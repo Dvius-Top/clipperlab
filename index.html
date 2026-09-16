@@ -1,0 +1,247 @@
+<!-- ============================================================
+     CLIPPERLAB — SITIO DE SERVICIO TÉCNICO PARA BARBERÍAS
+     ============================================================
+     Este es tu segundo sitio. Ya conoces lo básico, así que aquí
+     comento sobre todo las cosas NUEVAS. Recuerda el patrón:
+     toda etiqueta se ABRE <asi> y se CIERRA </asi>.
+
+     Estructura de la página:
+       1. Cabecera con logo y menú
+       2. Héroe (mensaje principal)
+       3. Servicios (tus 3 líneas)
+       4. Banda de asesoría (contacto)
+       5. Pie de página
+============================================================ -->
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClipperLab — Equipamiento y servicio técnico para barberías</title>
+
+  <!-- Tipografías: Space Grotesk (técnica, para títulos) + Inter (para textos) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+
+    /* ---- VARIABLES DE COLOR (cámbialas y cambia toda la página) ---- */
+    :root {
+      --grafito:  #15171c;   /* fondo oscuro, tipo taller     */
+      --panel:    #1d2028;   /* fondo de las tarjetas         */
+      --hueso:    #edeae4;   /* texto claro                   */
+      --voltaje:  #ff7a2f;   /* naranja eléctrico, tu acento  */
+      --gris:     #9aa0a8;   /* texto secundario              */
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: var(--grafito);
+      color: var(--hueso);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+    }
+
+    .contenedor {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ---- CABECERA CON MENÚ ----
+       NUEVO: 'display: flex' pone los elementos en fila.
+       'justify-content: space-between' empuja el logo a la
+       izquierda y el menú a la derecha. */
+    header {
+      padding: 20px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;   /* los centra verticalmente */
+    }
+    .logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .logo span { color: var(--voltaje); }
+
+    /* Los enlaces del menú, en fila y con espacio entre ellos */
+    .menu {
+      display: flex;
+      gap: 28px;
+    }
+    .menu a {
+      color: var(--gris);
+      text-decoration: none;
+      font-size: 15px;
+    }
+    .menu a:hover { color: var(--hueso); }  /* se aclara al pasar el mouse */
+
+    /* ---- HÉROE ---- */
+    .hero {
+      padding: 110px 0 90px;
+      max-width: 720px;   /* el texto no se estira de lado a lado */
+    }
+    .hero h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 54px;
+      line-height: 1.05;
+      margin-bottom: 20px;
+    }
+    .hero h1 span { color: var(--voltaje); }
+    .hero p {
+      color: var(--gris);
+      font-size: 19px;
+      margin-bottom: 32px;
+    }
+
+    /* Botón reutilizable */
+    .boton {
+      display: inline-block;
+      background-color: var(--voltaje);
+      color: var(--grafito);
+      font-weight: 600;
+      padding: 15px 34px;
+      border-radius: 4px;
+      text-decoration: none;
+    }
+    .boton:hover { opacity: 0.88; }
+
+    /* ---- SERVICIOS (tus 3 líneas de negocio) ---- */
+    .servicios { padding: 70px 0; }
+    .servicios h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 34px;
+      margin-bottom: 12px;
+    }
+    .subtitulo {
+      color: var(--gris);
+      margin-bottom: 40px;
+    }
+    .grilla {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .tarjeta {
+      background-color: var(--panel);
+      padding: 32px 28px;
+      border-radius: 8px;
+      border-top: 3px solid var(--voltaje); /* franja de acento arriba */
+    }
+    .tarjeta h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+    .tarjeta p { color: var(--gris); font-size: 15px; }
+
+    /* ---- BANDA DE ASESORÍA (llamado a contactar) ---- */
+    .asesoria {
+      margin: 40px 0;
+      padding: 60px 40px;
+      background-color: var(--panel);
+      border-radius: 10px;
+      text-align: center;
+    }
+    .asesoria h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 30px;
+      margin-bottom: 12px;
+    }
+    .asesoria p {
+      color: var(--gris);
+      max-width: 520px;
+      margin: 0 auto 28px;
+    }
+
+    /* ---- PIE DE PÁGINA ---- */
+    footer {
+      padding: 40px 0;
+      text-align: center;
+      color: var(--gris);
+      font-size: 14px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    /* ---- RESPONSIVE (celular): las 3 columnas pasan a 1 ---- */
+    @media (max-width: 720px) {
+      .hero h1 { font-size: 38px; }
+      .grilla  { grid-template-columns: 1fr; }
+      .menu    { display: none; } /* ocultamos el menú en pantallas chicas por ahora */
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- CABECERA -->
+  <header>
+    <div class="contenedor">
+      <div class="nav">
+        <div class="logo">Clipper<span>Lab</span></div>
+        <nav class="menu">
+          <a href="#servicios">Servicios</a>
+          <a href="#asesoria">Asesoría</a>
+          <a href="#contacto">Contacto</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- HÉROE -->
+  <section class="hero contenedor">
+    <h1>Equipamiento y <span>servicio técnico</span> para barberías</h1>
+    <p>Venta de máquinas, mantención de sillones y equipos, e instalación integral para locales nuevos o remodelaciones.</p>
+    <a href="#contacto" class="boton">Solicitar asesoría</a>
+  </section>
+
+  <!-- SERVICIOS: tus 3 líneas. Copia una tarjeta para agregar más. -->
+  <section class="servicios contenedor" id="servicios">
+    <h2>Qué hacemos</h2>
+    <p class="subtitulo">Todo lo que tu barbería necesita para funcionar, en un solo lugar.</p>
+    <div class="grilla">
+
+      <div class="tarjeta">
+        <h3>Venta de máquinas</h3>
+        <p>Máquinas de barbería profesionales, repuestos y accesorios. Equipos listos para rendir.</p>
+      </div>
+
+      <div class="tarjeta">
+        <h3>Mantención y reparación</h3>
+        <p>Servicio técnico de máquinas y sillones: limpieza, ajuste, reparación y customización.</p>
+      </div>
+
+      <div class="tarjeta">
+        <h3>Instalaciones y asesoría</h3>
+        <p>Montaje integral para barberías nuevas o remodelaciones: instalación eléctrica y puesta a punto del local.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- BANDA DE ASESORÍA -->
+  <section class="asesoria contenedor" id="asesoria">
+    <h2>¿Abriendo o remodelando tu local?</h2>
+    <p>Te asesoramos de principio a fin: qué equipos necesitas, instalación y puesta en marcha. Cuéntanos tu proyecto.</p>
+    <!-- Reemplaza el número 56900000000 por tu WhatsApp real (código país 56 + número, sin +) -->
+    <a href="https://wa.me/56900000000?text=Hola%20ClipperLab,%20quiero%20asesoría%20para%20mi%20local" class="boton">Escríbenos por WhatsApp</a>
+  </section>
+
+  <!-- PIE DE PÁGINA -->
+  <footer id="contacto">
+    <div class="contenedor">
+      ClipperLab · Servicio técnico y equipamiento para barberías · Santiago, Chile
+    </div>
+  </footer>
+
+</body>
+</html>
