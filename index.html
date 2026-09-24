@@ -1,16 +1,11 @@
 <!-- ============================================================
      CLIPPERLAB — SITIO DE SERVICIO TÉCNICO PARA BARBERÍAS
      ============================================================
-     Este es tu segundo sitio. Ya conoces lo básico, así que aquí
-     comento sobre todo las cosas NUEVAS. Recuerda el patrón:
-     toda etiqueta se ABRE <asi> y se CIERRA </asi>.
+     ESTE es el archivo correcto de ClipperLab (no el de BarberTop).
+     Recuerda: toda etiqueta se ABRE <asi> y se CIERRA </asi>.
 
-     Estructura de la página:
-       1. Cabecera con logo y menú
-       2. Héroe (mensaje principal)
-       3. Servicios (tus 3 líneas)
-       4. Banda de asesoría (contacto)
-       5. Pie de página
+     NUEVO en esta versión: el HÉROE ahora tiene una IMAGEN DE FONDO.
+     Búscalo más abajo, en el CSS marcado con "LECCIÓN 1".
 ============================================================ -->
 
 <!DOCTYPE html>
@@ -51,18 +46,15 @@
       padding: 0 24px;
     }
 
-    /* ---- CABECERA CON MENÚ ----
-       NUEVO: 'display: flex' pone los elementos en fila.
-       'justify-content: space-between' empuja el logo a la
-       izquierda y el menú a la derecha. */
+    /* ---- CABECERA CON MENÚ ---- */
     header {
       padding: 20px 0;
       border-bottom: 1px solid rgba(255,255,255,0.08);
     }
     .nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;   /* los centra verticalmente */
+      display: flex;                     /* pone logo y menú en fila */
+      justify-content: space-between;    /* uno a la izq, otro a la der */
+      align-items: center;
     }
     .logo {
       font-family: 'Space Grotesk', sans-serif;
@@ -72,23 +64,33 @@
     }
     .logo span { color: var(--voltaje); }
 
-    /* Los enlaces del menú, en fila y con espacio entre ellos */
-    .menu {
-      display: flex;
-      gap: 28px;
-    }
+    .menu { display: flex; gap: 28px; }
     .menu a {
       color: var(--gris);
       text-decoration: none;
       font-size: 15px;
     }
-    .menu a:hover { color: var(--hueso); }  /* se aclara al pasar el mouse */
+    .menu a:hover { color: var(--hueso); }
 
-    /* ---- HÉROE ---- */
+    /* ============================================================
+       LECCIÓN 1 — HÉROE CON IMAGEN DE FONDO
+       ------------------------------------------------------------
+       'background-image' tiene DOS capas:
+         1) el linear-gradient = capa oscura semitransparente
+         2) url('imagenes/hero.jpg') = TU foto
+       La capa oscura va ENCIMA de la foto para que el texto blanco
+       siempre se lea. Si la foto queda muy tapada, baja el 0.92;
+       si el texto no se lee, súbelo.
+       IMPORTANTE: sube tu foto a una carpeta 'imagenes' con el
+       nombre exacto hero.jpg (minúscula, sin espacios ni tildes).
+       ============================================================ */
     .hero {
-      padding: 110px 0 90px;
-      max-width: 720px;   /* el texto no se estira de lado a lado */
+      background-image: linear-gradient(rgba(21,23,28,0.72), rgba(21,23,28,0.94)), url('imagenes/hero.jpg');
+      background-size: cover;       /* la foto cubre todo sin deformarse */
+      background-position: center;  /* se centra */
+      padding: 150px 0 120px;
     }
+    .hero .contenedor { max-width: 720px; } /* el texto no se estira de lado a lado */
     .hero h1 {
       font-family: 'Space Grotesk', sans-serif;
       font-size: 54px;
@@ -97,9 +99,10 @@
     }
     .hero h1 span { color: var(--voltaje); }
     .hero p {
-      color: var(--gris);
+      color: var(--hueso);
       font-size: 19px;
       margin-bottom: 32px;
+      opacity: 0.85;
     }
 
     /* Botón reutilizable */
@@ -121,10 +124,7 @@
       font-size: 34px;
       margin-bottom: 12px;
     }
-    .subtitulo {
-      color: var(--gris);
-      margin-bottom: 40px;
-    }
+    .subtitulo { color: var(--gris); margin-bottom: 40px; }
     .grilla {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -134,7 +134,7 @@
       background-color: var(--panel);
       padding: 32px 28px;
       border-radius: 8px;
-      border-top: 3px solid var(--voltaje); /* franja de acento arriba */
+      border-top: 3px solid var(--voltaje);
     }
     .tarjeta h3 {
       font-family: 'Space Grotesk', sans-serif;
@@ -175,7 +175,7 @@
     @media (max-width: 720px) {
       .hero h1 { font-size: 38px; }
       .grilla  { grid-template-columns: 1fr; }
-      .menu    { display: none; } /* ocultamos el menú en pantallas chicas por ahora */
+      .menu    { display: none; }
     }
 
   </style>
@@ -197,11 +197,13 @@
     </div>
   </header>
 
-  <!-- HÉROE -->
-  <section class="hero contenedor">
-    <h1>Equipamiento y <span>servicio técnico</span> para barberías</h1>
-    <p>Venta de máquinas, mantención de sillones y equipos, e instalación integral para locales nuevos o remodelaciones.</p>
-    <a href="#contacto" class="boton">Solicitar asesoría</a>
+  <!-- HÉROE con imagen de fondo (LECCIÓN 1) -->
+  <section class="hero">
+    <div class="contenedor">
+      <h1>Equipamiento y <span>servicio técnico</span> para barberías</h1>
+      <p>Venta de máquinas, mantención de sillones y equipos, e instalación integral para locales nuevos o remodelaciones.</p>
+      <a href="#contacto" class="boton">Solicitar asesoría</a>
+    </div>
   </section>
 
   <!-- SERVICIOS: tus 3 líneas. Copia una tarjeta para agregar más. -->
@@ -211,8 +213,8 @@
     <div class="grilla">
 
       <div class="tarjeta">
-        <h3>Venta de máquinas</h3>
-        <p>Máquinas de barbería profesionales, repuestos y accesorios. Equipos listos para rendir.</p>
+        <h3>Venta de máquinas e insumos</h3>
+        <p>Máquinas de barbería profesionales, repuestos, cuchillas y accesorios listos para rendir.</p>
       </div>
 
       <div class="tarjeta">
