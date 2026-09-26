@@ -142,6 +142,116 @@
       .fila-doble { grid-template-columns: 1fr; }
     }
  
+ 
+    /* ---- CATÁLOGO Y PRECIOS ---- */
+    .lista-precios { max-width: 720px; margin-top: 10px; }
+    .item-precio {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 16px; padding: 18px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .item-precio .info h4 {
+      font-family: 'Space Grotesk', sans-serif; font-size: 17px; margin-bottom: 2px;
+    }
+    .item-precio .info p { color: var(--gris); font-size: 14px; }
+    .item-precio .precio {
+      font-family: 'Space Grotesk', sans-serif; font-size: 18px;
+      color: var(--voltaje); white-space: nowrap;
+    }
+    .item-precio .pedir {
+      background: none; border: 1px solid var(--voltaje); color: var(--voltaje);
+      padding: 8px 16px; border-radius: 4px; cursor: pointer;
+      font-family: 'Inter', sans-serif; font-size: 13px; white-space: nowrap;
+    }
+    .item-precio .pedir:hover { background: var(--voltaje); color: var(--grafito); }
+ 
+    /* ---- AGENDA POR HORAS ---- */
+    .horas {
+      display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0 30px;
+    }
+    .hora {
+      background-color: var(--panel); border: 1px solid rgba(255,255,255,0.12);
+      color: var(--hueso); padding: 10px 18px; border-radius: 6px;
+      cursor: pointer; font-family: 'Inter', sans-serif; font-size: 15px;
+    }
+    .hora:hover { border-color: var(--voltaje); }
+    .hora.elegida { background-color: var(--voltaje); color: var(--grafito); border-color: var(--voltaje); }
+ 
+    .selector-servicio {
+      background-color: var(--panel); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px; padding: 14px 16px; color: var(--hueso);
+      font-family: 'Inter', sans-serif; font-size: 15px; margin-bottom: 20px;
+      max-width: 400px; width: 100%;
+    }
+ 
+ 
+    /* ============================================================
+       CARRITO DE COMPRAS
+       ============================================================ */
+    /* Contador en el menú (ícono con número) */
+    .carrito-btn {
+      position: relative; background: none; border: none; cursor: pointer;
+      color: var(--hueso); font-size: 22px; padding: 4px;
+    }
+    .carrito-contador {
+      position: absolute; top: -6px; right: -8px;
+      background: var(--voltaje); color: var(--grafito);
+      font-size: 11px; font-weight: 700;
+      min-width: 18px; height: 18px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 5px;
+    }
+ 
+    /* Panel lateral deslizante */
+    .panel-carrito {
+      position: fixed; top: 0; right: 0; height: 100%; width: 360px; max-width: 90vw;
+      background: var(--panel); z-index: 100;
+      transform: translateX(100%);            /* oculto a la derecha */
+      transition: transform 0.3s ease;
+      display: flex; flex-direction: column;
+      box-shadow: -4px 0 20px rgba(0,0,0,0.4);
+    }
+    .panel-carrito.abierto { transform: translateX(0); } /* se desliza a la vista */
+ 
+    .panel-cab {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 22px; border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .panel-cab h3 { font-family: 'Space Grotesk', sans-serif; font-size: 20px; }
+    .cerrar-carrito { background: none; border: none; color: var(--gris); font-size: 26px; cursor: pointer; }
+ 
+    .panel-items { flex: 1; overflow-y: auto; padding: 12px 22px; }
+    .carrito-vacio { color: var(--gris); text-align: center; margin-top: 40px; }
+ 
+    .item-carrito {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 10px; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .item-carrito .nombre { font-size: 14px; }
+    .item-carrito .sub { color: var(--gris); font-size: 13px; }
+    .cantidad-ctrl { display: flex; align-items: center; gap: 8px; }
+    .cantidad-ctrl button {
+      width: 26px; height: 26px; border-radius: 4px; cursor: pointer;
+      background: var(--grafito); border: 1px solid rgba(255,255,255,0.15);
+      color: var(--hueso); font-size: 16px; line-height: 1;
+    }
+    .cantidad-ctrl button:hover { border-color: var(--voltaje); }
+ 
+    .panel-pie { padding: 22px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .total-linea {
+      display: flex; justify-content: space-between; margin-bottom: 16px;
+      font-family: 'Space Grotesk', sans-serif; font-size: 18px;
+    }
+    .total-linea .monto { color: var(--voltaje); }
+    .panel-pie .boton { width: 100%; text-align: center; }
+ 
+    /* Fondo oscuro detrás del panel */
+    .fondo-carrito {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 99; display: none;
+    }
+    .fondo-carrito.visible { display: block; }
+ 
   </style>
 </head>
  
@@ -155,8 +265,10 @@
         <nav class="menu">
           <button onclick="mostrar('inicio')" class="activo">Inicio</button>
           <button onclick="mostrar('maquinas')">Venta de máquinas</button>
+          <button onclick="mostrar('catalogo')">Catálogo y precios</button>
           <button onclick="mostrar('mantencion')">Mantención</button>
           <button onclick="mostrar('contacto')">Contacto</button>
+          <button class="carrito-btn" onclick="abrirCarrito()">🛒<span class="carrito-contador" id="contadorCarrito">0</span></button>
         </nav>
       </div>
     </div>
@@ -210,11 +322,87 @@
     </section>
   </div>
  
+  <!-- ============================================================
+       PANTALLA: CATÁLOGO Y PRECIOS
+       Cada botón "Pedir" llama a pedirWhatsApp() con el nombre del
+       producto: JavaScript arma el mensaje solo y abre WhatsApp.
+       ============================================================ -->
+  <div class="pantalla" id="catalogo">
+    <section class="bloque contenedor">
+      <h2>Catálogo y precios</h2>
+      <p class="subtitulo">Precios referenciales. Escríbenos para confirmar stock y cotizar.</p>
+ 
+      <h3 style="font-family:'Space Grotesk',sans-serif;color:var(--voltaje);margin-bottom:4px;">Máquinas e insumos</h3>
+      <div class="lista-precios">
+        <div class="item-precio">
+          <div class="info"><h4>Máquina de corte profesional</h4><p>Modelo de uso intensivo</p></div>
+          <span class="precio">$00.000</span>
+          <button class="pedir" onclick="agregarCarrito('Máquina de corte profesional', 0)">Agregar</button>
+        </div>
+        <div class="item-precio">
+          <div class="info"><h4>Cuchilla de recambio</h4><p>Repuesto original</p></div>
+          <span class="precio">$00.000</span>
+          <button class="pedir" onclick="agregarCarrito('Cuchilla de recambio', 0)">Agregar</button>
+        </div>
+        <div class="item-precio">
+          <div class="info"><h4>Kit de aceites y limpieza</h4><p>Mantención básica</p></div>
+          <span class="precio">$00.000</span>
+          <button class="pedir" onclick="agregarCarrito('Kit de aceites y limpieza', 0)">Agregar</button>
+        </div>
+      </div>
+ 
+      <h3 style="font-family:'Space Grotesk',sans-serif;color:var(--voltaje);margin:36px 0 4px;">Servicios técnicos</h3>
+      <div class="lista-precios">
+        <div class="item-precio">
+          <div class="info"><h4>Mantención de máquina</h4><p>Limpieza, ajuste y afilado</p></div>
+          <span class="precio">$00.000</span>
+          <button class="pedir" onclick="pedirWhatsApp('Mantención de máquina')">Pedir</button>
+        </div>
+        <div class="item-precio">
+          <div class="info"><h4>Reparación de sillón</h4><p>Hidráulica, tapizado o estructura</p></div>
+          <span class="precio">Cotizar</span>
+          <button class="pedir" onclick="pedirWhatsApp('Reparación de sillón')">Pedir</button>
+        </div>
+        <div class="item-precio">
+          <div class="info"><h4>Instalación de local</h4><p>Montaje eléctrico y puesta a punto</p></div>
+          <span class="precio">Cotizar</span>
+          <button class="pedir" onclick="pedirWhatsApp('Instalación de local')">Pedir</button>
+        </div>
+      </div>
+ 
+      <div style="margin-top:36px;">
+        <button class="boton" onclick="mostrar('contacto')">Agendar una hora</button>
+      </div>
+    </section>
+  </div>
+ 
   <!-- PANTALLA 4: CONTACTO -->
   <div class="pantalla" id="contacto">
     <section class="bloque contenedor">
       <h2>Contáctanos</h2>
-      <p class="subtitulo">Escríbenos directo o déjanos tus datos y te contactamos.</p>
+      <p class="subtitulo">Escríbenos directo, o elige un servicio y una hora y te lo enviamos por WhatsApp.</p>
+ 
+      <!-- AGENDA RÁPIDA POR WHATSAPP (automatizada con JavaScript) -->
+      <h3 style="font-family:'Space Grotesk',sans-serif;margin-bottom:12px;">Agenda rápida</h3>
+      <select class="selector-servicio" id="servicioAgenda">
+        <option value="">¿Qué servicio necesitas?</option>
+        <option>Mantención de máquina</option>
+        <option>Reparación de sillón</option>
+        <option>Instalación / asesoría</option>
+        <option>Compra de máquina o insumos</option>
+      </select>
+      <div class="horas" id="listaHoras">
+        <button class="hora" onclick="elegirHora(this)">09:00</button>
+        <button class="hora" onclick="elegirHora(this)">10:00</button>
+        <button class="hora" onclick="elegirHora(this)">11:00</button>
+        <button class="hora" onclick="elegirHora(this)">12:00</button>
+        <button class="hora" onclick="elegirHora(this)">15:00</button>
+        <button class="hora" onclick="elegirHora(this)">16:00</button>
+        <button class="hora" onclick="elegirHora(this)">17:00</button>
+      </div>
+      <button class="boton" onclick="agendarPorWhatsApp()">Agendar por WhatsApp</button>
+ 
+      <p style="color:var(--gris);font-size:14px;margin:36px 0 12px;">O déjanos tus datos y te contactamos:</p>
  
       <a href="https://wa.me/56949430834?text=Hola%20ClipperLab,%20me%20gustaría%20recibir%20más%20información%20sobre%20sus%20servicios" class="boton">Escríbenos por WhatsApp</a>
  
@@ -291,6 +479,25 @@
     </section>
   </div>
  
+ 
+  <!-- ============================================================
+       PANEL DEL CARRITO (se desliza desde la derecha)
+       ============================================================ -->
+  <div class="fondo-carrito" id="fondoCarrito" onclick="cerrarCarrito()"></div>
+  <div class="panel-carrito" id="panelCarrito">
+    <div class="panel-cab">
+      <h3>Tu carrito</h3>
+      <button class="cerrar-carrito" onclick="cerrarCarrito()">&times;</button>
+    </div>
+    <div class="panel-items" id="itemsCarrito">
+      <p class="carrito-vacio">Tu carrito está vacío.</p>
+    </div>
+    <div class="panel-pie">
+      <div class="total-linea"><span>Total</span><span class="monto" id="totalCarrito">$0</span></div>
+      <button class="boton" onclick="alert('En la próxima capa: enviar pedido por WhatsApp')">Finalizar pedido</button>
+    </div>
+  </div>
+ 
   <!-- PIE DE PÁGINA con enlaces legales -->
   <footer>
     <div class="contenedor">
@@ -304,6 +511,123 @@
  
   <!-- JAVASCRIPT: navegación entre pantallas -->
   <script>
+ 
+    // ---- AUTOMATIZACIÓN: pedir un producto por WhatsApp ----
+    // Recibe el nombre del producto y arma el mensaje solo.
+    function pedirWhatsApp(producto) {
+      const numero = "56949430834";
+      const mensaje = "Hola ClipperLab, me interesa: " + producto + ". ¿Me pueden dar más información?";
+      const url = "https://wa.me/" + numero + "?text=" + encodeURIComponent(mensaje);
+      window.open(url, "_blank");
+    }
+ 
+    // ---- AGENDA: recordar qué hora eligió el cliente ----
+    let horaElegida = "";
+    function elegirHora(boton) {
+      // Quita la marca de todas las horas
+      document.querySelectorAll('.hora').forEach(h => h.classList.remove('elegida'));
+      // Marca la que tocó y guarda su texto
+      boton.classList.add('elegida');
+      horaElegida = boton.textContent;
+    }
+ 
+    // ---- AUTOMATIZACIÓN: armar la reserva y mandarla por WhatsApp ----
+    function agendarPorWhatsApp() {
+      const servicio = document.getElementById('servicioAgenda').value;
+      const numero = "56949430834";
+ 
+      // Validación: revisa que haya elegido servicio y hora
+      if (!servicio) { alert("Elige primero un servicio."); return; }
+      if (!horaElegida) { alert("Elige una hora disponible."); return; }
+ 
+      const mensaje = "Hola ClipperLab, quiero agendar: " + servicio + " a las " + horaElegida + ". ¿Está disponible?";
+      const url = "https://wa.me/" + numero + "?text=" + encodeURIComponent(mensaje);
+      window.open(url, "_blank");
+    }
+ 
+ 
+    // ============================================================
+    // SISTEMA DE CARRITO — la "memoria" manda sobre todo lo visible
+    // ============================================================
+    // El carrito es un ARRAY: cada elemento es un producto con su cantidad.
+    // Esta lista es el ESTADO. Cada acción la modifica y luego "redibuja".
+    let carrito = [];
+ 
+    // ---- ABRIR / CERRAR el panel ----
+    function abrirCarrito() {
+      document.getElementById('panelCarrito').classList.add('abierto');
+      document.getElementById('fondoCarrito').classList.add('visible');
+    }
+    function cerrarCarrito() {
+      document.getElementById('panelCarrito').classList.remove('abierto');
+      document.getElementById('fondoCarrito').classList.remove('visible');
+    }
+ 
+    // ---- AGREGAR un producto ----
+    function agregarCarrito(nombre, precio) {
+      // ¿Ya está en el carrito? Buscamos por nombre.
+      const existente = carrito.find(p => p.nombre === nombre);
+      if (existente) {
+        existente.cantidad++;        // si ya está, suma 1
+      } else {
+        carrito.push({ nombre, precio, cantidad: 1 }); // si no, lo agrega
+      }
+      dibujarCarrito();  // redibuja con el estado nuevo
+      abrirCarrito();    // muestra el panel
+    }
+ 
+    // ---- CAMBIAR cantidad (+1 o -1) ----
+    function cambiarCantidad(nombre, delta) {
+      const item = carrito.find(p => p.nombre === nombre);
+      if (!item) return;
+      item.cantidad += delta;
+      // Si llega a 0, se quita del carrito
+      if (item.cantidad <= 0) {
+        carrito = carrito.filter(p => p.nombre !== nombre);
+      }
+      dibujarCarrito();
+    }
+ 
+    // ---- DIBUJAR el carrito (lee el estado y arma lo visible) ----
+    function dibujarCarrito() {
+      const cont = document.getElementById('itemsCarrito');
+      const contador = document.getElementById('contadorCarrito');
+      const totalEl = document.getElementById('totalCarrito');
+ 
+      // Contador: suma todas las cantidades
+      const totalItems = carrito.reduce((s, p) => s + p.cantidad, 0);
+      contador.textContent = totalItems;
+ 
+      // Si está vacío
+      if (carrito.length === 0) {
+        cont.innerHTML = '<p class="carrito-vacio">Tu carrito está vacío.</p>';
+        totalEl.textContent = '$0';
+        return;
+      }
+ 
+      // Arma la lista de productos
+      let html = '';
+      let total = 0;
+      carrito.forEach(p => {
+        total += p.precio * p.cantidad;
+        const precioTxt = p.precio > 0 ? ('$' + (p.precio * p.cantidad).toLocaleString('es-CL')) : 'A cotizar';
+        html += `
+          <div class="item-carrito">
+            <div>
+              <div class="nombre">${p.nombre}</div>
+              <div class="sub">${precioTxt}</div>
+            </div>
+            <div class="cantidad-ctrl">
+              <button onclick="cambiarCantidad('${p.nombre}', -1)">-</button>
+              <span>${p.cantidad}</span>
+              <button onclick="cambiarCantidad('${p.nombre}', 1)">+</button>
+            </div>
+          </div>`;
+      });
+      cont.innerHTML = html;
+      totalEl.textContent = '$' + total.toLocaleString('es-CL');
+    }
+ 
     function mostrar(id) {
       const pantallas = document.querySelectorAll('.pantalla');
       pantallas.forEach(p => p.classList.remove('visible'));
@@ -318,3 +642,4 @@
  
 </body>
 </html>
+ 
