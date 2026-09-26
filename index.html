@@ -252,6 +252,28 @@
     }
     .fondo-carrito.visible { display: block; }
  
+ 
+    /* ---- CATÁLOGO AMPLIADO ---- */
+    .cat-titulo {
+      font-family: 'Space Grotesk', sans-serif; color: var(--voltaje);
+      margin: 40px 0 4px; font-size: 20px;
+    }
+    .banner-mayorista {
+      display: flex; justify-content: space-between; align-items: center; gap: 24px;
+      background: linear-gradient(135deg, rgba(255,122,47,0.15), rgba(29,32,40,0.6));
+      border: 1px solid var(--voltaje); border-radius: 10px;
+      padding: 28px; margin: 10px 0 20px; flex-wrap: wrap;
+    }
+    .banner-mayorista h3 { font-family: 'Space Grotesk', sans-serif; font-size: 20px; margin-bottom: 6px; }
+    .banner-mayorista p { color: var(--gris); font-size: 14px; max-width: 520px; }
+    .banner-mayorista .boton { white-space: nowrap; }
+    /* Etiqueta de mayorista dentro de cada producto */
+    .badge-mayor {
+      display: inline-block; font-size: 12px; color: var(--voltaje);
+      border: 1px solid var(--voltaje); border-radius: 4px;
+      padding: 1px 8px; margin-top: 4px;
+    }
+ 
   </style>
 </head>
  
@@ -330,26 +352,34 @@
   <div class="pantalla" id="catalogo">
     <section class="bloque contenedor">
       <h2>Catálogo y precios</h2>
-      <p class="subtitulo">Precios referenciales. Escríbenos para confirmar stock y cotizar.</p>
+      <p class="subtitulo">Precios al detalle. Compra por mayor y accede a precio rebajado automáticamente.</p>
  
-      <h3 style="font-family:'Space Grotesk',sans-serif;color:var(--voltaje);margin-bottom:4px;">Máquinas e insumos</h3>
-      <div class="lista-precios">
-        <div class="item-precio">
-          <div class="info"><h4>Máquina de corte profesional</h4><p>Modelo de uso intensivo</p></div>
-          <span class="precio">$00.000</span>
-          <button class="pedir" onclick="agregarCarrito('Máquina de corte profesional', 0)">Agregar</button>
+      <!-- BANNER MAYORISTA -->
+      <div class="banner-mayorista">
+        <div>
+          <h3>¿Barbería o tienda? Compra por mayor</h3>
+          <p>Equipa tu local o revende. Al llevar la cantidad mínima de cada producto, el precio mayorista se aplica solo. ¿Volumen grande? Cotiza directo.</p>
         </div>
-        <div class="item-precio">
-          <div class="info"><h4>Cuchilla de recambio</h4><p>Repuesto original</p></div>
-          <span class="precio">$00.000</span>
-          <button class="pedir" onclick="agregarCarrito('Cuchilla de recambio', 0)">Agregar</button>
-        </div>
-        <div class="item-precio">
-          <div class="info"><h4>Kit de aceites y limpieza</h4><p>Mantención básica</p></div>
-          <span class="precio">$00.000</span>
-          <button class="pedir" onclick="agregarCarrito('Kit de aceites y limpieza', 0)">Agregar</button>
-        </div>
+        <button class="boton" onclick="cotizarMayor()">Cotizar por mayor</button>
       </div>
+ 
+      <!-- MÁQUINAS -->
+      <h3 class="cat-titulo">Máquinas</h3>
+      <div class="lista-precios" id="cat-maquinas"></div>
+ 
+      <!-- CUCHILLAS Y NAVAJAS -->
+      <h3 class="cat-titulo">Cuchillas, navajas y accesorios de corte</h3>
+      <div class="lista-precios" id="cat-corte"></div>
+ 
+      <!-- INSUMOS -->
+      <h3 class="cat-titulo">Insumos y mantención</h3>
+      <div class="lista-precios" id="cat-insumos"></div>
+ 
+      <div style="margin-top:36px;">
+        <button class="boton" onclick="abrirCarrito()">Ver mi carrito</button>
+      </div>
+    </section>
+  </div>
  
       <h3 style="font-family:'Space Grotesk',sans-serif;color:var(--voltaje);margin:36px 0 4px;">Servicios técnicos</h3>
       <div class="lista-precios">
@@ -546,6 +576,81 @@
     }
  
  
+ 
+    // ============================================================
+    // CATÁLOGO DE PRODUCTOS (edita aquí precios y cantidades mínimas)
+    // ------------------------------------------------------------
+    // precio       = precio al detalle (1 unidad)
+    // precioMayor  = precio por unidad al comprar por mayor
+    // minMayor     = cantidad mínima para que se active el precio mayor
+    // Pon precio 0 si es "A cotizar".
+    // ============================================================
+    const PRODUCTOS = {
+      maquinas: [
+        { nombre: "Máquina de corte profesional", precio: 89990, precioMayor: 74990, minMayor: 3 },
+        { nombre: "Trimmer / patillera profesional", precio: 54990, precioMayor: 44990, minMayor: 3 },
+        { nombre: "Máquina inalámbrica premium", precio: 129990, precioMayor: 109990, minMayor: 2 }
+      ],
+      corte: [
+        { nombre: "Cuchilla de recambio", precio: 12990, precioMayor: 8990, minMayor: 10 },
+        { nombre: "Navaja barbera profesional", precio: 24990, precioMayor: 18990, minMayor: 5 },
+        { nombre: "Porta navajas de cuero", precio: 16990, precioMayor: 12990, minMayor: 5 },
+        { nombre: "Set de hojas desechables (caja)", precio: 9990, precioMayor: 6990, minMayor: 10 },
+        { nombre: "Tijera de corte profesional", precio: 39990, precioMayor: 31990, minMayor: 4 }
+      ],
+      insumos: [
+        { nombre: "Kit de aceites y limpieza", precio: 14990, precioMayor: 10990, minMayor: 6 },
+        { nombre: "Aceite lubricante para máquina", precio: 5990, precioMayor: 3990, minMayor: 12 },
+        { nombre: "Cepillo desvanecedor", precio: 7990, precioMayor: 5490, minMayor: 10 },
+        { nombre: "Capa de corte impermeable", precio: 11990, precioMayor: 8490, minMayor: 6 }
+      ]
+    };
+ 
+    // Dibuja una lista de productos dentro de un contenedor
+    function dibujarCatalogo(lista, idContenedor) {
+      let html = '';
+      lista.forEach(p => {
+        const precioTxt = p.precio > 0 ? '$' + p.precio.toLocaleString('es-CL') : 'A cotizar';
+        // Nota de mayorista (si tiene precio mayor definido)
+        const notaMayor = (p.precioMayor > 0 && p.minMayor > 0)
+          ? `<span class="badge-mayor">Por mayor: $${p.precioMayor.toLocaleString('es-CL')} c/u desde ${p.minMayor}</span>`
+          : '';
+        html += `
+          <div class="item-precio">
+            <div class="info">
+              <h4>${p.nombre}</h4>
+              ${notaMayor}
+            </div>
+            <span class="precio">${precioTxt}</span>
+            <button class="pedir" onclick="agregarCarrito('${p.nombre}', ${p.precio})">Agregar</button>
+          </div>`;
+      });
+      document.getElementById(idContenedor).innerHTML = html;
+    }
+ 
+    // Busca un producto por nombre en todo el catálogo (para saber su precio mayor)
+    function buscarProducto(nombre) {
+      for (const cat in PRODUCTOS) {
+        const encontrado = PRODUCTOS[cat].find(p => p.nombre === nombre);
+        if (encontrado) return encontrado;
+      }
+      return null;
+    }
+ 
+    // Cotizar por mayor por WhatsApp
+    function cotizarMayor() {
+      const numero = "56949430834";
+      const mensaje = "Hola ClipperLab, quiero cotizar una compra por MAYOR para equipar/revender. ¿Me pueden enviar lista de precios mayorista?";
+      window.open("https://wa.me/" + numero + "?text=" + encodeURIComponent(mensaje), "_blank");
+    }
+ 
+    // Dibuja todo el catálogo al cargar la página
+    window.addEventListener('DOMContentLoaded', function() {
+      dibujarCatalogo(PRODUCTOS.maquinas, 'cat-maquinas');
+      dibujarCatalogo(PRODUCTOS.corte, 'cat-corte');
+      dibujarCatalogo(PRODUCTOS.insumos, 'cat-insumos');
+    });
+ 
     // ============================================================
     // SISTEMA DE CARRITO — la "memoria" manda sobre todo lo visible
     // ============================================================
@@ -609,8 +714,18 @@
       let html = '';
       let total = 0;
       carrito.forEach(p => {
-        total += p.precio * p.cantidad;
-        const precioTxt = p.precio > 0 ? ('$' + (p.precio * p.cantidad).toLocaleString('es-CL')) : 'A cotizar';
+        // LÓGICA MAYORISTA: si la cantidad alcanza el mínimo, usa precio mayor
+        const info = buscarProducto(p.nombre);
+        let precioUnit = p.precio;
+        let esMayor = false;
+        if (info && info.precioMayor > 0 && info.minMayor > 0 && p.cantidad >= info.minMayor) {
+          precioUnit = info.precioMayor;
+          esMayor = true;
+        }
+        total += precioUnit * p.cantidad;
+        const precioTxt = precioUnit > 0
+          ? ('$' + (precioUnit * p.cantidad).toLocaleString('es-CL') + (esMayor ? ' · mayorista' : ''))
+          : 'A cotizar';
         html += `
           <div class="item-carrito">
             <div>
