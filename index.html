@@ -1,12 +1,12 @@
 <!-- ============================================================
-     CLIPPERLAB — NAVEGACIÓN DE "UNA SOLA PÁGINA" (con capas)
+     CLIPPERLAB — con formulario, aviso de privacidad y términos
      ============================================================
-     La idea: hay varias SECCIONES-PANTALLA, pero solo se ve UNA
-     a la vez. Al presionar un botón del menú, JavaScript oculta
-     la que estaba y muestra la que pediste. Sin recargar.
- 
-     Busca abajo la "LECCIÓN 3 — JAVASCRIPT": ahí está la magia,
-     comentada línea por línea.
+     NUEVO en esta versión:
+       - Aviso de privacidad bajo el formulario (Ley 19.628)
+       - Pantalla "Política de Privacidad"
+       - Pantalla "Términos y Condiciones"
+       - Enlaces a ambas en el pie de página
+     RECUERDA: reemplaza TU_CODIGO por tu código real de Formspree.
 ============================================================ -->
  
 <!DOCTYPE html>
@@ -41,11 +41,10 @@
  
     .contenedor { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
  
-    /* ---- CABECERA CON MENÚ ---- */
     header {
       padding: 20px 0;
       border-bottom: 1px solid rgba(255,255,255,0.08);
-      position: sticky; top: 0;              /* el menú se queda arriba al bajar */
+      position: sticky; top: 0;
       background-color: var(--grafito);
       z-index: 10;
     }
@@ -58,24 +57,17 @@
     .logo span { color: var(--voltaje); }
  
     .menu { display: flex; gap: 24px; flex-wrap: wrap; }
-    /* Los botones del menú (ahora son botones, no enlaces) */
     .menu button {
       background: none; border: none; cursor: pointer;
       color: var(--gris);
       font-family: 'Inter', sans-serif; font-size: 15px;
     }
     .menu button:hover { color: var(--hueso); }
-    .menu button.activo { color: var(--voltaje); }  /* el botón de la pantalla actual, en naranja */
+    .menu button.activo { color: var(--voltaje); }
  
-    /* ============================================================
-       LAS "PANTALLAS" (capas)
-       Por defecto TODAS están ocultas (display:none).
-       La que tenga la clase 'visible' se muestra.
-       ============================================================ */
     .pantalla { display: none; }
     .pantalla.visible { display: block; }
  
-    /* ---- HÉROE (pantalla de inicio) ---- */
     .hero {
       background-image: linear-gradient(rgba(21,23,28,0.72), rgba(21,23,28,0.94)), url('imagenes/hero.jpg');
       background-size: cover; background-position: center;
@@ -95,7 +87,6 @@
     }
     .boton:hover { opacity: 0.88; }
  
-    /* ---- Bloques de contenido interno ---- */
     .bloque { padding: 70px 0; }
     .bloque h2 { font-family: 'Space Grotesk', sans-serif; font-size: 34px; margin-bottom: 12px; }
     .subtitulo { color: var(--gris); margin-bottom: 40px; }
@@ -108,7 +99,6 @@
     .tarjeta h3 { font-family: 'Space Grotesk', sans-serif; font-size: 20px; margin-bottom: 12px; }
     .tarjeta p { color: var(--gris); font-size: 15px; }
  
-    /* ---- Formulario (pantalla de contacto) ---- */
     .formulario { max-width: 560px; margin-top: 20px; }
     .formulario input, .formulario textarea {
       width: 100%; background-color: var(--panel);
@@ -120,11 +110,31 @@
     .formulario textarea { min-height: 120px; resize: vertical; }
     .fila-doble { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
  
+    /* Aviso de privacidad bajo el formulario */
+    .aviso-privacidad {
+      font-size: 13px; color: var(--gris);
+      margin-top: 8px; max-width: 560px;
+    }
+    .aviso-privacidad a { color: var(--voltaje); }
+ 
+    /* Texto legal (política y términos) */
+    .legal { max-width: 760px; }
+    .legal h3 { font-family: 'Space Grotesk', sans-serif; font-size: 19px; margin: 28px 0 8px; }
+    .legal p { color: var(--gris); margin-bottom: 12px; font-size: 15px; }
+ 
     footer {
       padding: 40px 0; text-align: center;
       color: var(--gris); font-size: 14px;
       border-top: 1px solid rgba(255,255,255,0.08);
     }
+    /* Enlaces del pie de página */
+    .footer-links { margin-top: 12px; display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+    .footer-links button {
+      background: none; border: none; cursor: pointer;
+      color: var(--gris); font-family: 'Inter', sans-serif; font-size: 13px;
+      text-decoration: underline;
+    }
+    .footer-links button:hover { color: var(--hueso); }
  
     @media (max-width: 720px) {
       .hero h1 { font-size: 38px; }
@@ -137,7 +147,7 @@
  
 <body>
  
-  <!-- CABECERA: los botones llaman a mostrar(...) al hacer clic -->
+  <!-- CABECERA -->
   <header>
     <div class="contenedor">
       <div class="nav">
@@ -152,9 +162,7 @@
     </div>
   </header>
  
-  <!-- ============================================================
-       PANTALLA 1: INICIO (empieza visible)
-       ============================================================ -->
+  <!-- PANTALLA 1: INICIO -->
   <div class="pantalla visible" id="inicio">
     <section class="hero">
       <div class="contenedor">
@@ -167,94 +175,53 @@
       <h2>Qué hacemos</h2>
       <p class="subtitulo">Todo lo que tu barbería necesita, en un solo lugar.</p>
       <div class="grilla">
-        <div class="tarjeta">
-          <h3>Venta de máquinas e insumos</h3>
-          <p>Máquinas profesionales, repuestos, cuchillas y accesorios.</p>
-        </div>
-        <div class="tarjeta">
-          <h3>Mantención y reparación</h3>
-          <p>Servicio técnico de máquinas y sillones.</p>
-        </div>
-        <div class="tarjeta">
-          <h3>Instalaciones y asesoría</h3>
-          <p>Montaje integral para locales nuevos o remodelaciones.</p>
-        </div>
+        <div class="tarjeta"><h3>Venta de máquinas e insumos</h3><p>Máquinas profesionales, repuestos, cuchillas y accesorios.</p></div>
+        <div class="tarjeta"><h3>Mantención y reparación</h3><p>Servicio técnico de máquinas y sillones.</p></div>
+        <div class="tarjeta"><h3>Instalaciones y asesoría</h3><p>Montaje integral para locales nuevos o remodelaciones.</p></div>
       </div>
     </section>
   </div>
  
-  <!-- ============================================================
-       PANTALLA 2: VENTA DE MÁQUINAS (oculta hasta que la pidan)
-       ============================================================ -->
+  <!-- PANTALLA 2: VENTA DE MÁQUINAS -->
   <div class="pantalla" id="maquinas">
     <section class="bloque contenedor">
       <h2>Venta de máquinas e insumos</h2>
       <p class="subtitulo">Equipos profesionales y repuestos para tu barbería.</p>
       <div class="grilla">
-        <div class="tarjeta">
-          <h3>Máquinas de corte</h3>
-          <p>Modelos profesionales para uso intensivo. (Aquí pones tus productos reales.)</p>
-        </div>
-        <div class="tarjeta">
-          <h3>Cuchillas y repuestos</h3>
-          <p>Repuestos originales y cuchillas de recambio.</p>
-        </div>
-        <div class="tarjeta">
-          <h3>Accesorios</h3>
-          <p>Peines, aceites, cepillos y más.</p>
-        </div>
+        <div class="tarjeta"><h3>Máquinas de corte</h3><p>Modelos profesionales para uso intensivo.</p></div>
+        <div class="tarjeta"><h3>Cuchillas y repuestos</h3><p>Repuestos originales y cuchillas de recambio.</p></div>
+        <div class="tarjeta"><h3>Accesorios</h3><p>Peines, aceites, cepillos y más.</p></div>
       </div>
-      <div style="margin-top:30px;">
-        <button class="boton" onclick="mostrar('contacto')">Consultar por un producto</button>
-      </div>
+      <div style="margin-top:30px;"><button class="boton" onclick="mostrar('contacto')">Consultar por un producto</button></div>
     </section>
   </div>
  
-  <!-- ============================================================
-       PANTALLA 3: MANTENCIÓN
-       ============================================================ -->
+  <!-- PANTALLA 3: MANTENCIÓN -->
   <div class="pantalla" id="mantencion">
     <section class="bloque contenedor">
       <h2>Mantención y reparación</h2>
       <p class="subtitulo">Dejamos tus equipos y sillones como nuevos.</p>
       <div class="grilla">
-        <div class="tarjeta">
-          <h3>Servicio de máquinas</h3>
-          <p>Limpieza, ajuste, afilado y reparación.</p>
-        </div>
-        <div class="tarjeta">
-          <h3>Reparación de sillones</h3>
-          <p>Tapizado, hidráulica y estructura.</p>
-        </div>
-        <div class="tarjeta">
-          <h3>Customización</h3>
-          <p>Personalizamos tus equipos a tu estilo.</p>
-        </div>
+        <div class="tarjeta"><h3>Servicio de máquinas</h3><p>Limpieza, ajuste, afilado y reparación.</p></div>
+        <div class="tarjeta"><h3>Reparación de sillones</h3><p>Tapizado, hidráulica y estructura.</p></div>
+        <div class="tarjeta"><h3>Customización</h3><p>Personalizamos tus equipos a tu estilo.</p></div>
       </div>
-      <div style="margin-top:30px;">
-        <button class="boton" onclick="mostrar('contacto')">Pedir una mantención</button>
-      </div>
+      <div style="margin-top:30px;"><button class="boton" onclick="mostrar('contacto')">Pedir una mantención</button></div>
     </section>
   </div>
  
-  <!-- ============================================================
-       PANTALLA 4: CONTACTO (WhatsApp + formulario)
-       ============================================================ -->
+  <!-- PANTALLA 4: CONTACTO -->
   <div class="pantalla" id="contacto">
     <section class="bloque contenedor">
       <h2>Contáctanos</h2>
       <p class="subtitulo">Escríbenos directo o déjanos tus datos y te contactamos.</p>
  
-      <!-- WhatsApp directo -->
       <a href="https://wa.me/56949430834?text=Hola%20ClipperLab,%20me%20gustaría%20recibir%20más%20información%20sobre%20sus%20servicios" class="boton">Escríbenos por WhatsApp</a>
  
-      <!-- Formulario (recuerda conectar Formspree: reemplaza TU_CODIGO) -->
-      <form class="formulario" action="https://formspree.io/f/xzezawgo" method="POST"> <form class="formulario" action="https://formspree.io/f/xzezawgo" method="POST">
-  <input type="hidden" name="_subject" value="Nuevo contacto desde ClipperLab">
-  <input type="text" name="_gotcha" style="display:none">
-  <div class="fila-doble">
-  ...
-      <input type="text" name="_gotcha" style="display:none">
+      <!-- FORMULARIO: reemplaza TU_CODIGO por tu código de Formspree -->
+      <form class="formulario" action="https://formspree.io/f/xzezawgo" method="POST">
+        <input type="hidden" name="_subject" value="Nuevo contacto desde ClipperLab">
+        <input type="text" name="_gotcha" style="display:none">
         <div class="fila-doble">
           <input type="text" name="nombre" placeholder="Nombre" required>
           <input type="text" name="apellido" placeholder="Apellido" required>
@@ -264,41 +231,90 @@
         <textarea name="motivo" placeholder="Cuéntanos brevemente en qué te podemos ayudar..." required></textarea>
         <button type="submit" class="boton">Enviar mis datos</button>
       </form>
+ 
+      <!-- AVISO DE PRIVACIDAD (Ley 19.628) -->
+      <p class="aviso-privacidad">
+        Al enviar este formulario aceptas que tus datos se usen únicamente para contactarte,
+        conforme a la Ley 19.628 sobre protección de la vida privada. Revisa nuestra
+        <button onclick="mostrar('privacidad')" style="background:none;border:none;color:var(--voltaje);cursor:pointer;text-decoration:underline;font-size:13px;padding:0;">Política de Privacidad</button>.
+      </p>
     </section>
   </div>
  
-  <!-- PIE DE PÁGINA (siempre visible) -->
+  <!-- PANTALLA 5: POLÍTICA DE PRIVACIDAD -->
+  <div class="pantalla" id="privacidad">
+    <section class="bloque contenedor legal">
+      <h2>Política de Privacidad</h2>
+      <p class="subtitulo">Cómo tratamos tus datos personales.</p>
+ 
+      <h3>1. Responsable de los datos</h3>
+      <p>ClipperLab (Santiago, Chile) es responsable del tratamiento de los datos personales que nos entregas a través de este sitio.</p>
+ 
+      <h3>2. Qué datos recopilamos</h3>
+      <p>Recopilamos los datos que ingresas voluntariamente en nuestro formulario de contacto: nombre, apellido, correo electrónico, número de WhatsApp y el motivo de tu consulta.</p>
+ 
+      <h3>3. Para qué los usamos</h3>
+      <p>Usamos tus datos exclusivamente para responder tu consulta, contactarte y ofrecerte nuestros servicios. No los vendemos ni los compartimos con terceros ajenos a la prestación del servicio.</p>
+ 
+      <h3>4. Tus derechos (Ley 19.628)</h3>
+      <p>Conforme a la Ley 19.628 sobre protección de la vida privada, tienes derecho a acceder, rectificar, cancelar y oponerte al tratamiento de tus datos. Para ejercerlos, escríbenos por los canales de contacto de este sitio.</p>
+ 
+      <h3>5. Conservación y seguridad</h3>
+      <p>Conservamos tus datos solo por el tiempo necesario para atender tu solicitud y tomamos medidas razonables para protegerlos.</p>
+ 
+      <div style="margin-top:30px;"><button class="boton" onclick="mostrar('inicio')">Volver al inicio</button></div>
+    </section>
+  </div>
+ 
+  <!-- PANTALLA 6: TÉRMINOS Y CONDICIONES -->
+  <div class="pantalla" id="terminos">
+    <section class="bloque contenedor legal">
+      <h2>Términos y Condiciones</h2>
+      <p class="subtitulo">Condiciones de uso de este sitio.</p>
+ 
+      <h3>1. Sobre este sitio</h3>
+      <p>Este sitio web pertenece a ClipperLab y tiene como fin informar sobre nuestros servicios de venta de máquinas, mantención, reparación e instalación para barberías, y facilitar el contacto con clientes.</p>
+ 
+      <h3>2. Uso del sitio</h3>
+      <p>La información publicada tiene carácter referencial. Los precios, disponibilidad y características de los productos y servicios pueden variar y se confirman al momento de la cotización.</p>
+ 
+      <h3>3. Contacto y cotizaciones</h3>
+      <p>El envío de un formulario o mensaje no constituye un contrato ni una obligación de compra. Toda contratación se acuerda directamente entre ClipperLab y el cliente.</p>
+ 
+      <h3>4. Propiedad</h3>
+      <p>Los contenidos, marca e imágenes de este sitio pertenecen a ClipperLab y no pueden usarse sin autorización.</p>
+ 
+      <h3>5. Legislación aplicable</h3>
+      <p>Estos términos se rigen por las leyes de la República de Chile.</p>
+ 
+      <div style="margin-top:30px;"><button class="boton" onclick="mostrar('inicio')">Volver al inicio</button></div>
+    </section>
+  </div>
+ 
+  <!-- PIE DE PÁGINA con enlaces legales -->
   <footer>
     <div class="contenedor">
       ClipperLab · Servicio técnico y equipamiento para barberías · Santiago, Chile
+      <div class="footer-links">
+        <button onclick="mostrar('privacidad')">Política de Privacidad</button>
+        <button onclick="mostrar('terminos')">Términos y Condiciones</button>
+      </div>
     </div>
   </footer>
  
-  <!-- ============================================================
-       LECCIÓN 3 — JAVASCRIPT (¡la magia!)
-       ------------------------------------------------------------
-       Todo lo que va entre <script> y </script> es JavaScript.
-       Esta función 'mostrar' recibe el nombre de la pantalla a
-       mostrar (ej. 'maquinas') y hace 3 cosas:
-       ============================================================ -->
+  <!-- JAVASCRIPT: navegación entre pantallas -->
   <script>
     function mostrar(id) {
-      // 1) Oculta TODAS las pantallas (les quita la clase 'visible')
       const pantallas = document.querySelectorAll('.pantalla');
       pantallas.forEach(p => p.classList.remove('visible'));
- 
-      // 2) Muestra SOLO la pantalla pedida (le pone la clase 'visible')
       document.getElementById(id).classList.add('visible');
  
-      // 3) Marca en naranja el botón del menú correspondiente
       const botones = document.querySelectorAll('.menu button');
       botones.forEach(b => b.classList.remove('activo'));
  
-      // 4) Sube al inicio de la página (para no quedar a mitad de scroll)
       window.scrollTo(0, 0);
     }
   </script>
  
 </body>
 </html>
- 
