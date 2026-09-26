@@ -1,249 +1,299 @@
 <!-- ============================================================
-     CLIPPERLAB — SITIO DE SERVICIO TÉCNICO PARA BARBERÍAS
+     CLIPPERLAB — NAVEGACIÓN DE "UNA SOLA PÁGINA" (con capas)
      ============================================================
-     ESTE es el archivo correcto de ClipperLab (no el de BarberTop).
-     Recuerda: toda etiqueta se ABRE <asi> y se CIERRA </asi>.
-
-     NUEVO en esta versión: el HÉROE ahora tiene una IMAGEN DE FONDO.
-     Búscalo más abajo, en el CSS marcado con "LECCIÓN 1".
+     La idea: hay varias SECCIONES-PANTALLA, pero solo se ve UNA
+     a la vez. Al presionar un botón del menú, JavaScript oculta
+     la que estaba y muestra la que pediste. Sin recargar.
+ 
+     Busca abajo la "LECCIÓN 3 — JAVASCRIPT": ahí está la magia,
+     comentada línea por línea.
 ============================================================ -->
-
+ 
 <!DOCTYPE html>
 <html lang="es">
-
+ 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ClipperLab — Equipamiento y servicio técnico para barberías</title>
-
-  <!-- Tipografías: Space Grotesk (técnica, para títulos) + Inter (para textos) -->
+ 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
-
+ 
   <style>
-
-    /* ---- VARIABLES DE COLOR (cámbialas y cambia toda la página) ---- */
+ 
     :root {
-      --grafito:  #15171c;   /* fondo oscuro, tipo taller     */
-      --panel:    #1d2028;   /* fondo de las tarjetas         */
-      --hueso:    #edeae4;   /* texto claro                   */
-      --voltaje:  #ff7a2f;   /* naranja eléctrico, tu acento  */
-      --gris:     #9aa0a8;   /* texto secundario              */
+      --grafito:  #15171c;
+      --panel:    #1d2028;
+      --hueso:    #edeae4;
+      --voltaje:  #ff7a2f;
+      --gris:     #9aa0a8;
     }
-
+ 
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
+ 
     body {
       background-color: var(--grafito);
       color: var(--hueso);
       font-family: 'Inter', sans-serif;
       line-height: 1.6;
     }
-
-    .contenedor {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
-
+ 
+    .contenedor { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+ 
     /* ---- CABECERA CON MENÚ ---- */
     header {
       padding: 20px 0;
       border-bottom: 1px solid rgba(255,255,255,0.08);
+      position: sticky; top: 0;              /* el menú se queda arriba al bajar */
+      background-color: var(--grafito);
+      z-index: 10;
     }
-    .nav {
-      display: flex;                     /* pone logo y menú en fila */
-      justify-content: space-between;    /* uno a la izq, otro a la der */
-      align-items: center;
-    }
+    .nav { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
     .logo {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
+      font-size: 22px; font-weight: 700; letter-spacing: 0.5px;
+      cursor: pointer;
     }
     .logo span { color: var(--voltaje); }
-
-    .menu { display: flex; gap: 28px; }
-    .menu a {
+ 
+    .menu { display: flex; gap: 24px; flex-wrap: wrap; }
+    /* Los botones del menú (ahora son botones, no enlaces) */
+    .menu button {
+      background: none; border: none; cursor: pointer;
       color: var(--gris);
-      text-decoration: none;
-      font-size: 15px;
+      font-family: 'Inter', sans-serif; font-size: 15px;
     }
-    .menu a:hover { color: var(--hueso); }
-
+    .menu button:hover { color: var(--hueso); }
+    .menu button.activo { color: var(--voltaje); }  /* el botón de la pantalla actual, en naranja */
+ 
     /* ============================================================
-       LECCIÓN 1 — HÉROE CON IMAGEN DE FONDO
-       ------------------------------------------------------------
-       'background-image' tiene DOS capas:
-         1) el linear-gradient = capa oscura semitransparente
-         2) url('imagenes/hero.jpg') = TU foto
-       La capa oscura va ENCIMA de la foto para que el texto blanco
-       siempre se lea. Si la foto queda muy tapada, baja el 0.92;
-       si el texto no se lee, súbelo.
-       IMPORTANTE: sube tu foto a una carpeta 'imagenes' con el
-       nombre exacto hero.jpg (minúscula, sin espacios ni tildes).
+       LAS "PANTALLAS" (capas)
+       Por defecto TODAS están ocultas (display:none).
+       La que tenga la clase 'visible' se muestra.
        ============================================================ */
+    .pantalla { display: none; }
+    .pantalla.visible { display: block; }
+ 
+    /* ---- HÉROE (pantalla de inicio) ---- */
     .hero {
       background-image: linear-gradient(rgba(21,23,28,0.72), rgba(21,23,28,0.94)), url('imagenes/hero.jpg');
-      background-size: cover;       /* la foto cubre todo sin deformarse */
-      background-position: center;  /* se centra */
-      padding: 150px 0 120px;
+      background-size: cover; background-position: center;
+      padding: 130px 0 110px;
     }
-    .hero .contenedor { max-width: 720px; } /* el texto no se estira de lado a lado */
-    .hero h1 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 54px;
-      line-height: 1.05;
-      margin-bottom: 20px;
-    }
+    .hero .contenedor { max-width: 720px; }
+    .hero h1 { font-family: 'Space Grotesk', sans-serif; font-size: 52px; line-height: 1.05; margin-bottom: 20px; }
     .hero h1 span { color: var(--voltaje); }
-    .hero p {
-      color: var(--hueso);
-      font-size: 19px;
-      margin-bottom: 32px;
-      opacity: 0.85;
-    }
-
-    /* Botón reutilizable */
+    .hero p { color: var(--hueso); font-size: 19px; margin-bottom: 32px; opacity: 0.85; }
+ 
     .boton {
       display: inline-block;
-      background-color: var(--voltaje);
-      color: var(--grafito);
-      font-weight: 600;
-      padding: 15px 34px;
-      border-radius: 4px;
-      text-decoration: none;
+      background-color: var(--voltaje); color: var(--grafito);
+      font-weight: 600; padding: 15px 34px; border-radius: 4px;
+      text-decoration: none; border: none; cursor: pointer;
+      font-size: 16px; font-family: 'Inter', sans-serif;
     }
     .boton:hover { opacity: 0.88; }
-
-    /* ---- SERVICIOS (tus 3 líneas de negocio) ---- */
-    .servicios { padding: 70px 0; }
-    .servicios h2 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 34px;
-      margin-bottom: 12px;
-    }
+ 
+    /* ---- Bloques de contenido interno ---- */
+    .bloque { padding: 70px 0; }
+    .bloque h2 { font-family: 'Space Grotesk', sans-serif; font-size: 34px; margin-bottom: 12px; }
     .subtitulo { color: var(--gris); margin-bottom: 40px; }
-    .grilla {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
+ 
+    .grilla { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .tarjeta {
-      background-color: var(--panel);
-      padding: 32px 28px;
-      border-radius: 8px;
-      border-top: 3px solid var(--voltaje);
+      background-color: var(--panel); padding: 32px 28px;
+      border-radius: 8px; border-top: 3px solid var(--voltaje);
     }
-    .tarjeta h3 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 20px;
-      margin-bottom: 12px;
-    }
+    .tarjeta h3 { font-family: 'Space Grotesk', sans-serif; font-size: 20px; margin-bottom: 12px; }
     .tarjeta p { color: var(--gris); font-size: 15px; }
-
-    /* ---- BANDA DE ASESORÍA (llamado a contactar) ---- */
-    .asesoria {
-      margin: 40px 0;
-      padding: 60px 40px;
-      background-color: var(--panel);
-      border-radius: 10px;
-      text-align: center;
+ 
+    /* ---- Formulario (pantalla de contacto) ---- */
+    .formulario { max-width: 560px; margin-top: 20px; }
+    .formulario input, .formulario textarea {
+      width: 100%; background-color: var(--panel);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 6px;
+      padding: 14px 16px; color: var(--hueso);
+      font-family: 'Inter', sans-serif; font-size: 15px; margin-bottom: 16px;
     }
-    .asesoria h2 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 30px;
-      margin-bottom: 12px;
-    }
-    .asesoria p {
-      color: var(--gris);
-      max-width: 520px;
-      margin: 0 auto 28px;
-    }
-
-    /* ---- PIE DE PÁGINA ---- */
+    .formulario input:focus, .formulario textarea:focus { outline: none; border-color: var(--voltaje); }
+    .formulario textarea { min-height: 120px; resize: vertical; }
+    .fila-doble { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+ 
     footer {
-      padding: 40px 0;
-      text-align: center;
-      color: var(--gris);
-      font-size: 14px;
+      padding: 40px 0; text-align: center;
+      color: var(--gris); font-size: 14px;
       border-top: 1px solid rgba(255,255,255,0.08);
     }
-
-    /* ---- RESPONSIVE (celular): las 3 columnas pasan a 1 ---- */
+ 
     @media (max-width: 720px) {
       .hero h1 { font-size: 38px; }
       .grilla  { grid-template-columns: 1fr; }
-      .menu    { display: none; }
+      .fila-doble { grid-template-columns: 1fr; }
     }
-
+ 
   </style>
 </head>
-
+ 
 <body>
-
-  <!-- CABECERA -->
+ 
+  <!-- CABECERA: los botones llaman a mostrar(...) al hacer clic -->
   <header>
     <div class="contenedor">
       <div class="nav">
-        <div class="logo">Clipper<span>Lab</span></div>
+        <div class="logo" onclick="mostrar('inicio')">Clipper<span>Lab</span></div>
         <nav class="menu">
-          <a href="#servicios">Servicios</a>
-          <a href="#asesoria">Asesoría</a>
-          <a href="#contacto">Contacto</a>
+          <button onclick="mostrar('inicio')" class="activo">Inicio</button>
+          <button onclick="mostrar('maquinas')">Venta de máquinas</button>
+          <button onclick="mostrar('mantencion')">Mantención</button>
+          <button onclick="mostrar('contacto')">Contacto</button>
         </nav>
       </div>
     </div>
   </header>
-
-  <!-- HÉROE con imagen de fondo (LECCIÓN 1) -->
-  <section class="hero">
-    <div class="contenedor">
-      <h1>Equipamiento y <span>servicio técnico</span> para barberías</h1>
-      <p>Venta de máquinas, mantención de sillones y equipos, e instalación integral para locales nuevos o remodelaciones.</p>
-      <a href="#contacto" class="boton">Solicitar asesoría</a>
-    </div>
-  </section>
-
-  <!-- SERVICIOS: tus 3 líneas. Copia una tarjeta para agregar más. -->
-  <section class="servicios contenedor" id="servicios">
-    <h2>Qué hacemos</h2>
-    <p class="subtitulo">Todo lo que tu barbería necesita para funcionar, en un solo lugar.</p>
-    <div class="grilla">
-
-      <div class="tarjeta">
-        <h3>Venta de máquinas e insumos</h3>
-        <p>Máquinas de barbería profesionales, repuestos, cuchillas y accesorios listos para rendir.</p>
+ 
+  <!-- ============================================================
+       PANTALLA 1: INICIO (empieza visible)
+       ============================================================ -->
+  <div class="pantalla visible" id="inicio">
+    <section class="hero">
+      <div class="contenedor">
+        <h1>Equipamiento y <span>servicio técnico</span> para barberías</h1>
+        <p>Venta de máquinas, mantención de sillones y equipos, e instalación integral para locales nuevos o remodelaciones.</p>
+        <button class="boton" onclick="mostrar('contacto')">Solicitar asesoría</button>
       </div>
-
-      <div class="tarjeta">
-        <h3>Mantención y reparación</h3>
-        <p>Servicio técnico de máquinas y sillones: limpieza, ajuste, reparación y customización.</p>
+    </section>
+    <section class="bloque contenedor">
+      <h2>Qué hacemos</h2>
+      <p class="subtitulo">Todo lo que tu barbería necesita, en un solo lugar.</p>
+      <div class="grilla">
+        <div class="tarjeta">
+          <h3>Venta de máquinas e insumos</h3>
+          <p>Máquinas profesionales, repuestos, cuchillas y accesorios.</p>
+        </div>
+        <div class="tarjeta">
+          <h3>Mantención y reparación</h3>
+          <p>Servicio técnico de máquinas y sillones.</p>
+        </div>
+        <div class="tarjeta">
+          <h3>Instalaciones y asesoría</h3>
+          <p>Montaje integral para locales nuevos o remodelaciones.</p>
+        </div>
       </div>
-
-      <div class="tarjeta">
-        <h3>Instalaciones y asesoría</h3>
-        <p>Montaje integral para barberías nuevas o remodelaciones: instalación eléctrica y puesta a punto del local.</p>
+    </section>
+  </div>
+ 
+  <!-- ============================================================
+       PANTALLA 2: VENTA DE MÁQUINAS (oculta hasta que la pidan)
+       ============================================================ -->
+  <div class="pantalla" id="maquinas">
+    <section class="bloque contenedor">
+      <h2>Venta de máquinas e insumos</h2>
+      <p class="subtitulo">Equipos profesionales y repuestos para tu barbería.</p>
+      <div class="grilla">
+        <div class="tarjeta">
+          <h3>Máquinas de corte</h3>
+          <p>Modelos profesionales para uso intensivo. (Aquí pones tus productos reales.)</p>
+        </div>
+        <div class="tarjeta">
+          <h3>Cuchillas y repuestos</h3>
+          <p>Repuestos originales y cuchillas de recambio.</p>
+        </div>
+        <div class="tarjeta">
+          <h3>Accesorios</h3>
+          <p>Peines, aceites, cepillos y más.</p>
+        </div>
       </div>
-
-    </div>
-  </section>
-
-  <!-- BANDA DE ASESORÍA -->
-  <section class="asesoria contenedor" id="asesoria">
-    <h2>¿Abriendo o remodelando tu local?</h2>
-    <p>Te asesoramos de principio a fin: qué equipos necesitas, instalación y puesta en marcha. Cuéntanos tu proyecto.</p>
-    <!-- Reemplaza el número 56900000000 por tu WhatsApp real (código país 56 + número, sin +) -->
-    <a href="https://wa.me/56949430834?text=Hola%20ClipperLab,%20quiero%20asesoría%20para%20mi%20local" class="boton">Escríbenos por WhatsApp</a>
-  </section>
-
-  <!-- PIE DE PÁGINA -->
-  <footer id="contacto">
+      <div style="margin-top:30px;">
+        <button class="boton" onclick="mostrar('contacto')">Consultar por un producto</button>
+      </div>
+    </section>
+  </div>
+ 
+  <!-- ============================================================
+       PANTALLA 3: MANTENCIÓN
+       ============================================================ -->
+  <div class="pantalla" id="mantencion">
+    <section class="bloque contenedor">
+      <h2>Mantención y reparación</h2>
+      <p class="subtitulo">Dejamos tus equipos y sillones como nuevos.</p>
+      <div class="grilla">
+        <div class="tarjeta">
+          <h3>Servicio de máquinas</h3>
+          <p>Limpieza, ajuste, afilado y reparación.</p>
+        </div>
+        <div class="tarjeta">
+          <h3>Reparación de sillones</h3>
+          <p>Tapizado, hidráulica y estructura.</p>
+        </div>
+        <div class="tarjeta">
+          <h3>Customización</h3>
+          <p>Personalizamos tus equipos a tu estilo.</p>
+        </div>
+      </div>
+      <div style="margin-top:30px;">
+        <button class="boton" onclick="mostrar('contacto')">Pedir una mantención</button>
+      </div>
+    </section>
+  </div>
+ 
+  <!-- ============================================================
+       PANTALLA 4: CONTACTO (WhatsApp + formulario)
+       ============================================================ -->
+  <div class="pantalla" id="contacto">
+    <section class="bloque contenedor">
+      <h2>Contáctanos</h2>
+      <p class="subtitulo">Escríbenos directo o déjanos tus datos y te contactamos.</p>
+ 
+      <!-- WhatsApp directo -->
+      <a href="https://wa.me/56949430834?text=Hola%20ClipperLab,%20me%20gustaría%20recibir%20más%20información%20sobre%20sus%20servicios" class="boton">Escríbenos por WhatsApp</a>
+ 
+      <!-- Formulario (recuerda conectar Formspree: reemplaza TU_CODIGO) -->
+      <form class="formulario" action="https://formspree.io/f/TU_CODIGO" method="POST">
+        <div class="fila-doble">
+          <input type="text" name="nombre" placeholder="Nombre" required>
+          <input type="text" name="apellido" placeholder="Apellido" required>
+        </div>
+        <input type="email" name="correo" placeholder="Correo (Gmail)" required>
+        <input type="tel" name="whatsapp" placeholder="WhatsApp (ej. +56 9 1234 5678)" required>
+        <textarea name="motivo" placeholder="Cuéntanos brevemente en qué te podemos ayudar..." required></textarea>
+        <button type="submit" class="boton">Enviar mis datos</button>
+      </form>
+    </section>
+  </div>
+ 
+  <!-- PIE DE PÁGINA (siempre visible) -->
+  <footer>
     <div class="contenedor">
       ClipperLab · Servicio técnico y equipamiento para barberías · Santiago, Chile
     </div>
   </footer>
-
+ 
+  <!-- ============================================================
+       LECCIÓN 3 — JAVASCRIPT (¡la magia!)
+       ------------------------------------------------------------
+       Todo lo que va entre <script> y </script> es JavaScript.
+       Esta función 'mostrar' recibe el nombre de la pantalla a
+       mostrar (ej. 'maquinas') y hace 3 cosas:
+       ============================================================ -->
+  <script>
+    function mostrar(id) {
+      // 1) Oculta TODAS las pantallas (les quita la clase 'visible')
+      const pantallas = document.querySelectorAll('.pantalla');
+      pantallas.forEach(p => p.classList.remove('visible'));
+ 
+      // 2) Muestra SOLO la pantalla pedida (le pone la clase 'visible')
+      document.getElementById(id).classList.add('visible');
+ 
+      // 3) Marca en naranja el botón del menú correspondiente
+      const botones = document.querySelectorAll('.menu button');
+      botones.forEach(b => b.classList.remove('activo'));
+ 
+      // 4) Sube al inicio de la página (para no quedar a mitad de scroll)
+      window.scrollTo(0, 0);
+    }
+  </script>
+ 
 </body>
 </html>
+ 
