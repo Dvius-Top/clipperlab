@@ -274,6 +274,26 @@
       padding: 1px 8px; margin-top: 4px;
     }
  
+ 
+    /* ---- CATÁLOGO VISUAL MEJORADO ---- */
+    .item-precio .precios-doble { text-align: right; white-space: nowrap; }
+    .precio-detalle { font-family: 'Space Grotesk', sans-serif; font-size: 18px; color: var(--voltaje); }
+    .precio-mayor-linea { font-size: 12px; color: var(--gris); margin-top: 2px; }
+    .precio-mayor-linea b { color: var(--hueso); }
+    .ahorro { color: #4ade80; font-size: 11px; font-weight: 600; }
+ 
+    /* Aviso "estás comprando por mayor" en el item del carrito */
+    .aviso-mayor {
+      display: inline-block; background: rgba(74,222,128,0.15);
+      color: #4ade80; font-size: 11px; font-weight: 600;
+      padding: 2px 8px; border-radius: 4px; margin-top: 4px;
+    }
+    .sub-precio { color: var(--hueso); font-size: 13px; }
+    .sub-tachado { color: var(--gris); font-size: 12px; text-decoration: line-through; margin-right: 6px; }
+ 
+    /* Nota de cuánto falta para el precio mayor */
+    .falta-mayor { color: var(--voltaje); font-size: 11px; margin-top: 3px; }
+ 
   </style>
 </head>
  
@@ -524,7 +544,7 @@
     </div>
     <div class="panel-pie">
       <div class="total-linea"><span>Total</span><span class="monto" id="totalCarrito">$0</span></div>
-      <button class="boton" onclick="alert('En la próxima capa: enviar pedido por WhatsApp')">Finalizar pedido</button>
+      <button class="boton" onclick="enviarPedido()">Finalizar pedido por WhatsApp</button>
     </div>
   </div>
  
@@ -611,17 +631,25 @@
       let html = '';
       lista.forEach(p => {
         const precioTxt = p.precio > 0 ? '$' + p.precio.toLocaleString('es-CL') : 'A cotizar';
-        // Nota de mayorista (si tiene precio mayor definido)
-        const notaMayor = (p.precioMayor > 0 && p.minMayor > 0)
-          ? `<span class="badge-mayor">Por mayor: $${p.precioMayor.toLocaleString('es-CL')} c/u desde ${p.minMayor}</span>`
-          : '';
+        // Bloque de precio mayorista visual con ahorro
+        let bloqueMayor = '';
+        if (p.precioMayor > 0 && p.minMayor > 0) {
+          const ahorro = p.precio - p.precioMayor;
+          bloqueMayor = `
+            <div class="precio-mayor-linea">
+              Por mayor (desde ${p.minMayor}): <b>$${p.precioMayor.toLocaleString('es-CL')}</b> c/u
+              <span class="ahorro">ahorras $${ahorro.toLocaleString('es-CL')}</span>
+            </div>`;
+        }
         html += `
           <div class="item-precio">
             <div class="info">
               <h4>${p.nombre}</h4>
-              ${notaMayor}
             </div>
-            <span class="precio">${precioTxt}</span>
+            <div class="precios-doble">
+              <div class="precio-detalle">${precioTxt}</div>
+              ${bloqueMayor}
+            </div>
             <button class="pedir" onclick="agregarCarrito('${p.nombre}', ${p.precio})">Agregar</button>
           </div>`;
       });
@@ -722,15 +750,37 @@
           precioUnit = info.precioMayor;
           esMayor = true;
         }
-        total += precioUnit * p.cantidad;
-        const precioTxt = precioUnit > 0
-          ? ('$' + (precioUnit * p.cantidad).toLocaleString('es-CL') + (esMayor ? ' · mayorista' : ''))
-          : 'A cotizar';
+        const subtotal = precioUnit * p.cantidad;
+        total += subtotal;
+ 
+        // Línea de precio del item (con tachado si aplica mayorista)
+        let lineaPrecio = '';
+        if (precioUnit > 0) {
+          if (esMayor) {
+            const detalleTotal = p.precio * p.cantidad;
+            lineaPrecio = `<span class="sub-tachado">$${detalleTotal.toLocaleString('es-CL')}</span><span class="sub-precio">$${subtotal.toLocaleString('es-CL')}</span>`;
+          } else {
+            lineaPrecio = `<span class="sub-precio">$${subtotal.toLocaleString('es-CL')}</span>`;
+          }
+        } else {
+          lineaPrecio = '<span class="sub-precio">A cotizar</span>';
+        }
+ 
+        // Aviso: ya es mayorista, o cuánto falta para serlo
+        let avisoMayor = '';
+        if (esMayor) {
+          avisoMayor = `<div class="aviso-mayor">✓ Precio por mayor aplicado</div>`;
+        } else if (info && info.precioMayor > 0 && info.minMayor > 0) {
+          const faltan = info.minMayor - p.cantidad;
+          avisoMayor = `<div class="falta-mayor">Agrega ${faltan} más y pagas precio por mayor</div>`;
+        }
+ 
         html += `
           <div class="item-carrito">
             <div>
               <div class="nombre">${p.nombre}</div>
-              <div class="sub">${precioTxt}</div>
+              <div class="sub">${lineaPrecio}</div>
+              ${avisoMayor}
             </div>
             <div class="cantidad-ctrl">
               <button onclick="cambiarCantidad('${p.nombre}', -1)">-</button>
@@ -741,6 +791,39 @@
       });
       cont.innerHTML = html;
       totalEl.textContent = '$' + total.toLocaleString('es-CL');
+    }
+ 
+ 
+    // ---- FINALIZAR: arma el mensaje de WhatsApp con todo el detalle ----
+    function enviarPedido() {
+      if (carrito.length === 0) { alert("Tu carrito está vacío."); return; }
+ 
+      const numero = "56949430834";
+      let mensaje = "Hola ClipperLab, quiero hacer este pedido:%0A%0A";
+      let total = 0;
+      let hayMayor = false;
+ 
+      carrito.forEach(p => {
+        const info = buscarProducto(p.nombre);
+        let precioUnit = p.precio;
+        let esMayor = false;
+        if (info && info.precioMayor > 0 && info.minMayor > 0 && p.cantidad >= info.minMayor) {
+          precioUnit = info.precioMayor; esMayor = true; hayMayor = true;
+        }
+        const subtotal = precioUnit * p.cantidad;
+        total += subtotal;
+ 
+        // Línea por producto: cantidad x nombre — subtotal (marca si es mayorista)
+        const precioLinea = precioUnit > 0 ? ("$" + subtotal.toLocaleString("es-CL")) : "a cotizar";
+        const etiqueta = esMayor ? " (por mayor)" : "";
+        mensaje += "• " + p.cantidad + "x " + p.nombre + etiqueta + " — " + precioLinea + "%0A";
+      });
+ 
+      mensaje += "%0ATotal: $" + total.toLocaleString("es-CL");
+      if (hayMayor) { mensaje += "%0A(incluye precios por mayor)"; }
+      mensaje += "%0A%0A¿Me confirman disponibilidad y forma de pago?";
+ 
+      window.open("https://wa.me/" + numero + "?text=" + mensaje, "_blank");
     }
  
     function mostrar(id) {
