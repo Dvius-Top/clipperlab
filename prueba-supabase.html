@@ -1,33 +1,69 @@
 <!-- ============================================================
-     PRUEBA DE CONEXIÓN CON SUPABASE
+     AGENDA MENSUAL — ClipperLab (conectada a Supabase)
      ============================================================
-     Esta página de prueba se conecta a tu base de datos real:
-     - Guarda una reserva (nombre + hora) en la tabla 'reservas'
-     - Lee y muestra todas las reservas guardadas
-     Si esto funciona, tu página YA habla con la base de datos.
+     Flujo del sistema:
+       1. Eliges un TRABAJADOR (Marcos / Juan)
+       2. Eliges un DÍA en el calendario
+       3. El sistema muestra las HORAS: libres (verde) u ocupadas (rojo)
+          -> las ocupadas las lee de la base de datos real
+       4. Eliges una hora libre + escribes tu nombre -> RESERVAR
+          -> guarda en la base y bloquea ese cupo
+     La regla del "no topar": una fecha+trabajador+hora es única.
 ============================================================ -->
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prueba Supabase — ClipperLab</title>
-
-  <!-- Traemos la librería de Supabase (el "traductor" que habla con tu base de datos) -->
+  <title>Agenda — ClipperLab</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
-    :root { --grafito:#15171c; --panel:#1d2028; --hueso:#edeae4; --voltaje:#ff7a2f; --gris:#9aa0a8; }
+    :root { --grafito:#15171c; --panel:#1d2028; --hueso:#edeae4; --voltaje:#ff7a2f; --gris:#9aa0a8; --verde:#4ade80; --rojo:#f4544f; }
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:var(--grafito); color:var(--hueso); font-family:'Inter',system-ui,sans-serif; padding:40px 20px; line-height:1.6; }
-    .caja { max-width:520px; margin:0 auto; }
-    h1 { font-size:28px; margin-bottom:6px; }
+    body { background:var(--grafito); color:var(--hueso); font-family:'Inter',system-ui,sans-serif; padding:30px 18px; line-height:1.5; }
+    .caja { max-width:640px; margin:0 auto; }
+    h1 { font-size:26px; margin-bottom:4px; }
     h1 span { color:var(--voltaje); }
-    .sub { color:var(--gris); margin-bottom:28px; font-size:15px; }
+    .sub { color:var(--gris); margin-bottom:24px; font-size:14px; }
+    h2 { font-size:16px; margin:24px 0 10px; }
+
+    .selector { display:flex; gap:10px; flex-wrap:wrap; }
+    .selector button {
+      background:var(--panel); border:1px solid rgba(255,255,255,0.12); color:var(--hueso);
+      padding:10px 20px; border-radius:6px; cursor:pointer; font-size:14px; font-family:inherit;
+    }
+    .selector button.activo { background:var(--voltaje); color:var(--grafito); border-color:var(--voltaje); }
+
+    /* Calendario */
+    .cal-cab { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .cal-cab button { background:none; border:1px solid rgba(255,255,255,0.12); color:var(--hueso); border-radius:6px; padding:6px 12px; cursor:pointer; }
+    .cal-mes { font-weight:600; text-transform:capitalize; }
+    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+    .cal-dia-nom { text-align:center; color:var(--gris); font-size:12px; padding:4px 0; }
+    .cal-dia {
+      aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+      background:var(--panel); border:1px solid rgba(255,255,255,0.08); border-radius:6px;
+      cursor:pointer; font-size:14px;
+    }
+    .cal-dia:hover { border-color:var(--voltaje); }
+    .cal-dia.vacio { background:transparent; border:none; cursor:default; }
+    .cal-dia.elegido { background:var(--voltaje); color:var(--grafito); border-color:var(--voltaje); font-weight:600; }
+    .cal-dia.pasado { opacity:0.3; cursor:default; }
+    .cal-dia.pasado:hover { border-color:rgba(255,255,255,0.08); }
+
+    /* Horas */
+    .horas { display:flex; flex-wrap:wrap; gap:8px; }
+    .hora {
+      padding:10px 16px; border-radius:6px; cursor:pointer; font-size:14px;
+      border:1px solid rgba(255,255,255,0.12); background:var(--panel); color:var(--hueso);
+    }
+    .hora.libre:hover { border-color:var(--verde); }
+    .hora.elegida { background:var(--verde); color:var(--grafito); border-color:var(--verde); font-weight:600; }
+    .hora.ocupada { background:rgba(244,84,79,0.12); color:var(--rojo); border-color:rgba(244,84,79,0.3); cursor:not-allowed; text-decoration:line-through; }
+
     input {
       width:100%; background:var(--panel); border:1px solid rgba(255,255,255,0.12);
-      border-radius:6px; padding:14px 16px; color:var(--hueso); font-size:15px; margin-bottom:12px;
+      border-radius:6px; padding:12px 14px; color:var(--hueso); font-size:15px; margin:14px 0;
     }
     input:focus { outline:none; border-color:var(--voltaje); }
     .boton {
@@ -35,90 +71,175 @@
       padding:14px 28px; border-radius:6px; cursor:pointer; font-size:15px; width:100%;
     }
     .boton:hover { opacity:0.9; }
-    .lista { margin-top:32px; }
-    .lista h2 { font-size:18px; margin-bottom:14px; }
-    .reserva {
-      background:var(--panel); border-left:3px solid var(--voltaje);
-      padding:14px 18px; border-radius:6px; margin-bottom:10px;
-    }
-    .reserva .hora { color:var(--voltaje); font-weight:600; }
-    .estado { font-size:13px; color:var(--gris); margin-top:8px; min-height:18px; }
+    .estado { font-size:14px; margin-top:12px; min-height:20px; }
+    .paso { color:var(--gris); font-size:13px; }
   </style>
 </head>
 <body>
   <div class="caja">
-    <h1>Prueba <span>Supabase</span></h1>
-    <p class="sub">Guarda una reserva y mírala aparecer desde tu base de datos real.</p>
+    <h1>Agenda <span>ClipperLab</span></h1>
+    <p class="sub">Elige con quién, qué día y a qué hora atenderte.</p>
 
-    <input type="text" id="nombre" placeholder="Nombre del cliente">
-    <input type="text" id="hora" placeholder="Hora (ej. 14:00)">
-    <button class="boton" onclick="guardarReserva()">Guardar reserva</button>
-    <p class="estado" id="estado"></p>
+    <h2>1. ¿Con quién?</h2>
+    <div class="selector" id="selTrabajador"></div>
 
-    <div class="lista">
-      <h2>Reservas guardadas</h2>
-      <div id="listaReservas">Cargando...</div>
+    <h2>2. Elige el día</h2>
+    <div class="cal-cab">
+      <button onclick="cambiarMes(-1)">‹</button>
+      <span class="cal-mes" id="calMes"></span>
+      <button onclick="cambiarMes(1)">›</button>
     </div>
+    <div class="cal-grid" id="calGrid"></div>
+
+    <h2>3. Elige la hora</h2>
+    <p class="paso" id="pasoHoras">Primero elige trabajador y día.</p>
+    <div class="horas" id="listaHoras"></div>
+
+    <div id="zonaReserva" style="display:none;">
+      <input type="text" id="nombreCliente" placeholder="Tu nombre">
+      <button class="boton" onclick="reservar()">Confirmar reserva</button>
+    </div>
+    <p class="estado" id="estado"></p>
   </div>
 
   <script>
-    // ============================================================
-    // 1) CONEXIÓN A TU BASE DE DATOS (tus dos llaves)
-    // ============================================================
+    // ===== CONEXIÓN =====
     const SUPABASE_URL = "https://ugchyfulwkzmxwqjwkwp.supabase.co";
     const SUPABASE_KEY = "sb_publishable__WRIUNVBq6-nxTAwPD360g_5UICkBn_";
-
-    // Creamos el "cliente" que habla con Supabase
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // ============================================================
-    // 2) GUARDAR una reserva (ESCRIBIR en la base de datos)
-    // ============================================================
-    async function guardarReserva() {
-      const nombre = document.getElementById('nombre').value;
-      const hora = document.getElementById('hora').value;
+    // ===== DATOS DE CONFIGURACIÓN (edita aquí) =====
+    const TRABAJADORES = ["Marcos", "Juan"];              // barberos
+    const HORAS = ["09:00","10:00","11:00","12:00","15:00","16:00","17:00"]; // horario del día
+
+    // ===== ESTADO (la memoria del sistema) =====
+    let trabajadorElegido = "";
+    let fechaElegida = "";     // formato "2026-10-15"
+    let horaElegida = "";
+    let fechaVista = new Date(); // mes que se muestra en el calendario
+    let ocupadas = [];         // horas ocupadas del día/trabajador elegido
+
+    // ===== 1) BOTONES DE TRABAJADOR =====
+    function dibujarTrabajadores() {
+      const cont = document.getElementById('selTrabajador');
+      cont.innerHTML = TRABAJADORES.map(t =>
+        `<button onclick="elegirTrabajador('${t}')">${t}</button>`
+      ).join('');
+    }
+    function elegirTrabajador(t) {
+      trabajadorElegido = t;
+      document.querySelectorAll('#selTrabajador button').forEach(b => {
+        b.classList.toggle('activo', b.textContent === t);
+      });
+      if (fechaElegida) cargarHoras(); // si ya había día, recarga horas
+    }
+
+    // ===== 2) CALENDARIO =====
+    const NOMBRES_DIA = ["Do","Lu","Ma","Mi","Ju","Vi","Sa"];
+    function dibujarCalendario() {
+      const año = fechaVista.getFullYear();
+      const mes = fechaVista.getMonth();
+      document.getElementById('calMes').textContent =
+        fechaVista.toLocaleDateString('es-CL', { month:'long', year:'numeric' });
+
+      const primerDia = new Date(año, mes, 1).getDay();   // qué día de semana empieza
+      const diasEnMes = new Date(año, mes+1, 0).getDate(); // cuántos días tiene el mes
+      const hoy = new Date(); hoy.setHours(0,0,0,0);
+
+      let html = NOMBRES_DIA.map(d => `<div class="cal-dia-nom">${d}</div>`).join('');
+      for (let i=0; i<primerDia; i++) html += `<div class="cal-dia vacio"></div>`;
+      for (let d=1; d<=diasEnMes; d++) {
+        const fecha = new Date(año, mes, d);
+        const fechaTxt = `${año}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const esPasado = fecha < hoy;
+        const clase = esPasado ? 'cal-dia pasado' : 'cal-dia';
+        const onclick = esPasado ? '' : `onclick="elegirDia('${fechaTxt}', this)"`;
+        html += `<div class="${clase}" ${onclick}>${d}</div>`;
+      }
+      document.getElementById('calGrid').innerHTML = html;
+    }
+    function cambiarMes(delta) {
+      fechaVista.setMonth(fechaVista.getMonth() + delta);
+      dibujarCalendario();
+    }
+    function elegirDia(fechaTxt, elem) {
+      fechaElegida = fechaTxt;
+      document.querySelectorAll('.cal-dia').forEach(c => c.classList.remove('elegido'));
+      elem.classList.add('elegido');
+      cargarHoras();
+    }
+
+    // ===== 3) HORAS: leer ocupadas de la base y dibujar =====
+    async function cargarHoras() {
+      const paso = document.getElementById('pasoHoras');
+      const cont = document.getElementById('listaHoras');
+      document.getElementById('zonaReserva').style.display = 'none';
+      horaElegida = "";
+
+      if (!trabajadorElegido) { paso.textContent = "Elige primero un trabajador."; cont.innerHTML=''; return; }
+      if (!fechaElegida)      { paso.textContent = "Elige un día en el calendario."; cont.innerHTML=''; return; }
+
+      paso.textContent = `Horas de ${trabajadorElegido} para el ${fechaElegida}:`;
+
+      // Consultar reservas ya existentes de ese trabajador ese día
+      const { data, error } = await db.from('reservas')
+        .select('hora')
+        .eq('trabajador', trabajadorElegido)
+        .eq('fecha', fechaElegida);
+
+      if (error) { cont.innerHTML = "Error: " + error.message; return; }
+      ocupadas = data.map(r => r.hora); // lista de horas ya tomadas
+
+      // Dibujar cada hora: ocupada o libre
+      cont.innerHTML = HORAS.map(h => {
+        if (ocupadas.includes(h)) {
+          return `<div class="hora ocupada">${h}</div>`;
+        }
+        return `<div class="hora libre" onclick="elegirHora('${h}', this)">${h}</div>`;
+      }).join('');
+    }
+    function elegirHora(h, elem) {
+      horaElegida = h;
+      document.querySelectorAll('.hora').forEach(x => x.classList.remove('elegida'));
+      elem.classList.add('elegida');
+      document.getElementById('zonaReserva').style.display = 'block';
+    }
+
+    // ===== 4) RESERVAR: guardar y bloquear =====
+    async function reservar() {
+      const nombre = document.getElementById('nombreCliente').value;
       const estado = document.getElementById('estado');
+      if (!nombre) { estado.textContent = "Escribe tu nombre."; return; }
+      if (!horaElegida) { estado.textContent = "Elige una hora."; return; }
 
-      // Validación simple
-      if (!nombre || !hora) { estado.textContent = "Escribe nombre y hora."; return; }
+      estado.textContent = "Reservando...";
 
-      estado.textContent = "Guardando...";
+      // Doble chequeo: ¿alguien tomó esta hora recién? (evita topar)
+      const { data: check } = await db.from('reservas').select('hora')
+        .eq('trabajador', trabajadorElegido).eq('fecha', fechaElegida).eq('hora', horaElegida);
+      if (check && check.length > 0) {
+        estado.textContent = "Uy, esa hora se acaba de ocupar. Elige otra.";
+        cargarHoras();
+        return;
+      }
 
-      // Insertamos la fila en la tabla 'reservas'
-      const { error } = await db.from('reservas').insert({ nombre: nombre, hora: hora });
+      // Guardar la reserva
+      const { error } = await db.from('reservas').insert({
+        nombre: nombre, hora: horaElegida, fecha: fechaElegida, trabajador: trabajadorElegido
+      });
 
       if (error) {
         estado.textContent = "Error: " + error.message;
       } else {
-        estado.textContent = "✓ Guardado en la base de datos";
-        document.getElementById('nombre').value = "";
-        document.getElementById('hora').value = "";
-        cargarReservas(); // recarga la lista
+        estado.textContent = `✓ Reservado: ${trabajadorElegido}, ${fechaElegida} a las ${horaElegida}`;
+        document.getElementById('nombreCliente').value = "";
+        cargarHoras(); // recarga: la hora reservada ahora aparece ocupada
       }
     }
 
-    // ============================================================
-    // 3) LEER todas las reservas (LEER de la base de datos)
-    // ============================================================
-    async function cargarReservas() {
-      const cont = document.getElementById('listaReservas');
-
-      // Pedimos todas las filas de 'reservas', ordenadas por fecha
-      const { data, error } = await db.from('reservas').select('*');
-
-      if (error) { cont.innerHTML = "Error al leer: " + error.message; return; }
-      if (!data || data.length === 0) { cont.innerHTML = "<p style='color:var(--gris)'>Aún no hay reservas.</p>"; return; }
-
-      // Dibujamos cada reserva
-      let html = '';
-      data.forEach(r => {
-        html += `<div class="reserva"><strong>${r.nombre}</strong> — <span class="hora">${r.hora}</span></div>`;
-      });
-      cont.innerHTML = html;
-    }
-
-    // Al abrir la página, cargamos las reservas existentes
-    cargarReservas();
+    // ===== ARRANQUE =====
+    dibujarTrabajadores();
+    dibujarCalendario();
   </script>
 </body>
 </html>
