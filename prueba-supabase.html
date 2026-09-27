@@ -1,0 +1,124 @@
+<!-- ============================================================
+     PRUEBA DE CONEXIÓN CON SUPABASE
+     ============================================================
+     Esta página de prueba se conecta a tu base de datos real:
+     - Guarda una reserva (nombre + hora) en la tabla 'reservas'
+     - Lee y muestra todas las reservas guardadas
+     Si esto funciona, tu página YA habla con la base de datos.
+============================================================ -->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prueba Supabase — ClipperLab</title>
+
+  <!-- Traemos la librería de Supabase (el "traductor" que habla con tu base de datos) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root { --grafito:#15171c; --panel:#1d2028; --hueso:#edeae4; --voltaje:#ff7a2f; --gris:#9aa0a8; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--grafito); color:var(--hueso); font-family:'Inter',system-ui,sans-serif; padding:40px 20px; line-height:1.6; }
+    .caja { max-width:520px; margin:0 auto; }
+    h1 { font-size:28px; margin-bottom:6px; }
+    h1 span { color:var(--voltaje); }
+    .sub { color:var(--gris); margin-bottom:28px; font-size:15px; }
+    input {
+      width:100%; background:var(--panel); border:1px solid rgba(255,255,255,0.12);
+      border-radius:6px; padding:14px 16px; color:var(--hueso); font-size:15px; margin-bottom:12px;
+    }
+    input:focus { outline:none; border-color:var(--voltaje); }
+    .boton {
+      background:var(--voltaje); color:var(--grafito); font-weight:600; border:none;
+      padding:14px 28px; border-radius:6px; cursor:pointer; font-size:15px; width:100%;
+    }
+    .boton:hover { opacity:0.9; }
+    .lista { margin-top:32px; }
+    .lista h2 { font-size:18px; margin-bottom:14px; }
+    .reserva {
+      background:var(--panel); border-left:3px solid var(--voltaje);
+      padding:14px 18px; border-radius:6px; margin-bottom:10px;
+    }
+    .reserva .hora { color:var(--voltaje); font-weight:600; }
+    .estado { font-size:13px; color:var(--gris); margin-top:8px; min-height:18px; }
+  </style>
+</head>
+<body>
+  <div class="caja">
+    <h1>Prueba <span>Supabase</span></h1>
+    <p class="sub">Guarda una reserva y mírala aparecer desde tu base de datos real.</p>
+
+    <input type="text" id="nombre" placeholder="Nombre del cliente">
+    <input type="text" id="hora" placeholder="Hora (ej. 14:00)">
+    <button class="boton" onclick="guardarReserva()">Guardar reserva</button>
+    <p class="estado" id="estado"></p>
+
+    <div class="lista">
+      <h2>Reservas guardadas</h2>
+      <div id="listaReservas">Cargando...</div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // 1) CONEXIÓN A TU BASE DE DATOS (tus dos llaves)
+    // ============================================================
+    const SUPABASE_URL = "https://ugchyfulwkzmxwqjwkwp.supabase.co";
+    const SUPABASE_KEY = "sb_publishable__WRIUNVBq6-nxTAwPD360g_5UICkBn_";
+
+    // Creamos el "cliente" que habla con Supabase
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ============================================================
+    // 2) GUARDAR una reserva (ESCRIBIR en la base de datos)
+    // ============================================================
+    async function guardarReserva() {
+      const nombre = document.getElementById('nombre').value;
+      const hora = document.getElementById('hora').value;
+      const estado = document.getElementById('estado');
+
+      // Validación simple
+      if (!nombre || !hora) { estado.textContent = "Escribe nombre y hora."; return; }
+
+      estado.textContent = "Guardando...";
+
+      // Insertamos la fila en la tabla 'reservas'
+      const { error } = await db.from('reservas').insert({ nombre: nombre, hora: hora });
+
+      if (error) {
+        estado.textContent = "Error: " + error.message;
+      } else {
+        estado.textContent = "✓ Guardado en la base de datos";
+        document.getElementById('nombre').value = "";
+        document.getElementById('hora').value = "";
+        cargarReservas(); // recarga la lista
+      }
+    }
+
+    // ============================================================
+    // 3) LEER todas las reservas (LEER de la base de datos)
+    // ============================================================
+    async function cargarReservas() {
+      const cont = document.getElementById('listaReservas');
+
+      // Pedimos todas las filas de 'reservas', ordenadas por fecha
+      const { data, error } = await db.from('reservas').select('*').order('created_at', { ascending: false });
+
+      if (error) { cont.innerHTML = "Error al leer: " + error.message; return; }
+      if (!data || data.length === 0) { cont.innerHTML = "<p style='color:var(--gris)'>Aún no hay reservas.</p>"; return; }
+
+      // Dibujamos cada reserva
+      let html = '';
+      data.forEach(r => {
+        html += `<div class="reserva"><strong>${r.nombre}</strong> — <span class="hora">${r.hora}</span></div>`;
+      });
+      cont.innerHTML = html;
+    }
+
+    // Al abrir la página, cargamos las reservas existentes
+    cargarReservas();
+  </script>
+</body>
+</html>
