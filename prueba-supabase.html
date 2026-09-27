@@ -104,7 +104,7 @@
       const cont = document.getElementById('listaReservas');
 
       // Pedimos todas las filas de 'reservas', ordenadas por fecha
-      const { data, error } = await db.from('reservas').select('*').order('created_at', { ascending: false });
+      const { data, error } = await db.from('reservas').select('*');
 
       if (error) { cont.innerHTML = "Error al leer: " + error.message; return; }
       if (!data || data.length === 0) { cont.innerHTML = "<p style='color:var(--gris)'>Aún no hay reservas.</p>"; return; }
