@@ -97,9 +97,14 @@
 
     <div id="zonaReserva" style="display:none;">
       <input type="text" id="nombreCliente" placeholder="Tu nombre">
+      <input type="email" id="correoCliente" placeholder="Tu correo (Gmail)">
+      <input type="tel" id="telefonoCliente" placeholder="Tu WhatsApp (ej. +56 9 1234 5678)">
+      <textarea id="descripcionCliente" placeholder="Cuéntanos qué necesitas..." style="width:100%;background:var(--panel);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:12px 14px;color:var(--hueso);font-size:15px;margin:14px 0;min-height:90px;font-family:inherit;resize:vertical;"></textarea>
       <button class="boton" onclick="reservar()">Confirmar reserva</button>
     </div>
     <p class="estado" id="estado"></p>
+
+    <div id="conteo" style="margin-top:36px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.1);color:var(--gris);font-size:14px;"></div>
   </div>
 
   <script>
@@ -208,8 +213,15 @@
     // ===== 4) RESERVAR: guardar y bloquear =====
     async function reservar() {
       const nombre = document.getElementById('nombreCliente').value;
+      const correo = document.getElementById('correoCliente').value;
+      const telefono = document.getElementById('telefonoCliente').value;
+      const descripcion = document.getElementById('descripcionCliente').value;
       const estado = document.getElementById('estado');
-      if (!nombre) { estado.textContent = "Escribe tu nombre."; return; }
+
+      // Validaciones
+      if (!nombre)  { estado.textContent = "Escribe tu nombre."; return; }
+      if (!correo)  { estado.textContent = "Escribe tu correo."; return; }
+      if (!telefono){ estado.textContent = "Escribe tu WhatsApp."; return; }
       if (!horaElegida) { estado.textContent = "Elige una hora."; return; }
 
       estado.textContent = "Reservando...";
@@ -223,23 +235,58 @@
         return;
       }
 
-      // Guardar la reserva
+      // Guardar la reserva en la base de datos (con todos los datos del cliente)
       const { error } = await db.from('reservas').insert({
-        nombre: nombre, hora: horaElegida, fecha: fechaElegida, trabajador: trabajadorElegido
+        nombre: nombre, hora: horaElegida, fecha: fechaElegida, trabajador: trabajadorElegido,
+        correo: correo, telefono: telefono, descripcion: descripcion
       });
 
       if (error) {
         estado.textContent = "Error: " + error.message;
-      } else {
-        estado.textContent = `✓ Reservado: ${trabajadorElegido}, ${fechaElegida} a las ${horaElegida}`;
-        document.getElementById('nombreCliente').value = "";
-        cargarHoras(); // recarga: la hora reservada ahora aparece ocupada
+        return;
       }
+
+      // ENVIAR CORREO AL ADMINISTRADOR (a ti) vía Formspree
+      // Reemplaza xzezawgo por tu código si es otro; es el mismo de ClipperLab.
+      try {
+        await fetch("https://formspree.io/f/xzezawgo", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({
+            _subject: "Nueva reserva ClipperLab",
+            trabajador: trabajadorElegido,
+            fecha: fechaElegida,
+            hora: horaElegida,
+            nombre: nombre,
+            correo: correo,
+            telefono: telefono,
+            descripcion: descripcion
+          })
+        });
+      } catch (e) { /* si falla el correo, la reserva igual quedó guardada */ }
+
+      estado.textContent = `✓ Reservado: ${trabajadorElegido}, ${fechaElegida} a las ${horaElegida}`;
+      // Limpiar campos
+      document.getElementById('nombreCliente').value = "";
+      document.getElementById('correoCliente').value = "";
+      document.getElementById('telefonoCliente').value = "";
+      document.getElementById('descripcionCliente').value = "";
+      cargarHoras();       // recarga: la hora reservada aparece ocupada
+      cargarConteo();      // actualiza el conteo
+    }
+
+    // ===== CONTEO: total de reservas en la base =====
+    async function cargarConteo() {
+      const cont = document.getElementById('conteo');
+      const { count, error } = await db.from('reservas').select('*', { count: 'exact', head: true });
+      if (error) { cont.textContent = ""; return; }
+      cont.innerHTML = `<strong style="color:var(--hueso)">Total de reservas registradas:</strong> ${count}`;
     }
 
     // ===== ARRANQUE =====
     dibujarTrabajadores();
     dibujarCalendario();
+    cargarConteo();
   </script>
 </body>
 </html>
