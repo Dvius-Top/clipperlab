@@ -73,6 +73,12 @@
     .boton:hover { opacity:0.9; }
     .estado { font-size:14px; margin-top:12px; min-height:20px; }
     .paso { color:var(--gris); font-size:13px; }
+
+    .franja { color:var(--voltaje); font-size:13px; font-weight:600; margin:16px 0 8px; text-transform:uppercase; letter-spacing:0.5px; }
+    .fila-horas { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+    .selector button { transition:all 0.15s; }
+    .cal-dia { transition:all 0.15s; }
+
   </style>
 </head>
 <body>
@@ -195,13 +201,30 @@
       if (error) { cont.innerHTML = "Error: " + error.message; return; }
       ocupadas = data.map(r => r.hora); // lista de horas ya tomadas
 
-      // Dibujar cada hora: ocupada o libre
-      cont.innerHTML = HORAS.map(h => {
-        if (ocupadas.includes(h)) {
-          return `<div class="hora ocupada">${h}</div>`;
-        }
-        return `<div class="hora libre" onclick="elegirHora('${h}', this)">${h}</div>`;
-      }).join('');
+      // SOLO las horas LIBRES (quitamos las ocupadas de la vista)
+      const libres = HORAS.filter(h => !ocupadas.includes(h));
+
+      if (libres.length === 0) {
+        cont.innerHTML = '<p class="paso">No quedan horas disponibles este día. Elige otro.</p>';
+        return;
+      }
+
+      // Separar en Mañana (antes de 13:00) y Tarde (13:00 en adelante)
+      const manana = libres.filter(h => parseInt(h) < 13);
+      const tarde  = libres.filter(h => parseInt(h) >= 13);
+
+      let html = '';
+      if (manana.length) {
+        html += '<div class="franja">Mañana</div><div class="fila-horas">';
+        html += manana.map(h => `<div class="hora libre" onclick="elegirHora('${h}', this)">${h}</div>`).join('');
+        html += '</div>';
+      }
+      if (tarde.length) {
+        html += '<div class="franja">Tarde</div><div class="fila-horas">';
+        html += tarde.map(h => `<div class="hora libre" onclick="elegirHora('${h}', this)">${h}</div>`).join('');
+        html += '</div>';
+      }
+      cont.innerHTML = html;
     }
     function elegirHora(h, elem) {
       horaElegida = h;
