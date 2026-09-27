@@ -123,6 +123,32 @@
     .resumen-form { font-size:13px; color:var(--gris); margin-top:8px; }
     .ventana { max-width:480px; }
 
+    /* Fase 4: pagos, caja, avisos */
+    .pagos { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:10px; }
+    .pagos .chip { padding:6px 12px; }
+    .chips-periodo { display:flex; gap:6px; }
+    .grid-caja { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:4px; }
+    .barra-metodo { margin:10px 0; }
+    .barra-metodo .fila { display:flex; justify-content:space-between; font-size:14px; margin-bottom:4px; }
+    .barra-metodo .fila span:last-child { font-weight:600; }
+    .barra-metodo .pista { height:8px; background:var(--panel2); border-radius:4px; overflow:hidden; }
+    .barra-metodo .relleno { height:100%; border-radius:4px; }
+    .tabla-caja { width:100%; border-collapse:collapse; font-size:13px; }
+    .tabla-caja th { text-align:left; color:var(--gris); font-weight:500; padding:6px 8px; border-bottom:1px solid var(--linea); white-space:nowrap; }
+    .tabla-caja td { padding:7px 8px; border-bottom:1px solid var(--linea); white-space:nowrap; }
+    .tabla-caja td.num, .tabla-caja th.num { text-align:right; }
+    .tabla-caja tr.total td { font-weight:700; border-bottom:none; }
+    .toasts { position:fixed; right:16px; bottom:16px; display:flex; flex-direction:column; gap:10px; z-index:50; max-width:min(360px, calc(100vw - 32px)); }
+    .toast { background:var(--panel); border:1px solid rgba(255,122,47,0.5); border-left:4px solid var(--voltaje); border-radius:12px; padding:12px 14px; box-shadow:0 12px 40px rgba(0,0,0,0.55); font-size:13px; cursor:pointer; animation:entra .25s ease-out; }
+    .toast b { display:block; font-size:14px; margin-bottom:2px; }
+    .toast.cancelada, .toast.eliminada { border-left-color:var(--rojo); border-color:rgba(248,113,113,0.5); }
+    .toast.bloqueo, .toast.desbloqueo { border-left-color:var(--gris); border-color:rgba(154,160,168,0.5); }
+    @keyframes entra { from { transform:translateY(12px); opacity:0; } to { transform:none; opacity:1; } }
+    .en-vivo { display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--gris); }
+    .en-vivo i { width:7px; height:7px; border-radius:50%; background:var(--gris); display:inline-block; }
+    .en-vivo.on i { background:var(--verde); box-shadow:0 0 6px var(--verde); }
+    @media (max-width:720px){ .grid-caja { grid-template-columns:1fr; } }
+
     /* Lista */
     .filtros { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; align-items:center; }
     .chip { background:var(--panel2); border:1px solid rgba(255,255,255,0.12); color:var(--hueso); padding:7px 14px; border-radius:20px; cursor:pointer; font-size:13px; font-family:inherit; }
@@ -196,8 +222,15 @@
         <label for="loginClave">Contraseña</label>
         <input type="password" id="loginClave" autocomplete="current-password" onkeydown="if(event.key==='Enter')entrar()">
         <button class="boton ancho" onclick="entrar()">Entrar</button>
-        <button class="link" onclick="recuperarClave()">¿Olvidaste tu contraseña?</button>
+        <button class="link" onclick="mostrarCodigo()">¿Olvidaste tu contraseña? Entra con un código a tu correo</button>
         <p class="estado" id="estadoLogin"></p>
+        <div id="cajaCodigo" class="oculto" style="margin-top:6px;border-top:1px solid var(--linea);padding-top:12px;">
+          <p class="nota">Te enviaremos un código de acceso al correo de arriba. Después podrás crear una contraseña nueva en <b>Mi cuenta</b>.</p>
+          <button class="boton-linea" style="margin-top:10px;" onclick="enviarCodigo()">Enviar código</button>
+          <label for="loginCodigo">Código recibido</label>
+          <input id="loginCodigo" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" onkeydown="if(event.key==='Enter')entrarConCodigo()">
+          <button class="boton ancho" onclick="entrarConCodigo()">Entrar con código</button>
+        </div>
       </div>
     </section>
 
@@ -234,6 +267,7 @@
           </div>
         </div>
         <div style="display:flex; gap:8px; align-items:flex-start; position:relative;">
+          <span class="en-vivo" id="enVivo" title="Verde = notificaciones en tiempo real conectadas" style="align-self:center;"><i></i>en vivo</span>
           <button class="campana" id="btnCampana" onclick="toggleNotif()" aria-label="Notificaciones">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
             <span class="contador oculto" id="nNoLeidas"></span>
@@ -243,6 +277,7 @@
             <div id="listaNotif"></div>
           </div>
           <a class="boton-linea" href="agenda.html">Ver agenda pública</a>
+          <button class="boton-linea" onclick="abrirMiCuenta()">Mi cuenta</button>
           <button class="boton-linea" onclick="salir()">Salir</button>
         </div>
       </div>
@@ -252,6 +287,7 @@
         <button class="tab solo-admin" data-tab="dia" onclick="verTab('dia')">Agenda del día</button>
         <button class="tab" data-tab="semana" onclick="verTab('semana')">Semana</button>
         <button class="tab" data-tab="lista" onclick="verTab('lista')">Historial</button>
+        <button class="tab" data-tab="caja" onclick="verTab('caja')">Caja</button>
         <button class="tab solo-admin" data-tab="equipo" onclick="verTab('equipo')">Equipo y horarios</button>
         <button class="tab solo-admin" data-tab="servicios" onclick="verTab('servicios')">Servicios</button>
         <button class="tab solo-trab" data-tab="mihorario" onclick="verTab('mihorario')">Mi horario</button>
@@ -324,10 +360,11 @@
           <h3>Agregar trabajador</h3>
           <div class="grid-2">
             <div><label for="nuevoNombre">Nombre (así aparece en la agenda)</label><input id="nuevoNombre" placeholder="Ej: Diego"></div>
-            <div><label for="nuevoCorreo">Correo (para su cuenta; opcional)</label><input id="nuevoCorreo" type="email" placeholder="diego@gmail.com"></div>
+            <div><label for="nuevoCorreo">Correo (con este entra al panel)</label><input id="nuevoCorreo" type="email" placeholder="diego@gmail.com"></div>
+            <div><label for="nuevaClaveTrab">Contraseña inicial (mín. 6)</label><input id="nuevaClaveTrab" type="text" placeholder="Ej: Barber2026"></div>
           </div>
           <button class="boton" style="margin-top:12px;" onclick="agregarTrabajador()">Agregar</button>
-          <p class="nota" style="margin-top:6px;">Se crea con horario lunes a sábado 09:00–18:00 y colación 13:00–14:00. Lo ajustas abajo.</p>
+          <p class="nota" style="margin-top:6px;">Queda con horario lunes a sábado 09:00–18:00 y colación 13:00–14:00 (lo ajustas abajo). Con correo y contraseña, su cuenta queda lista para entrar de inmediato.</p>
           <p class="estado" id="estadoNuevo"></p>
         </div>
         <div id="listaTrab"></div>
@@ -344,12 +381,36 @@
         </div>
       </div>
 
+      <!-- Caja (pagos y producción) -->
+      <div id="tab-caja" class="oculto">
+        <div class="barra">
+          <div class="chips-periodo">
+            <button class="chip sel" data-p="dia" onclick="periodoCaja('dia')">Día</button>
+            <button class="chip" data-p="semana" onclick="periodoCaja('semana')">Semana</button>
+            <button class="chip" data-p="mes" onclick="periodoCaja('mes')">Mes</button>
+          </div>
+          <button class="boton-linea" onclick="moverCaja(-1)" aria-label="Anterior">‹</button>
+          <span class="fecha-txt" id="cajaTxt"></span>
+          <button class="boton-linea" onclick="moverCaja(1)" aria-label="Siguiente">›</button>
+          <button class="boton-linea" onclick="cajaHoy()">Hoy</button>
+          <select id="cajaTrab" class="solo-admin" style="width:auto;" onchange="dibujarCaja()"></select>
+        </div>
+        <div class="kpis" id="kpisCaja"></div>
+        <div class="grid-caja">
+          <div class="tarjeta" style="margin-top:0;"><h3>Por método de pago</h3><div id="cajaMetodos"></div></div>
+          <div class="tarjeta" style="margin-top:0;"><h3 id="cajaTituloDetalle">Detalle</h3><div id="cajaDetalle"></div></div>
+        </div>
+        <div class="tarjeta"><h3>Atenciones del período</h3><div id="cajaLista"></div></div>
+      </div>
+
       <!-- Mi horario (trabajador) -->
       <div id="tab-mihorario" class="oculto">
         <div class="tarjeta"><div id="miHorario"></div><p class="nota" style="margin-top:10px;">Si necesitas un cambio, pídeselo al administrador.</p></div>
       </div>
     </section>
   </div>
+
+  <div class="toasts" id="toasts"></div>
 
   <!-- Ventana de detalle -->
   <div class="fondo oculto" id="fondoDetalle" onclick="if(event.target===this)cerrarDetalle()">
@@ -377,6 +438,7 @@
     function estado(id, texto, tipo){ const e = $(id); e.textContent = texto; e.className = 'estado ' + (tipo||''); }
 
     let yo = null;               // { rol, nombre, trabajador_id, correo }
+    let entroConCodigo = false;
     let bloqueosTodos = [], serviciosActivos = [], notificaciones = [], ultimoNoLeidas = -1;
     let trabajadores = [], horarios = [], servicios = [], reservasTodas = [];
     let diaVista = hoyTxt(), filtro = 'proximas', modoRecuperacion = false;
@@ -399,7 +461,25 @@
       if (error) estado('estadoLogin', error.message.includes('Invalid') ? "Correo o contraseña incorrectos." :
                                        error.message.includes('confirm') ? "Falta confirmar tu correo: revisa tu bandeja de entrada." : "Error: " + error.message, 'error');
     }
-    async function salir(){ clearInterval(relojNotif); await db.auth.signOut(); }
+    async function salir(){ clearInterval(relojNotif); if (canal){ db.removeChannel(canal); canal = null; } await db.auth.signOut(); }
+    function mostrarCodigo(){ $('cajaCodigo').classList.toggle('oculto'); }
+    async function enviarCodigo(){
+      const email = $('loginCorreo').value.trim().toLowerCase();
+      if (!email) return estado('estadoLogin', 'Escribe tu correo arriba.', 'error');
+      estado('estadoLogin', 'Enviando código…');
+      const { error } = await db.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname } });
+      if (error) return estado('estadoLogin', /not found|signups/i.test(error.message) ? 'Ese correo no tiene cuenta. Pídele al administrador que te la cree.' : 'Error: ' + error.message, 'error');
+      estado('estadoLogin', '✓ Revisa tu correo: te llegó un código (o un enlace) para entrar.', 'ok');
+      $('loginCodigo').focus();
+    }
+    async function entrarConCodigo(){
+      const email = $('loginCorreo').value.trim().toLowerCase(), token = $('loginCodigo').value.trim();
+      if (!email || !token) return estado('estadoLogin', 'Escribe tu correo y el código.', 'error');
+      estado('estadoLogin', 'Verificando…');
+      const { error } = await db.auth.verifyOtp({ email, token, type: 'email' });
+      if (error) return estado('estadoLogin', 'Código incorrecto o vencido. Pide uno nuevo.', 'error');
+      entroConCodigo = true;
+    }
     async function recuperarClave(){
       const email = $('loginCorreo').value.trim();
       if (!email){ estado('estadoLogin', "Escribe tu correo arriba y vuelve a pulsar.", 'error'); return; }
@@ -437,6 +517,7 @@
       await cargarBase();
       verTab(yo.rol === 'admin' ? 'dia' : 'midia');
       iniciarNotif();
+      if (entroConCodigo){ entroConCodigo = false; abrirMiCuenta('Entraste con un código. Crea tu nueva contraseña para la próxima vez.'); }
     }
     db.auth.onAuthStateChange((evento, session) => {
       if (evento === 'PASSWORD_RECOVERY') modoRecuperacion = true;
@@ -449,7 +530,7 @@
       const [t, h, r, b, c] = await Promise.all([
         db.from('trabajadores').select('*').order('orden').order('id'),
         db.from('horarios').select('*'),
-        db.from('reservas').select('*').order('fecha').order('hora'),
+        yo.rol === 'admin' ? db.from('reservas').select('*').order('fecha').order('hora') : db.rpc('mis_citas', {}),
         db.from('bloqueos').select('*').order('inicio'),
         db.rpc('agenda_config'),
       ]);
@@ -461,7 +542,8 @@
 
     function verTab(t){
       document.querySelectorAll('.tab').forEach(b => b.classList.toggle('sel', b.dataset.tab === t));
-      ['midia','dia','semana','lista','equipo','servicios','mihorario'].forEach(x => $('tab-'+x).classList.toggle('oculto', x !== t));
+      ['midia','dia','semana','lista','caja','equipo','servicios','mihorario'].forEach(x => $('tab-'+x).classList.toggle('oculto', x !== t));
+      if (t === 'caja') dibujarCaja();
       if (t === 'midia') dibujarMiDia();
       if (t === 'dia') dibujarDia();
       if (t === 'semana') dibujarSemana();
@@ -605,7 +687,8 @@
       $('saludoSub').textContent = ahora.toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' });
       $('kpisTrab').innerHTML =
         `<div class="kpi"><b>${deHoy.filter(activa).length}</b><span>citas hoy</span></div>` +
-        `<div class="kpi"><b>${clp(sumaTotal(deHoy))}</b><span>hoy</span></div>` +
+        `<div class="kpi"><b>${clp(cobrado(deHoy))}</b><span>cobrado hoy</span></div>` +
+        `<div class="kpi"><b>${clp(sumaTotal(deHoy))}</b><span>agendado hoy</span></div>` +
         `<div class="kpi"><b>${clp(sumaTotal(semana))}</b><span>esta semana</span></div>` +
         `<div class="kpi"><b>${clp(sumaTotal(mes))}</b><span>este mes</span></div>`;
 
@@ -625,29 +708,32 @@
       $('bloqueosHoy').innerHTML = bq.map(b => `<div class="bloq-item" onclick="abrirBloqueo(${b.id})">🔒 <b>${aHora(b.desde)}–${b.hasta >= 1440 ? '24:00' : aHora(b.hasta)}</b> · ${esc(b.motivo || 'Bloqueado')}</div>`).join('');
       if (!deHoy.length){ $('citasHoy').innerHTML = '<p class="vacio">Hoy no tienes citas agendadas.</p>'; return; }
       $('citasHoy').innerHTML = deHoy.map(r => {
-        const [ri, rf] = rangoDe(r), est = r.estado || 'confirmada', tel = (r.telefono || '').replace(/\D/g, '');
+        const [ri, rf] = rangoDe(r), est = r.estado || 'confirmada';
         const pasada = rf <= ahoraMin;
         return `<div class="cita ${est} ${pasada && est === 'confirmada' ? 'pendiente' : ''}">
           <div class="r-hora">${aHora(ri)}<small>hasta ${aHora(rf)}</small></div>
           <div>
-            <div class="r-top"><div class="r-nombre">${esc(r.nombre)}</div><span class="badge ${est}">${ESTADOS[est] || est}</span></div>
+            <div class="r-top"><div class="r-nombre">${esc(r.nombre)}</div><span class="badge ${est}">${ESTADOS[est] || est}${r.metodo_pago ? ' · ' + PAGOS[r.metodo_pago] : ''}</span></div>
             <div class="r-sub">${esc(r.servicios || '')}${r.total ? ' · ' + clp(r.total) : ''}</div>
             ${r.descripcion ? `<div class="r-msg">“${esc(r.descripcion)}”</div>` : ''}
             <div class="acciones-rapidas">
-              ${tel ? `<a class="boton-linea" href="https://wa.me/${tel}" target="_blank" rel="noopener">WhatsApp</a>` : ''}
-              ${est !== 'completada' ? `<button class="boton-linea verde" onclick="estadoRapido(${r.id}, 'completada')">✓ Atendido</button>` : ''}
+              ${est !== 'completada' ? `<button class="boton-linea verde" onclick="elegirPagoRapido(${r.id})">✓ Atendido</button>` : ''}
               ${est === 'confirmada' ? `<button class="boton-linea rojo" onclick="estadoRapido(${r.id}, 'no_asistio')">No vino</button>` : ''}
+              ${est === 'completada' && !r.metodo_pago ? `<button class="boton-linea verde" onclick="elegirPagoRapido(${r.id})">Registrar pago</button>` : ''}
               ${est !== 'confirmada' ? `<button class="boton-linea" onclick="estadoRapido(${r.id}, 'confirmada')">Deshacer</button>` : ''}
+            </div>
+            <div class="pagos oculto" id="pago-${r.id}"><span class="nota">¿Cómo pagó?</span>
+              ${Object.entries(PAGOS).map(([k, v]) => `<button class="chip" onclick="estadoRapido(${r.id}, 'completada', '${k}')">${v}</button>`).join('')}
             </div>
           </div></div>`;
       }).join('');
     }
-    async function estadoRapido(id, nuevo){
-      const { error } = await db.from('reservas').update({ estado: nuevo }).eq('id', id);
-      if (error){ alert(error.code === '23P01' ? 'No se puede: esa hora ya la tomó otra persona.' : 'Error: ' + error.message); return; }
-      const r = reservasTodas.find(x => x.id === id); if (r) r.estado = nuevo;
+    async function estadoRapido(id, nuevo, pago){
+      const err = await marcar(id, nuevo, pago);
+      if (err){ alert(err); return; }
       dibujarMiDia();
     }
+    function elegirPagoRapido(id){ const e = document.getElementById('pago-' + id); e.classList.toggle('oculto'); }
 
     // ================= LISTA =================
     function filtrar(f){ filtro = f; document.querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c.dataset.f === f)); dibujarLista(); }
@@ -684,7 +770,7 @@
     // ================= DETALLE DE RESERVA =================
     function abrirDetalle(id){
       const r = reservasTodas.find(x => x.id === id); if (!r) return;
-      const [ri, rf] = rangoDe(r), est = r.estado || 'confirmada';
+      const [ri, rf] = rangoDe(r), est = r.estado || 'confirmada', admin = yo.rol === 'admin';
       const tel = (r.telefono || '').replace(/\D/g, '');
       const grupo = r.grupo ? reservasTodas.filter(x => x.grupo === r.grupo && x.id !== r.id) : [];
       const msgWa = encodeURIComponent(`Hola ${r.nombre}, te escribimos de ClipperLab por tu reserva del ${r.fecha} a las ${aHora(ri)}.`);
@@ -695,12 +781,15 @@
         ${r.creado_por ? `<div class="det-fila"><span>Agendada por</span><span>${esc(r.creado_por)}${r.origen === 'panel' ? ' (panel)' : ''}</span></div>` : ''}
         <div class="det-fila"><span>Servicios</span><span>${esc(r.servicios || '—')}</span></div>
         <div class="det-fila"><span>Total</span><span>${r.total ? clp(r.total) : '—'}</span></div>
-        <div class="det-fila"><span>WhatsApp</span><span>${esc(r.telefono || '—')}</span></div>
-        <div class="det-fila"><span>Correo</span><span>${esc(r.correo || '—')}</span></div>
+        ${admin ? `<div class="det-fila"><span>WhatsApp</span><span>${esc(r.telefono || '—')}</span></div>
+        <div class="det-fila"><span>Correo</span><span>${esc(r.correo || '—')}</span></div>` : ''}
         ${r.descripcion ? `<div class="det-fila"><span>Mensaje</span><span style="text-align:right;">${esc(r.descripcion)}</span></div>` : ''}
-        ${grupo.length ? `<div class="det-fila"><span>Viene con</span><span>${grupo.map(x => esc(x.nombre) + ' (' + esc(x.trabajador) + ')').join(', ')}</span></div>` : ''}
+        ${admin && grupo.length ? `<div class="det-fila"><span>Viene con</span><span>${grupo.map(x => esc(x.nombre) + ' (' + esc(x.trabajador) + ')').join(', ')}</span></div>` : ''}
+        <div class="det-fila"><span>Pago</span><span>${r.metodo_pago ? PAGOS[r.metodo_pago] : (est === 'completada' ? 'Sin registrar' : '—')}</span></div>
+        ${est !== 'cancelada' ? `<div class="pagos"><span class="nota">${est === 'completada' ? 'Método de pago:' : 'Marcar atendido y pagado con:'}</span>
+          ${Object.entries(PAGOS).map(([k, v]) => `<button class="chip ${r.metodo_pago === k ? 'sel' : ''}" onclick="cambiarPago(${r.id}, '${k}')">${v}</button>`).join('')}</div>` : ''}
         <div class="det-acciones">
-          ${tel ? `<a class="boton-linea" href="https://wa.me/${tel}?text=${msgWa}" target="_blank" rel="noopener">WhatsApp</a>` : ''}
+          ${admin && tel ? `<a class="boton-linea" href="https://wa.me/${tel}?text=${msgWa}" target="_blank" rel="noopener">WhatsApp</a>` : ''}
           <select onchange="cambiarEstado(${r.id}, this.value)">
             ${Object.entries(ESTADOS).map(([k,v]) => `<option value="${k}" ${k===est?'selected':''}>${v}</option>`).join('')}
           </select>
@@ -717,14 +806,26 @@
       const t = document.querySelector('.tab.sel')?.dataset.tab;
       if (t === 'dia') dibujarDia(); if (t === 'lista') dibujarLista();
       if (t === 'semana') dibujarSemana(); if (t === 'midia') dibujarMiDia();
+      if (t === 'caja') dibujarCaja();
+    }
+    const PAGOS = { efectivo:'Efectivo', debito:'Débito', transferencia:'Transferencia' };
+    // Cambia estado y/o método de pago en el servidor (valida permisos: el profesional solo las suyas)
+    async function marcar(id, nuevoEstado, pago){
+      const { error } = await db.rpc('marcar_cita', { p_id: id, p_estado: nuevoEstado ?? null, p_pago: pago ?? null });
+      if (error) return (error.message || '').includes('HORA_OCUPADA') ? 'No se puede reactivar: esa hora ya la tomó otra persona.' : error.message;
+      const r = reservasTodas.find(x => x.id === id);
+      if (r){ if (nuevoEstado) r.estado = nuevoEstado; if (pago !== undefined) r.metodo_pago = pago || null; if (r.estado !== 'completada') r.metodo_pago = null; }
+      return null;
+    }
+    async function cambiarPago(id, pago){
+      const r = reservasTodas.find(x => x.id === id);
+      const err = await marcar(id, 'completada', pago);
+      if (err) return estado('estadoDetalle', err, 'error');
+      abrirDetalle(id); estado('estadoDetalle', pago ? `✓ Atendido · pagó con ${PAGOS[pago]}` : '✓ Actualizado', 'ok'); refrescarVista();
     }
     async function cambiarEstado(id, nuevo){
-      const { error } = await db.from('reservas').update({ estado: nuevo }).eq('id', id);
-      if (error){
-        estado('estadoDetalle', error.code === '23P01' ? "No se puede reactivar: esa hora ya la tomó otra persona." : "Error: " + error.message, 'error');
-        return;
-      }
-      const r = reservasTodas.find(x => x.id === id); if (r) r.estado = nuevo;
+      const err = await marcar(id, nuevo);
+      if (err){ estado('estadoDetalle', err, 'error'); return; }
       estado('estadoDetalle', '✓ Estado actualizado', 'ok');
       refrescarVista();
     }
@@ -895,9 +996,149 @@
     }
     async function recargarTodo(){ await cargarBase(); refrescarVista(); }
 
+    // ================= CAJA (pagos y producción) =================
+    let cajaPeriodo = 'dia', cajaRef = new Date();
+    const cobrado = lista => lista.filter(r => r.estado === 'completada').reduce((a, r) => a + (r.total || 0), 0);
+    const COLOR_PAGO = { efectivo:'var(--verde)', debito:'var(--azul)', transferencia:'var(--voltaje)', sin:'var(--gris)' };
+    function periodoCaja(p){ cajaPeriodo = p; document.querySelectorAll('.chips-periodo .chip').forEach(c => c.classList.toggle('sel', c.dataset.p === p)); dibujarCaja(); }
+    function moverCaja(n){
+      if (cajaPeriodo === 'dia') cajaRef.setDate(cajaRef.getDate() + n);
+      else if (cajaPeriodo === 'semana') cajaRef.setDate(cajaRef.getDate() + 7*n);
+      else cajaRef = new Date(cajaRef.getFullYear(), cajaRef.getMonth() + n, 1);
+      dibujarCaja();
+    }
+    function cajaHoy(){ cajaRef = new Date(); dibujarCaja(); }
+    function rangoCaja(){
+      if (cajaPeriodo === 'dia'){ const t = fechaTexto(cajaRef); return [t, t, (t === hoyTxt() ? 'Hoy · ' : '') + cajaRef.toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' })]; }
+      if (cajaPeriodo === 'semana'){ const l = lunesDe(cajaRef), d = new Date(l); d.setDate(d.getDate() + 6);
+        return [fechaTexto(l), fechaTexto(d), `${l.getDate()} ${l.toLocaleDateString('es-CL', { month:'short' })} – ${d.getDate()} ${d.toLocaleDateString('es-CL', { month:'short', year:'numeric' })}`]; }
+      const a = new Date(cajaRef.getFullYear(), cajaRef.getMonth(), 1), b = new Date(cajaRef.getFullYear(), cajaRef.getMonth() + 1, 0);
+      return [fechaTexto(a), fechaTexto(b), a.toLocaleDateString('es-CL', { month:'long', year:'numeric' })];
+    }
+    function resumenPagos(lista){
+      const hechas = lista.filter(r => r.estado === 'completada'), m = k => hechas.filter(r => r.metodo_pago === k).reduce((a, r) => a + (r.total || 0), 0);
+      return { n: hechas.length, efectivo: m('efectivo'), debito: m('debito'), transferencia: m('transferencia'),
+               sin: hechas.filter(r => !r.metodo_pago).reduce((a, r) => a + (r.total || 0), 0), total: cobrado(hechas) };
+    }
+    function dibujarCaja(){
+      const sel = $('cajaTrab');
+      if (yo.rol === 'admin' && !sel.options.length)
+        sel.innerHTML = '<option value="">Todo el equipo</option>' + trabajadores.map(t => `<option value="${t.id}">${esc(t.nombre)}</option>`).join('');
+      const [desde, hasta, txt] = rangoCaja(); $('cajaTxt').textContent = txt;
+      const tid = yo.rol === 'admin' ? (Number(sel.value) || null) : yo.trabajador_id;
+      const lista = reservasTodas.filter(r => r.fecha >= desde && r.fecha <= hasta && (!tid || r.trabajador_id === tid));
+      const R = resumenPagos(lista), pend = lista.filter(r => r.estado === 'confirmada');
+      $('kpisCaja').innerHTML =
+        `<div class="kpi"><b>${clp(R.total)}</b><span>cobrado</span></div>` +
+        `<div class="kpi"><b>${R.n}</b><span>atenciones</span></div>` +
+        `<div class="kpi"><b>${R.n ? clp(Math.round(R.total / R.n)) : '—'}</b><span>ticket promedio</span></div>` +
+        `<div class="kpi"><b>${clp(sumaTotal(pend))}</b><span>por atender (${pend.length})</span></div>` +
+        `<div class="kpi"><b>${lista.filter(r => r.estado === 'no_asistio').length}</b><span>no asistieron</span></div>` +
+        `<div class="kpi"><b>${lista.filter(r => r.estado === 'cancelada').length}</b><span>canceladas</span></div>`;
+
+      const filas = [['efectivo', 'Efectivo'], ['debito', 'Débito'], ['transferencia', 'Transferencia'], ['sin', 'Sin registrar']];
+      $('cajaMetodos').innerHTML = filas.map(([k, v]) => `<div class="barra-metodo">
+          <div class="fila"><span>${v}</span><span>${clp(R[k])}</span></div>
+          <div class="pista"><div class="relleno" style="width:${R.total ? Math.round(R[k] / R.total * 100) : 0}%;background:${COLOR_PAGO[k]}"></div></div></div>`).join('') +
+        (R.sin ? `<p class="nota">Hay atenciones sin método de pago: regístralo en la lista de abajo.</p>` : '');
+
+      const cab = `<tr><th></th><th class="num">Atenc.</th><th class="num">Efectivo</th><th class="num">Débito</th><th class="num">Transf.</th><th class="num">Total</th></tr>`;
+      const fila = (nombre, x, total) => `<tr class="${total ? 'total' : ''}"><td>${nombre}</td><td class="num">${x.n}</td><td class="num">${clp(x.efectivo)}</td><td class="num">${clp(x.debito)}</td><td class="num">${clp(x.transferencia)}</td><td class="num">${clp(x.total)}</td></tr>`;
+      let cuerpo = '';
+      if (yo.rol === 'admin' && !tid){
+        $('cajaTituloDetalle').textContent = 'Por profesional';
+        cuerpo = trabajadores.map(t => fila(esc(t.nombre), resumenPagos(lista.filter(r => r.trabajador_id === t.id)))).join('') + fila('Total', R, true);
+      } else if (cajaPeriodo !== 'dia'){
+        $('cajaTituloDetalle').textContent = 'Por día';
+        const dias = [...new Set(lista.map(r => r.fecha))].sort();
+        cuerpo = dias.map(d => fila(deTexto(d).toLocaleDateString('es-CL', { weekday:'short', day:'numeric', month:'short' }), resumenPagos(lista.filter(r => r.fecha === d)))).join('') + fila('Total', R, true);
+      } else {
+        $('cajaTituloDetalle').textContent = 'Resumen del día';
+        cuerpo = fila('Día', R, true);
+      }
+      $('cajaDetalle').innerHTML = `<div style="overflow-x:auto;"><table class="tabla-caja">${cab}${cuerpo}</table></div>`;
+
+      const hechas = lista.filter(r => r.estado === 'completada').sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+      $('cajaLista').innerHTML = hechas.length ? `<div style="overflow-x:auto;"><table class="tabla-caja">
+        <tr><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Servicios</th>${yo.rol === 'admin' ? '<th>Profesional</th>' : ''}<th>Pago</th><th class="num">Total</th></tr>
+        ${hechas.map(r => `<tr style="cursor:pointer;" onclick="abrirDetalle(${r.id})"><td>${deTexto(r.fecha).toLocaleDateString('es-CL', { day:'numeric', month:'short' })}</td><td>${aHora(rangoDe(r)[0])}</td>
+          <td>${esc(r.nombre)}</td><td>${esc(r.servicios || '')}</td>${yo.rol === 'admin' ? `<td>${esc(r.trabajador)}</td>` : ''}
+          <td>${r.metodo_pago ? PAGOS[r.metodo_pago] : '<span class="error">Registrar</span>'}</td><td class="num">${clp(r.total)}</td></tr>`).join('')}
+        </table></div>` : '<p class="vacio">No hay atenciones completadas en este período.</p>';
+    }
+
+    // ================= MI CUENTA =================
+    function abrirMiCuenta(msg){
+      const permiso = 'Notification' in window ? Notification.permission : 'no';
+      $('ventanaDetalle').innerHTML = `<h3 style="font-size:18px;">Mi cuenta</h3>
+        ${msg ? `<p class="ok" style="font-size:14px;margin-bottom:8px;">${esc(msg)}</p>` : ''}
+        <div class="det-fila"><span>Correo</span><span>${esc(yo.correo)}</span></div>
+        <div class="det-fila"><span>Rol</span><span>${esc(yo.rol)}</span></div>
+        <label for="mcClave">Nueva contraseña (mínimo 6)</label><input type="password" id="mcClave" autocomplete="new-password">
+        <label for="mcClave2">Repítela</label><input type="password" id="mcClave2" autocomplete="new-password" onkeydown="if(event.key==='Enter')cambiarMiClave()">
+        <div class="det-acciones"><button class="boton" onclick="cambiarMiClave()">Guardar contraseña</button></div>
+        <h3 style="margin-top:18px;">Avisos del navegador</h3>
+        <p class="nota">Te avisa cuando te agendan, cancelan o modifican una hora, aunque estés en otra pestaña.</p>
+        <button class="boton-linea" style="margin-top:8px;" onclick="activarAvisosNavegador()">${permiso === 'granted' ? '✓ Activados' : permiso === 'denied' ? 'Bloqueados en el navegador' : 'Activar avisos'}</button>
+        <div class="det-acciones"><button class="boton-linea" style="margin-left:auto;" onclick="cerrarDetalle()">Cerrar</button></div>
+        <p class="estado" id="estadoCuenta"></p>`;
+      $('fondoDetalle').classList.remove('oculto');
+    }
+    async function cambiarMiClave(){
+      const a = $('mcClave').value, b = $('mcClave2').value;
+      if (a.length < 6) return estado('estadoCuenta', 'Mínimo 6 caracteres.', 'error');
+      if (a !== b) return estado('estadoCuenta', 'Las contraseñas no coinciden.', 'error');
+      const { error } = await db.auth.updateUser({ password: a });
+      estado('estadoCuenta', error ? 'Error: ' + error.message : '✓ Contraseña actualizada. Úsala la próxima vez que entres.', error ? 'error' : 'ok');
+      if (!error){ $('mcClave').value = ''; $('mcClave2').value = ''; }
+    }
+    async function activarAvisosNavegador(){
+      if (!('Notification' in window)) return estado('estadoCuenta', 'Este navegador no permite avisos.', 'error');
+      const p = await Notification.requestPermission();
+      estado('estadoCuenta', p === 'granted' ? '✓ Avisos activados.' : 'No se activaron: revisa los permisos del sitio en tu navegador.', p === 'granted' ? 'ok' : 'error');
+    }
+
+    // ================= AVISOS EN TIEMPO REAL =================
+    let canal = null, ultimoIdVisto = null;
+    function mostrarToast(n){
+      const t = document.createElement('div');
+      t.className = 'toast ' + n.tipo;
+      t.innerHTML = `<b>${ICONOS[n.tipo] || '•'} ${esc(n.titulo)}</b>${esc(n.detalle || '')}`;
+      t.onclick = () => { t.remove(); abrirNotif(n.id); };
+      $('toasts').appendChild(t);
+      setTimeout(() => t.remove(), 9000);
+    }
+    let audioCtx = null;
+    function sonar(){
+      try {
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        [0, 0.16].forEach((retraso, i) => {
+          const o = audioCtx.createOscillator(), g = audioCtx.createGain(), t0 = audioCtx.currentTime + retraso;
+          o.frequency.value = i ? 1175 : 880; o.connect(g); g.connect(audioCtx.destination);
+          g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.18, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22);
+          o.start(t0); o.stop(t0 + 0.25);
+        });
+      } catch (e) {}
+    }
+    function avisoNavegador(n){
+      try { if ('Notification' in window && Notification.permission === 'granted' && document.hidden)
+        new Notification('ClipperLab · ' + n.titulo, { body: n.detalle || '', tag: 'clipperlab-' + n.id }); } catch (e) {}
+    }
+    function conectarTiempoReal(){
+      if (canal){ db.removeChannel(canal); canal = null; }
+      if (!db.channel){ return; }
+      canal = db.channel('notificaciones-' + (yo.trabajador_id || 'admin') + '-' + Date.now())
+        .on('postgres_changes', { event:'INSERT', schema:'public', table:'notificaciones' }, () => cargarNotif())
+        .subscribe(estadoCanal => $('enVivo').classList.toggle('on', estadoCanal === 'SUBSCRIBED'));
+    }
+
     // ================= NOTIFICACIONES =================
     let relojNotif = null;
-    function iniciarNotif(){ clearInterval(relojNotif); ultimoNoLeidas = -1; cargarNotif(); relojNotif = setInterval(cargarNotif, 30000); }
+    function iniciarNotif(){
+      clearInterval(relojNotif); ultimoNoLeidas = -1; ultimoIdVisto = null;
+      cargarNotif(); relojNotif = setInterval(cargarNotif, 20000);   // respaldo por si el tiempo real se corta
+      conectarTiempoReal();
+    }
     async function cargarNotif(){
       if (!yo) return;
       const { data, error } = await db.from('notificaciones').select('*').order('creado', { ascending:false }).limit(40);
@@ -905,7 +1146,13 @@
       notificaciones = data;
       const n = notificaciones.filter(x => !x.leida).length;
       $('nNoLeidas').textContent = n > 9 ? '9+' : n; $('nNoLeidas').classList.toggle('oculto', !n);
-      if (ultimoNoLeidas >= 0 && n > ultimoNoLeidas) recargarTodo();     // llegó algo nuevo: la agenda se actualiza sola
+      // Lo que llegó desde la última revisión: aviso emergente + sonido + aviso del navegador, y la agenda se actualiza sola
+      const maxId = notificaciones.reduce((m, x) => Math.max(m, x.id), 0);
+      if (ultimoIdVisto !== null){
+        const nuevas = notificaciones.filter(x => x.id > ultimoIdVisto && !x.leida).reverse();
+        if (nuevas.length){ nuevas.slice(-3).forEach(mostrarToast); sonar(); nuevas.forEach(avisoNavegador); recargarTodo(); }
+      }
+      ultimoIdVisto = Math.max(ultimoIdVisto || 0, maxId);
       ultimoNoLeidas = n;
       dibujarNotif();
     }
@@ -952,9 +1199,10 @@
       $('listaTrab').innerHTML = trabajadores.map(t => {
         const a = acc[t.id] || {};
         let accesoHtml;
-        if (!t.correo) accesoHtml = `<span class="nota">Sin correo: agrégalo para crearle una cuenta.</span>`;
-        else if (a.confirmado) accesoHtml = `<span class="ok">✓ Tiene acceso al panel</span>`;
-        else if (a.tiene_cuenta) accesoHtml = `<span style="color:var(--voltaje)">Cuenta creada: falta que confirme su correo</span>`;
+        if (!t.correo) accesoHtml = `<span class="nota">Sin correo: agrégalo y guarda para crearle una cuenta.</span>`;
+        else if (a.tiene_cuenta) accesoHtml = `<span class="ok">✓ Entra con ${esc(t.correo)}</span>
+            <input type="text" id="clave-${t.id}" placeholder="Nueva contraseña">
+            <button class="boton-linea" onclick="crearAcceso(${t.id})">Cambiar contraseña</button>`;
         else accesoHtml = `<span class="nota">Sin cuenta.</span>
             <input type="text" id="clave-${t.id}" placeholder="Contraseña inicial (mín. 6)">
             <button class="boton-linea" onclick="crearAcceso(${t.id})">Crear acceso</button>`;
@@ -1050,25 +1298,25 @@
       if (error) return estado('estadoNuevo', error.code === '23505' ? 'Ese correo ya lo usa otro trabajador.' : 'Error: ' + error.message, 'error');
       const base = [1,2,3,4,5,6].map(d => ({ trabajador_id: data.id, dia: d, inicio: '09:00', fin: '18:00', almuerzo_inicio: '13:00', almuerzo_fin: '14:00' }));
       const { error: e2 } = await db.from('horarios').insert(base);
-      $('nuevoNombre').value = ''; $('nuevoCorreo').value = '';
-      estado('estadoNuevo', e2 ? 'Trabajador creado, pero falló el horario: ' + e2.message : `✓ ${nombre} agregado. Ya aparece en la agenda pública.`, e2 ? 'error' : 'ok');
+      let msgCuenta = '';
+      const clave = $('nuevaClaveTrab').value;
+      if (correo && clave){
+        const { error: e3 } = await db.rpc('admin_acceso', { p_trabajador_id: data.id, p_clave: clave });
+        msgCuenta = e3 ? ` No se pudo crear su cuenta: ${e3.message}` : ` Su cuenta ya está lista: entra con ${correo} y la contraseña que pusiste.`;
+      }
+      $('nuevoNombre').value = ''; $('nuevoCorreo').value = ''; $('nuevaClaveTrab').value = '';
+      estado('estadoNuevo', e2 ? 'Trabajador creado, pero falló el horario: ' + e2.message : `✓ ${nombre} agregado.${msgCuenta}`, e2 ? 'error' : 'ok');
       await cargarEquipo();
     }
-    // Crea la cuenta del trabajador SIN cerrar la sesión del admin (usa un cliente aparte que no guarda sesión)
+    // Crea la cuenta (o cambia la contraseña) del profesional. Queda lista para entrar, sin confirmar correo.
     async function crearAcceso(tid){
       const t = trabajadores.find(x => x.id === tid), clave = $('clave-' + tid).value, id = 'estado-trab-' + tid;
       if (clave.length < 6) return estado(id, 'La contraseña debe tener al menos 6 caracteres.', 'error');
-      const alta = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession:false, autoRefreshToken:false, storageKey:'clipperlab-alta' } });
-      const { data, error } = await alta.auth.signUp({ email: t.correo, password: clave, options: { emailRedirectTo: location.origin + location.pathname } });
-      if (error){
-        return estado(id, /not allowed|disabled/i.test(error.message)
-          ? 'El registro está desactivado en Supabase. Actívalo (Authentication → Sign In / Providers → Allow new users to sign up) o crea el usuario en Authentication → Users → Add user con este mismo correo.'
-          : 'Error: ' + error.message, 'error');
-      }
-      if (data.user && data.user.identities && data.user.identities.length === 0) return estado(id, 'Ese correo ya tiene cuenta. Si olvidó la contraseña, que use "¿Olvidaste tu contraseña?" en el login.', 'error');
+      const { data, error } = await db.rpc('admin_acceso', { p_trabajador_id: tid, p_clave: clave });
+      if (error) return estado(id, 'Error: ' + error.message, 'error');
       await cargarEquipo();
-      estado('estado-trab-' + tid, data.session ? `✓ Cuenta creada. ${t.nombre} ya puede entrar con su correo y esa contraseña.`
-                                                : `✓ Cuenta creada. A ${t.correo} le llegó un correo para confirmar; después entra con esa contraseña.`, 'ok');
+      estado('estado-trab-' + tid, data === 'creada' ? `✓ Cuenta creada. ${t.nombre} ya puede entrar con ${t.correo} y esa contraseña.`
+                                                     : `✓ Contraseña cambiada. Avísale a ${t.nombre} la nueva contraseña.`, 'ok');
     }
 
     // ================= SERVICIOS (admin) =================
