@@ -3,62 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google" content="notranslate">
   <title>Agenda — ClipperLab</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root { --grafito:#15171c; --panel:#1d2028; --panel2:#23262f; --hueso:#edeae4; --voltaje:#ff7a2f; --gris:#9aa0a8; --verde:#4ade80; }
+    :root { --grafito:#15171c; --panel:#1d2028; --panel2:#23262f; --hueso:#edeae4; --voltaje:#ff7a2f; --gris:#9aa0a8; --verde:#4ade80; --rojo:#f87171; }
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:var(--grafito); color:var(--hueso); font-family:'Inter',system-ui,sans-serif; padding:24px 16px 100px; line-height:1.5; }
-    .caja { max-width:560px; margin:0 auto; }
+    body { background:var(--grafito); color:var(--hueso); font-family:'Inter',system-ui,sans-serif; padding:24px 16px 80px; line-height:1.5; }
+    .caja { max-width:600px; margin:0 auto; }
+    .oculto { display:none !important; }
     h1 { font-size:24px; margin-bottom:4px; }
     h1 span { color:var(--voltaje); }
     .sub { color:var(--gris); margin-bottom:20px; font-size:14px; }
 
-    /* Tarjeta de cada PASO */
-    .paso {
-      background:var(--panel); border:1px solid rgba(255,255,255,0.08);
-      border-radius:14px; padding:20px; margin-bottom:14px;
-      opacity:0.45; pointer-events:none; transition:opacity 0.3s;
-    }
+    .paso { background:var(--panel); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:20px; margin-bottom:14px; opacity:0.45; pointer-events:none; transition:opacity .3s; }
     .paso.activo { opacity:1; pointer-events:auto; border-color:rgba(255,122,47,0.3); }
     .paso-titulo { display:flex; align-items:center; gap:10px; font-size:15px; font-weight:600; margin-bottom:14px; }
     .paso-num { width:24px; height:24px; border-radius:50%; background:var(--voltaje); color:var(--grafito); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0; }
     .paso-check { color:var(--verde); font-size:13px; margin-left:auto; text-align:right; }
 
-    /* Servicios (selección múltiple) */
-    .lista-serv { display:flex; flex-direction:column; gap:8px; }
-    .card-serv {
-      display:flex; align-items:flex-start; gap:12px; padding:12px 14px;
-      background:var(--panel2); border:1px solid rgba(255,255,255,0.1); border-radius:10px; cursor:pointer;
-    }
+    /* Cantidad de personas */
+    .chips { display:flex; gap:8px; flex-wrap:wrap; }
+    .chip { background:var(--panel2); border:1px solid rgba(255,255,255,0.12); color:var(--hueso); padding:10px 18px; border-radius:10px; cursor:pointer; font-size:14px; font-family:inherit; }
+    .chip:hover { border-color:var(--voltaje); }
+    .chip.sel { background:var(--voltaje); border-color:var(--voltaje); color:var(--grafito); font-weight:600; }
+    .nota { color:var(--gris); font-size:12px; margin-top:8px; }
+
+    /* Persona (servicios + profesional) */
+    .persona { background:var(--panel2); border-radius:12px; padding:14px; margin-bottom:10px; }
+    .persona-cab { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-weight:600; font-size:14px; }
+    .persona-cab small { color:var(--voltaje); font-size:14px; }
+    .card-serv { display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border:1px solid rgba(255,255,255,0.1); border-radius:10px; cursor:pointer; margin-bottom:6px; background:var(--panel); }
     .card-serv:hover { border-color:var(--voltaje); }
     .card-serv.sel { border-color:var(--voltaje); background:rgba(255,122,47,0.12); }
-    .caja-check { width:20px; height:20px; border-radius:5px; border:2px solid var(--gris); flex-shrink:0; margin-top:2px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:var(--grafito); }
+    .caja-check { width:20px; height:20px; border-radius:5px; border:2px solid var(--gris); flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:var(--grafito); }
     .card-serv.sel .caja-check { background:var(--voltaje); border-color:var(--voltaje); }
     .serv-info { flex:1; min-width:0; }
-    .serv-nom { font-size:15px; font-weight:600; }
-    .serv-desc { font-size:13px; color:var(--gris); }
-    .serv-dur { font-size:12px; color:var(--gris); margin-top:2px; }
-    .serv-precio { font-weight:600; white-space:nowrap; }
-    .total-serv { display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.08); }
+    .serv-nom { font-size:14px; font-weight:600; }
+    .serv-desc { font-size:12px; color:var(--gris); }
+    .serv-precio { font-weight:600; white-space:nowrap; font-size:14px; }
+    .fila-prof { display:flex; align-items:center; gap:10px; margin-top:10px; }
+    .fila-prof label { font-size:13px; color:var(--gris); white-space:nowrap; }
+    .total-serv { display:flex; justify-content:space-between; align-items:center; margin-top:6px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08); }
     .total-serv strong { font-size:18px; color:var(--voltaje); }
     .total-serv small { color:var(--gris); display:block; font-size:12px; }
-    .boton-sec { background:var(--voltaje); color:var(--grafito); font-weight:600; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; font-size:14px; }
+    .boton-sec { background:var(--voltaje); color:var(--grafito); font-weight:600; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; font-size:14px; font-family:inherit; }
     .boton-sec:disabled { opacity:0.35; cursor:not-allowed; }
-
-    /* Trabajadores */
-    .grid-trab { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .card-trab {
-      display:flex; align-items:center; gap:12px; padding:12px 14px;
-      background:var(--panel2); border:1px solid rgba(255,255,255,0.1); border-radius:10px; cursor:pointer;
-    }
-    .card-trab:hover { border-color:var(--voltaje); }
-    .card-trab.sel { border-color:var(--voltaje); background:rgba(255,122,47,0.12); }
-    .card-trab.cualquiera { grid-column:1 / -1; }
-    .card-trab small { display:block; color:var(--gris); font-size:12px; }
-    .avatar { width:38px; height:38px; border-radius:50%; background:var(--voltaje); color:var(--grafito); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; flex-shrink:0; }
-    .avatar.alt { background:var(--verde); }
-    .card-trab span { font-size:14px; }
+    .aviso { color:var(--rojo); font-size:13px; margin-top:8px; }
 
     /* Días */
     .dias-cab { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
@@ -67,35 +58,47 @@
     .dias-fila { display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; }
     .dias-fila::-webkit-scrollbar { height:5px; }
     .dias-fila::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.15); border-radius:3px; }
-    .dia-card { flex-shrink:0; width:62px; text-align:center; padding:12px 0; background:var(--panel2); border:1px solid rgba(255,255,255,0.1); border-radius:10px; cursor:pointer; }
+    .dia-card { flex-shrink:0; width:62px; text-align:center; padding:10px 0; background:var(--panel2); border:1px solid rgba(255,255,255,0.1); border-radius:10px; cursor:pointer; }
     .dia-card:hover { border-color:var(--voltaje); }
     .dia-card.sel { border-color:var(--voltaje); background:var(--voltaje); color:var(--grafito); }
     .dia-card.sel .dia-nom { color:var(--grafito); }
-    .dia-card.pasado { opacity:0.3; pointer-events:none; }
+    .dia-card.off { opacity:0.3; pointer-events:none; }
     .dia-nom { font-size:12px; color:var(--gris); text-transform:capitalize; }
-    .dia-num { font-size:18px; font-weight:600; margin-top:2px; }
+    .dia-num { font-size:18px; font-weight:600; }
+    .dia-extra { font-size:10px; color:var(--gris); }
 
     /* Horas */
-    .franja { color:var(--voltaje); font-size:12px; font-weight:600; margin:14px 0 8px; text-transform:uppercase; letter-spacing:0.5px; }
+    .franja { color:var(--voltaje); font-size:12px; font-weight:600; margin:14px 0 8px; text-transform:uppercase; letter-spacing:.5px; }
     .franja:first-child { margin-top:0; }
     .fila-horas { display:flex; flex-wrap:wrap; gap:8px; }
-    .hora { padding:10px 18px; border-radius:8px; cursor:pointer; font-size:14px; border:1px solid rgba(255,255,255,0.15); background:var(--panel2); color:var(--hueso); }
+    .hora { padding:10px 16px; border-radius:8px; cursor:pointer; font-size:14px; border:1px solid rgba(255,255,255,0.15); background:var(--panel2); color:var(--hueso); font-family:inherit; }
     .hora:hover { border-color:var(--verde); }
     .hora.sel { background:var(--verde); color:var(--grafito); border-color:var(--verde); font-weight:600; }
 
     /* Datos */
-    input, textarea { width:100%; background:var(--panel2); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:12px 14px; color:var(--hueso); font-size:15px; margin-bottom:12px; font-family:inherit; }
-    input:focus, textarea:focus { outline:none; border-color:var(--voltaje); }
-    textarea { min-height:80px; resize:vertical; }
-    .boton { background:var(--voltaje); color:var(--grafito); font-weight:600; border:none; padding:14px; border-radius:10px; cursor:pointer; font-size:15px; width:100%; }
-    .boton:hover { opacity:0.9; }
+    input, textarea, select { width:100%; background:var(--panel2); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:11px 13px; color:var(--hueso); font-size:15px; font-family:inherit; }
+    .persona select { background:var(--panel); padding:8px 10px; font-size:14px; }
+    input, textarea { margin-bottom:10px; }
+    input:focus, textarea:focus, select:focus { outline:none; border-color:var(--voltaje); }
+    textarea { min-height:70px; resize:vertical; }
+    .boton { background:var(--voltaje); color:var(--grafito); font-weight:600; border:none; padding:14px; border-radius:10px; cursor:pointer; font-size:15px; width:100%; font-family:inherit; }
+    .boton:disabled { opacity:.5; cursor:wait; }
     .estado { font-size:14px; margin-top:12px; min-height:20px; }
-    .resumen { background:var(--panel2); border-radius:10px; padding:12px 14px; font-size:14px; }
-    .resumen div { display:flex; justify-content:space-between; gap:12px; padding:3px 0; }
-    .resumen div span:first-child { color:var(--gris); }
-    .resumen .fila-total { border-top:1px solid rgba(255,255,255,0.08); margin-top:6px; padding-top:8px; font-weight:600; }
-    .resumen-mini { color:var(--gris); font-size:13px; }
-    .conteo { margin-top:20px; text-align:center; color:var(--gris); font-size:13px; }
+    .resumen { background:var(--panel2); border-radius:10px; padding:12px 14px; font-size:14px; margin-bottom:14px; }
+    .res-persona { padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+    .res-persona:last-of-type { border-bottom:none; }
+    .res-linea { display:flex; justify-content:space-between; gap:12px; }
+    .res-linea span:first-child { color:var(--gris); }
+    .res-total { display:flex; justify-content:space-between; border-top:1px solid rgba(255,255,255,0.1); margin-top:6px; padding-top:8px; font-weight:600; }
+    .etiqueta { font-size:13px; color:var(--gris); margin:4px 0 6px; }
+
+    /* Confirmación y mis reservas */
+    .listo { text-align:center; }
+    .listo .ok { width:56px; height:56px; border-radius:50%; background:var(--verde); color:var(--grafito); font-size:28px; font-weight:700; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
+    .item-res { background:var(--panel2); border-radius:10px; padding:12px 14px; margin-top:8px; text-align:left; font-size:14px; }
+    .item-res b { color:var(--voltaje); }
+    .pie { margin-top:24px; text-align:center; font-size:13px; }
+    .pie a, .pie button { color:var(--gris); background:none; border:none; font-size:13px; text-decoration:underline; cursor:pointer; font-family:inherit; margin:0 8px; }
   </style>
 </head>
 <body>
@@ -103,55 +106,79 @@
     <h1>Agenda <span>ClipperLab</span></h1>
     <p class="sub">Reserva tu hora en simples pasos.</p>
 
-    <!-- PASO 1: SERVICIOS -->
-    <div class="paso activo" id="paso1">
-      <div class="paso-titulo"><span class="paso-num">1</span> ¿Qué servicios quieres? <span class="paso-check" id="check1"></span></div>
-      <div class="lista-serv" id="listaServ"></div>
-      <div class="total-serv">
-        <div><small>Total</small><strong id="totalServ">$0</strong> <small id="durServ"></small></div>
-        <button class="boton-sec" id="btnServ" onclick="confirmarServicios()" disabled>Continuar</button>
+    <div id="wizard">
+      <!-- PASO 1: PERSONAS -->
+      <div class="paso activo" id="paso1">
+        <div class="paso-titulo"><span class="paso-num">1</span> ¿Para cuántas personas? <span class="paso-check" id="check1"></span></div>
+        <div class="chips" id="chipsPersonas"></div>
+        <p class="nota">¿Vienen juntos? Reserva a la misma hora, cada uno con su profesional.</p>
       </div>
-    </div>
 
-    <!-- PASO 2: PROFESIONAL -->
-    <div class="paso" id="paso2">
-      <div class="paso-titulo"><span class="paso-num">2</span> ¿Con quién quieres atenderte? <span class="paso-check" id="check2"></span></div>
-      <div class="grid-trab" id="gridTrab"></div>
-    </div>
-
-    <!-- PASO 3: DÍA -->
-    <div class="paso" id="paso3">
-      <div class="paso-titulo"><span class="paso-num">3</span> ¿Qué día? <span class="paso-check" id="check3"></span></div>
-      <div class="dias-cab">
-        <button onclick="cambiarMes(-1)">‹</button>
-        <span class="dias-mes" id="diasMes"></span>
-        <button onclick="cambiarMes(1)">›</button>
+      <!-- PASO 2: SERVICIOS Y PROFESIONAL -->
+      <div class="paso activo" id="paso2">
+        <div class="paso-titulo"><span class="paso-num">2</span> Servicios y profesional <span class="paso-check" id="check2"></span></div>
+        <div id="listaPersonas"></div>
+        <p class="aviso" id="avisoPersonas"></p>
+        <div class="total-serv">
+          <div><small>Total</small><strong id="totalServ">$0</strong> <small id="durServ"></small></div>
+          <button class="boton-sec" id="btnServ" onclick="confirmarServicios()" disabled>Continuar</button>
+        </div>
       </div>
-      <div class="dias-fila" id="diasFila"></div>
-    </div>
 
-    <!-- PASO 4: HORA -->
-    <div class="paso" id="paso4">
-      <div class="paso-titulo"><span class="paso-num">4</span> ¿A qué hora? <span class="paso-check" id="check4"></span></div>
-      <div id="listaHoras"></div>
-    </div>
+      <!-- PASO 3: DÍA -->
+      <div class="paso" id="paso3">
+        <div class="paso-titulo"><span class="paso-num">3</span> ¿Qué día? <span class="paso-check" id="check3"></span></div>
+        <div class="dias-cab">
+          <button onclick="cambiarMes(-1)" aria-label="Mes anterior">‹</button>
+          <span class="dias-mes" id="diasMes"></span>
+          <button onclick="cambiarMes(1)" aria-label="Mes siguiente">›</button>
+        </div>
+        <div class="dias-fila" id="diasFila"></div>
+      </div>
 
-    <!-- PASO 5: DATOS -->
-    <div class="paso" id="paso5">
-      <div class="paso-titulo"><span class="paso-num">5</span> Tus datos</div>
-      <div class="resumen" id="resumen"></div>
-      <div style="margin-top:14px;">
+      <!-- PASO 4: HORA -->
+      <div class="paso" id="paso4">
+        <div class="paso-titulo"><span class="paso-num">4</span> ¿A qué hora? <span class="paso-check" id="check4"></span></div>
+        <div id="listaHoras"></div>
+      </div>
+
+      <!-- PASO 5: DATOS -->
+      <div class="paso" id="paso5">
+        <div class="paso-titulo"><span class="paso-num">5</span> Tus datos</div>
+        <div class="resumen" id="resumen"></div>
         <input type="text" id="nombreCliente" placeholder="Tu nombre">
-        <input type="email" id="correoCliente" placeholder="Tu correo (Gmail)">
+        <div id="acompanantes"></div>
+        <input type="email" id="correoCliente" placeholder="Tu correo">
         <input type="tel" id="telefonoCliente" placeholder="Tu WhatsApp (ej. +56 9 1234 5678)">
-        <textarea id="descripcionCliente" placeholder="Mensaje para el profesional (opcional). Ej: quiero degradado bajo, traigo foto de referencia."></textarea>
-        <button class="boton" onclick="reservar()">Confirmar reserva</button>
+        <textarea id="mensajeCliente" placeholder="Mensaje para el profesional (opcional). Ej: degradado bajo, traigo foto de referencia."></textarea>
+        <button class="boton" id="btnReservar" onclick="reservar()">Confirmar reserva</button>
         <p class="estado" id="estado"></p>
       </div>
     </div>
 
-    <div class="conteo" id="conteo"></div>
-    <p class="conteo"><a href="panel.html" style="color:var(--gris);">Acceso equipo</a></p>
+    <!-- CONFIRMACIÓN -->
+    <div class="paso activo listo oculto" id="vistaListo">
+      <div class="ok">✓</div>
+      <h2 style="font-size:20px;">¡Reserva confirmada!</h2>
+      <p class="sub" id="listoSub" style="margin:4px 0 0;"></p>
+      <div id="listoLista"></div>
+      <button class="boton" style="margin-top:16px;" onclick="location.reload()">Hacer otra reserva</button>
+    </div>
+
+    <!-- MIS RESERVAS -->
+    <div class="paso activo oculto" id="vistaMis">
+      <div class="paso-titulo">Mis reservas</div>
+      <p class="nota" style="margin:0 0 10px;">Escribe el correo y WhatsApp con que reservaste.</p>
+      <input type="email" id="misCorreo" placeholder="Correo">
+      <input type="tel" id="misTelefono" placeholder="WhatsApp">
+      <button class="boton" onclick="buscarMisReservas()">Ver mis reservas</button>
+      <div id="misLista"></div>
+    </div>
+
+    <div class="pie">
+      <button onclick="toggleMis()">Mis reservas</button>
+      <a href="panel.html">Acceso equipo</a>
+    </div>
   </div>
 
   <script>
@@ -159,104 +186,173 @@
     const SUPABASE_KEY = "sb_publishable__WRIUNVBq6-nxTAwPD360g_5UICkBn_";
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // ====== CONFIGURACIÓN (edita aquí) ======
-    const SERVICIOS = [
-      { id:"corte",     nombre:"Corte",      precio:11000, min:40, desc:"Corte a tijera o máquina, con lavado y peinado." },
-      { id:"barba",     nombre:"Barba",      precio:6000,  min:20, desc:"Perfilado y arreglo de barba." },
-      { id:"barbafull", nombre:"Barba Full", precio:10000, min:30, desc:"Barba con toalla caliente, navaja y productos." },
-    ];
-    const TRABAJADORES = ["Marcos", "Juan"];
-    const HORAS = ["09:00","10:00","11:00","12:00","15:00","16:00","17:00"];
-    const CUALQUIERA = "__cualquiera__";
-    // ========================================
+    const PASO_MIN = 30;          // cada cuántos minutos se ofrece una hora (09:00, 09:30, ...)
+    const MAX_PERSONAS = 3;
+    const DIAS_ADELANTE = 120;
+    const AUTO = "auto";          // "Primer profesional disponible"
 
-    let serviciosElegidos = [];      // ids
-    let modoTrabajador = "";         // nombre o CUALQUIERA
-    let trabajadorAsignado = "";     // el que finalmente atiende
-    let fechaElegida = "", horaElegida = "";
+    // Datos que vienen de Supabase (agenda_config)
+    let CFG = { servicios:[], trabajadores:[], horarios:[], ahora:"" };
+    // Estado del wizard
+    let personas = [ nuevaPersona() ];
+    let fechaElegida = "", horaElegida = null, asignacion = [], ocupacion = [];
     let fechaVista = new Date();
-    let ocupacion = {};              // { "10:00": ["Marcos"], ... } del día elegido
 
     const $ = id => document.getElementById(id);
-    const clp = n => "$" + n.toLocaleString("es-CL");
+    const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const clp = n => "$" + Number(n||0).toLocaleString("es-CL");
+    const aMin = hhmm => { const [h,m] = hhmm.split(':').map(Number); return h*60+m; };
+    const aHora = min => `${String(Math.floor(min/60)).padStart(2,'0')}:${String(min%60).padStart(2,'0')}`;
+    const fechaTexto = f => `${f.getFullYear()}-${String(f.getMonth()+1).padStart(2,'0')}-${String(f.getDate()).padStart(2,'0')}`;
+    const nombreTrab = id => CFG.trabajadores.find(t => t.id === id)?.nombre || '';
     function activar(id){ $(id).classList.add('activo'); }
     function desactivar(id){ $(id).classList.remove('activo'); }
-    function servSel(){ return SERVICIOS.filter(s => serviciosElegidos.includes(s.id)); }
-    function totalPrecio(){ return servSel().reduce((a,s)=>a+s.precio,0); }
-    function totalMin(){ return servSel().reduce((a,s)=>a+s.min,0); }
-    function nombresServ(){ return servSel().map(s=>s.nombre).join(" + "); }
+    function nuevaPersona(){ return { servicios:[], trabajador:AUTO }; }
 
-    // ---------- PASO 1: SERVICIOS ----------
-    function dibujarServicios(){
-      $('listaServ').innerHTML = SERVICIOS.map(s => {
-        const sel = serviciosElegidos.includes(s.id);
-        return `<div class="card-serv ${sel?'sel':''}" onclick="toggleServicio('${s.id}')">
-          <div class="caja-check">${sel?'✓':''}</div>
-          <div class="serv-info"><div class="serv-nom">${s.nombre}</div><div class="serv-desc">${s.desc}</div><div class="serv-dur">${s.min} min</div></div>
-          <div class="serv-precio">${clp(s.precio)}</div></div>`;
-      }).join('');
-      $('totalServ').textContent = clp(totalPrecio());
-      $('durServ').textContent = serviciosElegidos.length ? `· ${totalMin()} min` : '';
-      $('btnServ').disabled = serviciosElegidos.length === 0;
+    // ----- cálculos por persona -----
+    const servDe  = p => CFG.servicios.filter(s => p.servicios.includes(s.id));
+    const durDe   = p => servDe(p).reduce((a,s) => a + s.duracion, 0);
+    const totalDe = p => servDe(p).reduce((a,s) => a + s.precio, 0);
+    const totalGrupo = () => personas.reduce((a,p) => a + totalDe(p), 0);
+
+    // ---------- CARGA INICIAL ----------
+    async function iniciar(){
+      const { data, error } = await db.rpc('agenda_config');
+      if (error){ $('wizard').innerHTML = `<p class="estado">No pudimos cargar la agenda: ${esc(error.message)}</p>`; return; }
+      CFG = data;
+      const [f] = CFG.ahora.split('T'); const [a,m] = f.split('-').map(Number);
+      fechaVista = new Date(a, m-1, 1);
+      dibujarChipsPersonas(); dibujarPersonas(); dibujarDias();
     }
-    function toggleServicio(id){
-      serviciosElegidos = serviciosElegidos.includes(id)
-        ? serviciosElegidos.filter(x=>x!==id)
-        : [...serviciosElegidos, id];
-      dibujarServicios();
-      // si ya había avanzado y cambia servicios, se actualiza el resumen
-      if ($('check1').textContent) {
-        if (serviciosElegidos.length === 0) { $('check1').textContent=''; ['paso2','paso3','paso4','paso5'].forEach(desactivar); }
-        else { $('check1').textContent = '✓ ' + clp(totalPrecio()); dibujarResumen(); }
-      }
+
+    // ---------- PASO 1: PERSONAS ----------
+    function maxPersonas(){ return Math.max(1, Math.min(MAX_PERSONAS, CFG.trabajadores.length)); }
+    function dibujarChipsPersonas(){
+      let html = '';
+      for (let n=1; n<=maxPersonas(); n++)
+        html += `<button class="chip ${n===personas.length?'sel':''}" onclick="elegirPersonas(${n})">${n} ${n===1?'persona':'personas'}</button>`;
+      $('chipsPersonas').innerHTML = html;
+      $('check1').textContent = '✓ ' + personas.length;
+    }
+    function elegirPersonas(n){
+      while (personas.length < n) personas.push(nuevaPersona());
+      personas = personas.slice(0, n);
+      dibujarChipsPersonas(); dibujarPersonas(); reiniciarDesde(3);
+    }
+
+    // ---------- PASO 2: SERVICIOS Y PROFESIONAL ----------
+    function dibujarPersonas(){
+      $('listaPersonas').innerHTML = personas.map((p, i) => {
+        const titulo = personas.length === 1 ? 'Tus servicios' : (i === 0 ? 'Persona 1 (tú)' : `Persona ${i+1}`);
+        const serv = CFG.servicios.map(s => {
+          const sel = p.servicios.includes(s.id);
+          return `<div class="card-serv ${sel?'sel':''}" onclick="toggleServicio(${i}, ${s.id})">
+            <div class="caja-check">${sel?'✓':''}</div>
+            <div class="serv-info"><div class="serv-nom">${esc(s.nombre)}</div><div class="serv-desc">${esc(s.descripcion||'')} · ${s.duracion} min</div></div>
+            <div class="serv-precio">${clp(s.precio)}</div></div>`;
+        }).join('');
+        const opciones = `<option value="${AUTO}">Primer profesional disponible</option>` +
+          CFG.trabajadores.map(t => `<option value="${t.id}" ${p.trabajador===t.id?'selected':''}>${esc(t.nombre)}</option>`).join('');
+        return `<div class="persona">
+          <div class="persona-cab"><span>${titulo}</span><small>${p.servicios.length ? clp(totalDe(p)) + ' · ' + durDe(p) + ' min' : ''}</small></div>
+          ${serv}
+          <div class="fila-prof"><label>Profesional</label><select onchange="elegirProfesional(${i}, this.value)">${opciones}</select></div>
+        </div>`;
+      }).join('');
+      actualizarTotal();
+    }
+    function toggleServicio(i, id){
+      const p = personas[i];
+      p.servicios = p.servicios.includes(id) ? p.servicios.filter(x => x !== id) : [...p.servicios, id];
+      dibujarPersonas(); reiniciarDesde(3);
+    }
+    function elegirProfesional(i, valor){
+      personas[i].trabajador = valor === AUTO ? AUTO : Number(valor);
+      actualizarTotal(); reiniciarDesde(3);
+    }
+    function problemaPersonas(){
+      if (personas.some(p => !p.servicios.length)) return personas.length > 1 ? 'Elige al menos un servicio para cada persona.' : '';
+      const fijos = personas.filter(p => p.trabajador !== AUTO).map(p => p.trabajador);
+      if (new Set(fijos).size !== fijos.length) return 'Para ir a la misma hora, cada persona necesita un profesional distinto.';
+      return '';
+    }
+    function actualizarTotal(){
+      $('totalServ').textContent = clp(totalGrupo());
+      const durMax = Math.max(0, ...personas.map(durDe));
+      $('durServ').textContent = durMax ? `· ${durMax} min` : '';
+      const problema = problemaPersonas();
+      $('avisoPersonas').textContent = problema;
+      $('btnServ').disabled = !!problema || personas.some(p => !p.servicios.length);
+      $('check2').textContent = $('paso3').classList.contains('activo') && !$('btnServ').disabled ? '✓ ' + clp(totalGrupo()) : '';
     }
     function confirmarServicios(){
-      if (!serviciosElegidos.length) return;
-      $('check1').textContent = '✓ ' + clp(totalPrecio());
-      activar('paso2');
-      $('paso2').scrollIntoView({behavior:'smooth', block:'start'});
+      if ($('btnServ').disabled) return;
+      activar('paso3'); actualizarTotal(); dibujarDias();
+      $('paso3').scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+    // Si cambia algo arriba, lo de abajo se vuelve a elegir
+    function reiniciarDesde(n){
+      if (n <= 3){ fechaElegida = ''; $('check3').textContent = ''; desactivar('paso3'); dibujarDias(); }
+      if (n <= 4){ horaElegida = null; $('check4').textContent = ''; desactivar('paso4'); $('listaHoras').innerHTML = ''; }
+      desactivar('paso5'); actualizarTotal();
     }
 
-    // ---------- PASO 2: PROFESIONAL ----------
-    function dibujarTrabajadores(){
-      let html = `<div class="card-trab cualquiera" data-t="${CUALQUIERA}" onclick="elegirTrabajador('${CUALQUIERA}', this)">
-        <div class="avatar alt">⚡</div><span>Primer profesional disponible<small>Te mostramos todas las horas libres</small></span></div>`;
-      html += TRABAJADORES.map(t =>
-        `<div class="card-trab" data-t="${t}" onclick="elegirTrabajador('${t}', this)"><div class="avatar">${t[0]}</div><span>${t}</span></div>`
-      ).join('');
-      $('gridTrab').innerHTML = html;
+    // ---------- DISPONIBILIDAD ----------
+    function horarioDe(tid, dow){ return CFG.horarios.find(h => h.trabajador_id === tid && h.dia === dow); }
+    function candidatos(p){ return p.trabajador === AUTO ? CFG.trabajadores.map(t => t.id) : [p.trabajador]; }
+    function trabajaAlguien(dow){
+      return personas.every(p => candidatos(p).some(tid => horarioDe(tid, dow)));
     }
-    function elegirTrabajador(t, el){
-      modoTrabajador = t;
-      document.querySelectorAll('.card-trab').forEach(c => c.classList.remove('sel'));
-      el.classList.add('sel');
-      $('check2').textContent = '✓ ' + (t === CUALQUIERA ? 'Primer disponible' : t);
-      activar('paso3');
-      if (fechaElegida) cargarHoras();
+    // ¿El trabajador puede atender de "desde" a "hasta" (minutos) ese día?
+    function estaLibre(tid, dow, desde, hasta, minimo){
+      const h = horarioDe(tid, dow);
+      if (!h || desde < aMin(h.inicio) || hasta > aMin(h.fin) || desde < minimo) return false;
+      if (h.almuerzo_inicio && desde < aMin(h.almuerzo_fin) && hasta > aMin(h.almuerzo_inicio)) return false;
+      return !ocupacion.some(o => o.trabajador_id === tid && desde < o.hasta && hasta > o.desde);
+    }
+    // Busca una combinación válida: cada persona con un profesional distinto y libre (prueba todas, son pocas)
+    function buscarAsignacion(dow, desde, minimo){
+      const orden = personas.map((p,i) => i).sort((a,b) => candidatos(personas[a]).length - candidatos(personas[b]).length);
+      const res = [], usados = new Set();
+      function probar(k){
+        if (k === orden.length) return true;
+        const i = orden[k], p = personas[i];
+        for (const tid of candidatos(p)){
+          if (usados.has(tid) || !estaLibre(tid, dow, desde, desde + durDe(p), minimo)) continue;
+          usados.add(tid); res[i] = tid;
+          if (probar(k+1)) return true;
+          usados.delete(tid);
+        }
+        return false;
+      }
+      return probar(0) ? res.slice() : null;
     }
 
     // ---------- PASO 3: DÍA ----------
     const NOMBRES_DIA = ["dom","lun","mar","mié","jue","vie","sáb"];
-    function fechaTexto(f){ return `${f.getFullYear()}-${String(f.getMonth()+1).padStart(2,'0')}-${String(f.getDate()).padStart(2,'0')}`; }
     function dibujarDias(){
+      if (!CFG.ahora) return;
       const año = fechaVista.getFullYear(), mes = fechaVista.getMonth();
-      $('diasMes').textContent = fechaVista.toLocaleDateString('es-CL',{month:'long',year:'numeric'});
+      $('diasMes').textContent = fechaVista.toLocaleDateString('es-CL', { month:'long', year:'numeric' });
+      const hoyTxt = CFG.ahora.split('T')[0];
+      const limite = new Date(hoyTxt + 'T00:00'); limite.setDate(limite.getDate() + DIAS_ADELANTE);
       const diasEnMes = new Date(año, mes+1, 0).getDate();
-      const hoy = new Date(); hoy.setHours(0,0,0,0);
       let html = '';
       for (let d=1; d<=diasEnMes; d++){
-        const fecha = new Date(año,mes,d);
-        const ft = fechaTexto(fecha);
-        const pasado = fecha < hoy;
-        html += `<div class="dia-card ${pasado?'pasado':''} ${ft===fechaElegida?'sel':''}" ${pasado?'':`onclick="elegirDia('${ft}', this)"`}>
-          <div class="dia-nom">${NOMBRES_DIA[fecha.getDay()]}</div><div class="dia-num">${d}</div></div>`;
+        const f = new Date(año, mes, d), ft = fechaTexto(f);
+        const off = ft < hoyTxt || f > limite || !trabajaAlguien(f.getDay());
+        html += `<div class="dia-card ${off?'off':''} ${ft===fechaElegida?'sel':''}" ${off?'':`onclick="elegirDia('${ft}', this)"`}>
+          <div class="dia-nom">${NOMBRES_DIA[f.getDay()]}</div><div class="dia-num">${d}</div>
+          ${!trabajaAlguien(f.getDay()) ? '<div class="dia-extra">cerrado</div>' : ''}</div>`;
       }
       $('diasFila').innerHTML = html;
+      const sel = $('diasFila').querySelector('.sel') || $('diasFila').querySelector('.dia-card:not(.off)');
+      if (sel) sel.scrollIntoView({ block:'nearest', inline:'center' });
     }
-    function cambiarMes(delta){ fechaVista.setDate(1); fechaVista.setMonth(fechaVista.getMonth()+delta); dibujarDias(); }
+    function cambiarMes(delta){ fechaVista.setMonth(fechaVista.getMonth() + delta); dibujarDias(); }
     function elegirDia(ft, el){
       fechaElegida = ft;
-      document.querySelectorAll('.dia-card').forEach(c=>c.classList.remove('sel'));
+      document.querySelectorAll('.dia-card').forEach(c => c.classList.remove('sel'));
       el.classList.add('sel');
       $('check3').textContent = '✓ ' + ft;
       activar('paso4');
@@ -264,112 +360,131 @@
     }
 
     // ---------- PASO 4: HORA ----------
-    function libresEn(hora){ return TRABAJADORES.filter(t => !(ocupacion[hora]||[]).includes(t)); }
-    function horaPasada(h){
-      if (fechaElegida !== fechaTexto(new Date())) return false;
-      const [hh,mm] = h.split(':').map(Number), ahora = new Date();
-      return hh*60+mm <= ahora.getHours()*60+ahora.getMinutes();
-    }
     async function cargarHoras(){
+      reiniciarDesde(4); activar('paso4');
       const cont = $('listaHoras');
-      horaElegida = ""; trabajadorAsignado = ""; $('check4').textContent = '';
-      desactivar('paso5');
-      if (!modoTrabajador || !fechaElegida) return;
-      cont.innerHTML = '<p class="resumen-mini">Cargando horas…</p>';
+      if (!fechaElegida) return;
+      cont.innerHTML = '<p class="nota">Buscando horas libres…</p>';
+      const { data, error } = await db.rpc('ocupacion', { p_fecha: fechaElegida });
+      if (error){ cont.innerHTML = `<p class="aviso">Error: ${esc(error.message)}</p>`; return; }
+      ocupacion = data;
 
-      // Consulta pública segura: solo hora + trabajador, sin datos de clientes
-      const { data, error } = await db.rpc('horas_ocupadas', { p_fecha: fechaElegida });
-      if (error) { cont.innerHTML = "Error: " + error.message; return; }
-      ocupacion = {};
-      data.forEach(r => { (ocupacion[r.hora] = ocupacion[r.hora] || []).push(r.trabajador); });
+      const [a,m,d] = fechaElegida.split('-').map(Number), dow = new Date(a, m-1, d).getDay();
+      const [hoy, hhmm] = CFG.ahora.split('T');
+      const minimo = fechaElegida === hoy ? aMin(hhmm) + 15 : 0;   // hoy: al menos 15 min de aviso
+      const hs = CFG.horarios.filter(h => h.dia === dow);
+      if (!hs.length){ cont.innerHTML = '<p class="nota">Ese día no atendemos.</p>'; return; }
+      const desdeDia = Math.min(...hs.map(h => aMin(h.inicio))), hastaDia = Math.max(...hs.map(h => aMin(h.fin)));
 
-      const libres = HORAS.filter(h => {
-        if (horaPasada(h)) return false;
-        return modoTrabajador === CUALQUIERA ? libresEn(h).length > 0 : libresEn(h).includes(modoTrabajador);
-      });
-
-      if (!libres.length) { cont.innerHTML = '<p class="resumen-mini">No quedan horas este día. Elige otro.</p>'; return; }
-      const boton = h => `<div class="hora" onclick="elegirHora('${h}', this)">${h}</div>`;
-      const manana = libres.filter(h=>parseInt(h)<13), tarde = libres.filter(h=>parseInt(h)>=13);
+      const libres = [];
+      for (let t = desdeDia; t < hastaDia; t += PASO_MIN){
+        const asig = buscarAsignacion(dow, t, minimo);
+        if (asig) libres.push({ t, asig });
+      }
+      if (!libres.length){
+        cont.innerHTML = `<p class="nota">No quedan horas este día${personas.length>1?' para '+personas.length+' personas juntas':''}. Prueba otro día.</p>`;
+        return;
+      }
+      window._libres = libres;
+      const boton = (x, k) => `<button class="hora" onclick="elegirHora(${k}, this)">${aHora(x.t)}</button>`;
+      const man = libres.map((x,k) => [x,k]).filter(([x]) => x.t < 13*60), tar = libres.map((x,k) => [x,k]).filter(([x]) => x.t >= 13*60);
       let html = '';
-      if (manana.length) html += '<div class="franja">Mañana</div><div class="fila-horas">'+manana.map(boton).join('')+'</div>';
-      if (tarde.length)  html += '<div class="franja">Tarde</div><div class="fila-horas">'+tarde.map(boton).join('')+'</div>';
+      if (man.length) html += '<div class="franja">Mañana</div><div class="fila-horas">' + man.map(([x,k]) => boton(x,k)).join('') + '</div>';
+      if (tar.length) html += '<div class="franja">Tarde</div><div class="fila-horas">' + tar.map(([x,k]) => boton(x,k)).join('') + '</div>';
       cont.innerHTML = html;
     }
-    function elegirHora(h, el){
-      horaElegida = h;
-      trabajadorAsignado = modoTrabajador === CUALQUIERA ? libresEn(h)[0] : modoTrabajador;
-      document.querySelectorAll('.hora').forEach(x=>x.classList.remove('sel'));
+    function elegirHora(k, el){
+      const x = window._libres[k];
+      horaElegida = x.t; asignacion = x.asig;
+      document.querySelectorAll('.hora').forEach(b => b.classList.remove('sel'));
       el.classList.add('sel');
-      $('check4').textContent = '✓ ' + h;
-      dibujarResumen();
+      $('check4').textContent = '✓ ' + aHora(x.t);
+      dibujarResumen(); dibujarAcompanantes();
       activar('paso5');
-      $('paso5').scrollIntoView({behavior:'smooth', block:'start'});
+      $('paso5').scrollIntoView({ behavior:'smooth', block:'start' });
     }
 
     // ---------- PASO 5: DATOS ----------
     function dibujarResumen(){
-      if (!horaElegida) return;
-      const filas = servSel().map(s => `<div><span>${s.nombre} (${s.min} min)</span><span>${clp(s.precio)}</span></div>`).join('');
-      $('resumen').innerHTML = filas +
-        `<div><span>Profesional</span><span>${trabajadorAsignado}</span></div>` +
-        `<div><span>Fecha y hora</span><span>${fechaElegida} · ${horaElegida}</span></div>` +
-        `<div class="fila-total"><span>Total (${totalMin()} min)</span><span>${clp(totalPrecio())}</span></div>`;
+      const bloques = personas.map((p, i) => `
+        <div class="res-persona">
+          ${personas.length > 1 ? `<div class="res-linea"><span>${i===0?'Tú':'Persona '+(i+1)}</span><span>${clp(totalDe(p))}</span></div>` : ''}
+          <div class="res-linea"><span>${esc(servDe(p).map(s=>s.nombre).join(' + '))}</span><span>${personas.length===1?clp(totalDe(p)):''}</span></div>
+          <div class="res-linea"><span>Con ${esc(nombreTrab(asignacion[i]))}</span><span>${aHora(horaElegida)} – ${aHora(horaElegida + durDe(p))}</span></div>
+        </div>`).join('');
+      $('resumen').innerHTML = `<div class="res-linea" style="margin-bottom:4px;"><span>Fecha</span><span>${fechaElegida}</span></div>` +
+        bloques + `<div class="res-total"><span>Total</span><span>${clp(totalGrupo())}</span></div>`;
+    }
+    function dibujarAcompanantes(){
+      const previos = [...document.querySelectorAll('.acomp')].map(x => x.value);
+      $('acompanantes').innerHTML = personas.slice(1).map((p,i) =>
+        `<input type="text" class="acomp" placeholder="Nombre de la persona ${i+2}" value="${esc(previos[i]||'')}">`).join('');
     }
 
     async function reservar(){
-      const nombre = $('nombreCliente').value.trim();
-      const correo = $('correoCliente').value.trim();
-      const telefono = $('telefonoCliente').value.trim();
-      const mensaje = $('descripcionCliente').value.trim();
-      const estado = $('estado');
-      if (!serviciosElegidos.length){ estado.textContent="Elige al menos un servicio."; return; }
-      if (!nombre){ estado.textContent="Escribe tu nombre."; return; }
-      if (!correo){ estado.textContent="Escribe tu correo."; return; }
-      if (!telefono){ estado.textContent="Escribe tu WhatsApp."; return; }
-      estado.textContent = "Reservando...";
+      const nombre = $('nombreCliente').value.trim(), correo = $('correoCliente').value.trim();
+      const telefono = $('telefonoCliente').value.trim(), mensaje = $('mensajeCliente').value.trim();
+      const acomp = [...document.querySelectorAll('.acomp')].map(x => x.value.trim());
+      const est = $('estado');
+      if (!nombre){ est.textContent = "Escribe tu nombre."; return; }
+      if (!/^\S+@\S+\.\S+$/.test(correo)){ est.textContent = "Escribe un correo válido."; return; }
+      if (telefono.replace(/\D/g,'').length < 8){ est.textContent = "Escribe tu WhatsApp."; return; }
+      if (acomp.some(a => !a)){ est.textContent = "Escribe el nombre de cada acompañante."; return; }
 
-      // Revisar de nuevo quién está libre a esa hora (por si alguien reservó recién)
-      const { data:check } = await db.rpc('horas_ocupadas', { p_fecha: fechaElegida });
-      const ocupados = (check||[]).filter(r=>r.hora===horaElegida).map(r=>r.trabajador);
-      if (ocupados.includes(trabajadorAsignado)) {
-        const otro = modoTrabajador === CUALQUIERA ? TRABAJADORES.find(t=>!ocupados.includes(t)) : null;
-        if (otro) { trabajadorAsignado = otro; }
-        else { estado.textContent="Uy, esa hora se acaba de ocupar. Elige otra."; cargarHoras(); return; }
-      }
-
-      const servicios = nombresServ(), total = clp(totalPrecio()), duracion = totalMin() + " min";
-      // Se guarda todo en "descripcion" para no tener que cambiar la tabla
-      const descripcion = `Servicios: ${servicios} | Total: ${total} | ${duracion}` + (mensaje ? `\nMensaje: ${mensaje}` : '');
-
-      const { error } = await db.from('reservas').insert({
-        nombre, hora:horaElegida, fecha:fechaElegida, trabajador:trabajadorAsignado, correo, telefono, descripcion
-      });
+      $('btnReservar').disabled = true; est.textContent = "Reservando...";
+      const payload = {
+        fecha: fechaElegida, hora: aHora(horaElegida), nombre, correo, telefono, mensaje,
+        personas: personas.map((p, i) => ({ nombre: i===0 ? nombre : acomp[i-1], servicios: p.servicios, trabajador_id: asignacion[i] }))
+      };
+      const { data, error } = await db.rpc('reservar_grupo', { p: payload });
+      $('btnReservar').disabled = false;
       if (error){
-        // 23505 = el candado anti-tope de la base de datos detectó que la hora ya se tomó
-        estado.textContent = error.code === '23505' ? "Uy, esa hora se acaba de ocupar. Elige otra." : "Error: " + error.message;
-        if (error.code === '23505') cargarHoras();
+        if (error.message.includes('HORA_OCUPADA')){ est.textContent = "Alguien acaba de tomar esa hora. Te mostramos las horas actualizadas."; cargarHoras(); }
+        else est.textContent = "No se pudo reservar: " + error.message;
         return;
       }
 
+      // Aviso al admin por correo (Formspree)
+      const detalle = data.map(r => `${r.nombre}: ${r.servicios} con ${r.trabajador} ${r.desde}-${r.hasta} (${clp(r.total)})`).join('\n');
       try {
         await fetch("https://formspree.io/f/xzezawgo", { method:"POST",
           headers:{ "Content-Type":"application/json", "Accept":"application/json" },
-          body: JSON.stringify({ _subject:"Nueva reserva ClipperLab", servicios, total, duracion,
-            trabajador:trabajadorAsignado, fecha:fechaElegida, hora:horaElegida, nombre, correo, telefono, mensaje }) });
+          body: JSON.stringify({ _subject:`Nueva reserva ClipperLab (${data.length} persona${data.length>1?'s':''})`,
+            fecha: fechaElegida, hora: aHora(horaElegida), reservas: detalle,
+            total: clp(data.reduce((a,r)=>a+r.total,0)), nombre, correo, telefono, mensaje }) });
       } catch(e) {}
 
-      estado.textContent = `✓ Reservado: ${servicios} con ${trabajadorAsignado}, ${fechaElegida} a las ${horaElegida}. Total ${total}.`;
-      ['nombreCliente','correoCliente','telefonoCliente','descripcionCliente'].forEach(id => $(id).value='');
-      cargarHoras(); cargarConteo();
+      mostrarConfirmacion(data);
     }
 
-    async function cargarConteo(){
-      const { data:count, error } = await db.rpc('total_reservas');
-      if (!error) $('conteo').innerHTML = `Total de reservas: <strong style="color:var(--hueso)">${count}</strong>`;
+    function mostrarConfirmacion(data){
+      $('wizard').classList.add('oculto');
+      $('vistaListo').classList.remove('oculto');
+      $('listoSub').textContent = `${fechaElegida} · Total ${clp(data.reduce((a,r)=>a+r.total,0))}`;
+      $('listoLista').innerHTML = data.map(r => `<div class="item-res"><b>${esc(r.desde)} – ${esc(r.hasta)}</b> · ${esc(r.nombre)}<br>${esc(r.servicios)} con ${esc(r.trabajador)} · ${clp(r.total)}</div>`).join('') +
+        `<p class="nota" style="margin-top:12px;">Puedes revisar tus reservas en "Mis reservas" con tu correo y WhatsApp.</p>`;
+      window.scrollTo({ top:0, behavior:'smooth' });
     }
 
-    dibujarServicios(); dibujarTrabajadores(); dibujarDias(); cargarConteo();
+    // ---------- MIS RESERVAS ----------
+    function toggleMis(){
+      $('vistaMis').classList.toggle('oculto');
+      if (!$('vistaMis').classList.contains('oculto')) $('vistaMis').scrollIntoView({ behavior:'smooth' });
+    }
+    async function buscarMisReservas(){
+      const cont = $('misLista');
+      const correo = $('misCorreo').value.trim(), tel = $('misTelefono').value.trim();
+      if (!correo || tel.replace(/\D/g,'').length < 8){ cont.innerHTML = '<p class="aviso">Escribe tu correo y WhatsApp.</p>'; return; }
+      cont.innerHTML = '<p class="nota">Buscando…</p>';
+      const { data, error } = await db.rpc('mis_reservas', { p_correo: correo, p_telefono: tel });
+      if (error){ cont.innerHTML = `<p class="aviso">Error: ${esc(error.message)}</p>`; return; }
+      if (!data.length){ cont.innerHTML = '<p class="nota" style="margin-top:10px;">No encontramos reservas próximas con esos datos.</p>'; return; }
+      const est = { confirmada:'Confirmada', completada:'Completada', cancelada:'Cancelada', no_asistio:'No asistió' };
+      cont.innerHTML = data.map(r => `<div class="item-res"><b>${esc(r.fecha)} · ${esc(r.desde)} – ${esc(r.hasta)}</b> · ${esc(r.nombre)}<br>
+        ${esc(r.servicios || 'Reserva')} con ${esc(r.trabajador)}${r.total ? ' · ' + clp(r.total) : ''} · ${est[r.estado] || esc(r.estado)}</div>`).join('');
+    }
+
+    iniciar();
   </script>
 </body>
 </html>
