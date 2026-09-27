@@ -161,6 +161,7 @@
       <div class="tarjeta">
         <p>Tu cuenta (<strong id="pendCorreo"></strong>) todavía no tiene acceso.</p>
         <p class="sub" style="margin-top:6px;">Pídele al administrador que te agregue en <em>Equipo</em> con este mismo correo. Si recién creaste la cuenta, confirma tu correo desde el mensaje que te llegó.</p>
+        <p class="error" id="pendDetalle" style="margin-top:10px;font-size:14px;"></p>
         <button class="boton-linea" style="margin-top:14px;" onclick="salir()">Cerrar sesión</button>
       </div>
     </section>
@@ -317,7 +318,14 @@
       if (modoRecuperacion){ mostrar('vistaNuevaClave'); return; }
       if (!session){ yo = null; mostrar('vistaLogin'); return; }
       const { data, error } = await db.rpc('mi_sesion');
-      if (error || !data || data.rol === 'pendiente'){ $('pendCorreo').textContent = session.user.email; mostrar('vistaPendiente'); return; }
+      if (error || !data || data.rol === 'pendiente'){
+        $('pendCorreo').textContent = session.user.email;
+        // Si falla la consulta no es un problema de permisos: se muestra el motivo real
+        $('pendDetalle').innerHTML = !error ? '' : (error.code === 'PGRST202' || /mi_sesion/.test(error.message || '')
+          ? '⚠️ Falta instalar la Fase 2 en Supabase: corre <b>fase2-equipo-horarios.sql</b> en el SQL Editor y recarga esta página.'
+          : '⚠️ Error al revisar tu acceso: ' + esc(error.message || JSON.stringify(error)));
+        mostrar('vistaPendiente'); return;
+      }
       yo = { ...data, correo: session.user.email };
       $('yoAvatar').textContent = (yo.nombre || '?')[0].toUpperCase();
       $('yoNombre').textContent = yo.nombre || yo.correo;
