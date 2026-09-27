@@ -42,8 +42,16 @@
     .serv-nom { font-size:14px; font-weight:600; }
     .serv-desc { font-size:12px; color:var(--gris); }
     .serv-precio { font-weight:600; white-space:nowrap; font-size:14px; }
-    .fila-prof { display:flex; align-items:center; gap:10px; margin-top:10px; }
-    .fila-prof label { font-size:13px; color:var(--gris); white-space:nowrap; }
+    .etq-prof { font-size:13px; color:var(--gris); margin:12px 0 6px; }
+    .pros { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; }
+    .pro { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--panel); border:1px solid rgba(255,255,255,0.1); border-radius:10px; cursor:pointer; color:var(--hueso); font-family:inherit; font-size:14px; text-align:left; }
+    .pro:hover { border-color:var(--voltaje); }
+    .pro.sel { border-color:var(--voltaje); background:rgba(255,122,47,0.14); }
+    .pro:disabled { opacity:.35; cursor:not-allowed; }
+    .pro small { display:block; font-size:11px; color:var(--gris); }
+    .pro:first-child { grid-column:1 / -1; }
+    .pro-av { width:34px; height:34px; border-radius:50%; background:var(--voltaje); color:var(--grafito); display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; }
+    .pro-av.alt { background:var(--verde); }
     .total-serv { display:flex; justify-content:space-between; align-items:center; margin-top:6px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08); }
     .total-serv strong { font-size:18px; color:var(--voltaje); }
     .total-serv small { color:var(--gris); display:block; font-size:12px; }
@@ -251,12 +259,16 @@
             <div class="serv-info"><div class="serv-nom">${esc(s.nombre)}</div><div class="serv-desc">${esc(s.descripcion||'')} · ${s.duracion} min</div></div>
             <div class="serv-precio">${clp(s.precio)}</div></div>`;
         }).join('');
-        const opciones = `<option value="${AUTO}">Primer profesional disponible</option>` +
-          CFG.trabajadores.map(t => `<option value="${t.id}" ${p.trabajador===t.id?'selected':''}>${esc(t.nombre)}</option>`).join('');
+        const tomados = personas.filter((q, k) => k !== i && q.trabajador !== AUTO).map(q => q.trabajador);
+        const pros = `<button class="pro ${p.trabajador===AUTO?'sel':''}" onclick="elegirProfesional(${i}, '${AUTO}')">
+            <span class="pro-av alt">⚡</span><span>Cualquier profesional<small>Te asignamos al más disponible</small></span></button>` +
+          CFG.trabajadores.map(t => `<button class="pro ${p.trabajador===t.id?'sel':''}" ${tomados.includes(t.id)?'disabled title="Ya elegido para otra persona"':''} onclick="elegirProfesional(${i}, ${t.id})">
+            <span class="pro-av">${esc(t.nombre[0])}</span><span>${esc(t.nombre)}<small>${tomados.includes(t.id)?'Ya elegido':'Ver sus horas'}</small></span></button>`).join('');
         return `<div class="persona">
           <div class="persona-cab"><span>${titulo}</span><small>${p.servicios.length ? clp(totalDe(p)) + ' · ' + durDe(p) + ' min' : ''}</small></div>
           ${serv}
-          <div class="fila-prof"><label>Profesional</label><select onchange="elegirProfesional(${i}, this.value)">${opciones}</select></div>
+          <div class="etq-prof">¿Con quién?</div>
+          <div class="pros">${pros}</div>
         </div>`;
       }).join('');
       actualizarTotal();
@@ -268,7 +280,7 @@
     }
     function elegirProfesional(i, valor){
       personas[i].trabajador = valor === AUTO ? AUTO : Number(valor);
-      actualizarTotal(); reiniciarDesde(3);
+      dibujarPersonas(); reiniciarDesde(3);
     }
     function problemaPersonas(){
       if (personas.some(p => !p.servicios.length)) return personas.length > 1 ? 'Elige al menos un servicio para cada persona.' : '';
@@ -299,7 +311,11 @@
 
     // ---------- DISPONIBILIDAD ----------
     function horarioDe(tid, dow){ return CFG.horarios.find(h => h.trabajador_id === tid && h.dia === dow); }
-    function candidatos(p){ return p.trabajador === AUTO ? CFG.trabajadores.map(t => t.id) : [p.trabajador]; }
+    let carga = {};   // minutos ya agendados por profesional en el día elegido
+    function candidatos(p){
+      if (p.trabajador !== AUTO) return [p.trabajador];
+      return CFG.trabajadores.map(t => t.id).sort((a, b) => (carga[a]||0) - (carga[b]||0));
+    }
     function trabajaAlguien(dow){
       return personas.every(p => candidatos(p).some(tid => horarioDe(tid, dow)));
     }
@@ -368,6 +384,8 @@
       const { data, error } = await db.rpc('ocupacion', { p_fecha: fechaElegida });
       if (error){ cont.innerHTML = `<p class="aviso">Error: ${esc(error.message)}</p>`; return; }
       ocupacion = data;
+      carga = {};
+      ocupacion.forEach(o => { carga[o.trabajador_id] = (carga[o.trabajador_id]||0) + (o.hasta - o.desde); });
 
       const [a,m,d] = fechaElegida.split('-').map(Number), dow = new Date(a, m-1, d).getDay();
       const [hoy, hhmm] = CFG.ahora.split('T');
@@ -484,7 +502,14 @@
         ${esc(r.servicios || 'Reserva')} con ${esc(r.trabajador)}${r.total ? ' · ' + clp(r.total) : ''} · ${est[r.estado] || esc(r.estado)}</div>`).join('');
     }
 
-    iniciar();
+    // Si algo falla, se muestra en pantalla en vez de quedar en blanco
+    window.addEventListener('error', e => {
+      const w = document.getElementById('wizard');
+      if (w) w.insertAdjacentHTML('afterbegin', `<p class="aviso" style="margin-bottom:12px;">Error en la página: ${esc(e.message)}</p>`);
+    });
+    if (typeof supabase === 'undefined') {
+      document.getElementById('wizard').innerHTML = '<p class="aviso">No se pudo cargar la conexión con la base de datos. Revisa tu internet y recarga la página.</p>';
+    } else iniciar();
   </script>
 </body>
 </html>
