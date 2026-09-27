@@ -15,25 +15,33 @@
     h1 { font-size:24px; margin-bottom:4px; }
     h1 span { color:var(--voltaje); }
     .sub { color:var(--gris); margin-bottom:20px; font-size:14px; }
+    .nota { color:var(--gris); font-size:12px; }
+    .aviso { color:var(--rojo); font-size:13px; margin-top:8px; }
 
     .paso { background:var(--panel); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:20px; margin-bottom:14px; opacity:0.45; pointer-events:none; transition:opacity .3s; }
     .paso.activo { opacity:1; pointer-events:auto; border-color:rgba(255,122,47,0.3); }
     .paso-titulo { display:flex; align-items:center; gap:10px; font-size:15px; font-weight:600; margin-bottom:14px; }
     .paso-num { width:24px; height:24px; border-radius:50%; background:var(--voltaje); color:var(--grafito); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0; }
     .paso-check { color:var(--verde); font-size:13px; margin-left:auto; text-align:right; }
+    .quien-tag { color:var(--voltaje); font-weight:600; }
 
-    /* Cantidad de personas */
     .chips { display:flex; gap:8px; flex-wrap:wrap; }
     .chip { background:var(--panel2); border:1px solid rgba(255,255,255,0.12); color:var(--hueso); padding:10px 18px; border-radius:10px; cursor:pointer; font-size:14px; font-family:inherit; }
     .chip:hover { border-color:var(--voltaje); }
     .chip.sel { background:var(--voltaje); border-color:var(--voltaje); color:var(--grafito); font-weight:600; }
-    .nota { color:var(--gris); font-size:12px; margin-top:8px; }
 
-    /* Persona (servicios + profesional) */
-    .persona { background:var(--panel2); border-radius:12px; padding:14px; margin-bottom:10px; }
-    .persona-cab { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-weight:600; font-size:14px; }
-    .persona-cab small { color:var(--voltaje); font-size:14px; }
-    .card-serv { display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border:1px solid rgba(255,255,255,0.1); border-radius:10px; cursor:pointer; margin-bottom:6px; background:var(--panel); }
+    /* Progreso por persona */
+    .progreso { display:flex; gap:6px; margin:14px 0 0; flex-wrap:wrap; }
+    .prog { flex:1; min-width:120px; background:var(--panel2); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:8px 12px; font-size:13px; }
+    .prog b { display:block; font-size:13px; }
+    .prog span { color:var(--gris); font-size:12px; }
+    .prog.actual { border-color:var(--voltaje); background:rgba(255,122,47,0.12); }
+    .prog.lista { border-color:rgba(74,222,128,0.4); }
+    .prog.lista b { color:var(--verde); }
+    .prog button { background:none; border:none; color:var(--gris); text-decoration:underline; font-size:12px; cursor:pointer; font-family:inherit; padding:0; }
+
+    /* Servicios */
+    .card-serv { display:flex; align-items:flex-start; gap:10px; padding:11px 12px; border:1px solid rgba(255,255,255,0.1); border-radius:10px; cursor:pointer; margin-bottom:6px; background:var(--panel2); }
     .card-serv:hover { border-color:var(--voltaje); }
     .card-serv.sel { border-color:var(--voltaje); background:rgba(255,122,47,0.12); }
     .caja-check { width:20px; height:20px; border-radius:5px; border:2px solid var(--gris); flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:var(--grafito); }
@@ -42,22 +50,21 @@
     .serv-nom { font-size:14px; font-weight:600; }
     .serv-desc { font-size:12px; color:var(--gris); }
     .serv-precio { font-weight:600; white-space:nowrap; font-size:14px; }
-    .etq-prof { font-size:13px; color:var(--gris); margin:12px 0 6px; }
-    .pros { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; }
-    .pro { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--panel); border:1px solid rgba(255,255,255,0.1); border-radius:10px; cursor:pointer; color:var(--hueso); font-family:inherit; font-size:14px; text-align:left; }
-    .pro:hover { border-color:var(--voltaje); }
-    .pro.sel { border-color:var(--voltaje); background:rgba(255,122,47,0.14); }
-    .pro:disabled { opacity:.35; cursor:not-allowed; }
-    .pro small { display:block; font-size:11px; color:var(--gris); }
-    .pro:first-child { grid-column:1 / -1; }
-    .pro-av { width:34px; height:34px; border-radius:50%; background:var(--voltaje); color:var(--grafito); display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; }
-    .pro-av.alt { background:var(--verde); }
-    .total-serv { display:flex; justify-content:space-between; align-items:center; margin-top:6px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08); }
+    .total-serv { display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08); }
     .total-serv strong { font-size:18px; color:var(--voltaje); }
     .total-serv small { color:var(--gris); display:block; font-size:12px; }
     .boton-sec { background:var(--voltaje); color:var(--grafito); font-weight:600; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; font-size:14px; font-family:inherit; }
     .boton-sec:disabled { opacity:0.35; cursor:not-allowed; }
-    .aviso { color:var(--rojo); font-size:13px; margin-top:8px; }
+
+    /* Profesionales */
+    .pros { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; }
+    .pro { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--panel2); border:1px solid rgba(255,255,255,0.1); border-radius:10px; cursor:pointer; color:var(--hueso); font-family:inherit; font-size:14px; text-align:left; }
+    .pro:hover { border-color:var(--voltaje); }
+    .pro.sel { border-color:var(--voltaje); background:rgba(255,122,47,0.14); }
+    .pro small { display:block; font-size:11px; color:var(--gris); }
+    .pro:first-child { grid-column:1 / -1; }
+    .pro-av { width:34px; height:34px; border-radius:50%; background:var(--voltaje); color:var(--grafito); display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; }
+    .pro-av.alt { background:var(--verde); }
 
     /* Días */
     .dias-cab { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
@@ -82,25 +89,24 @@
     .hora { padding:10px 16px; border-radius:8px; cursor:pointer; font-size:14px; border:1px solid rgba(255,255,255,0.15); background:var(--panel2); color:var(--hueso); font-family:inherit; }
     .hora:hover { border-color:var(--verde); }
     .hora.sel { background:var(--verde); color:var(--grafito); border-color:var(--verde); font-weight:600; }
+    .elegida { margin-top:14px; padding:12px 14px; border-radius:10px; background:rgba(74,222,128,0.1); border:1px solid rgba(74,222,128,0.35); font-size:14px; }
+    .elegida .boton-sec { width:100%; margin-top:10px; padding:12px; }
 
     /* Datos */
-    input, textarea, select { width:100%; background:var(--panel2); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:11px 13px; color:var(--hueso); font-size:15px; font-family:inherit; }
-    .persona select { background:var(--panel); padding:8px 10px; font-size:14px; }
-    input, textarea { margin-bottom:10px; }
-    input:focus, textarea:focus, select:focus { outline:none; border-color:var(--voltaje); }
+    input, textarea { width:100%; background:var(--panel2); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:11px 13px; color:var(--hueso); font-size:15px; font-family:inherit; margin-bottom:10px; }
+    input:focus, textarea:focus { outline:none; border-color:var(--voltaje); }
     textarea { min-height:70px; resize:vertical; }
+    label.lbl { display:block; font-size:12px; color:var(--gris); margin:2px 0 4px; }
     .boton { background:var(--voltaje); color:var(--grafito); font-weight:600; border:none; padding:14px; border-radius:10px; cursor:pointer; font-size:15px; width:100%; font-family:inherit; }
     .boton:disabled { opacity:.5; cursor:wait; }
     .estado { font-size:14px; margin-top:12px; min-height:20px; }
     .resumen { background:var(--panel2); border-radius:10px; padding:12px 14px; font-size:14px; margin-bottom:14px; }
-    .res-persona { padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
-    .res-persona:last-of-type { border-bottom:none; }
+    .res-item { padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+    .res-item:last-of-type { border-bottom:none; }
     .res-linea { display:flex; justify-content:space-between; gap:12px; }
     .res-linea span:first-child { color:var(--gris); }
     .res-total { display:flex; justify-content:space-between; border-top:1px solid rgba(255,255,255,0.1); margin-top:6px; padding-top:8px; font-weight:600; }
-    .etiqueta { font-size:13px; color:var(--gris); margin:4px 0 6px; }
 
-    /* Confirmación y mis reservas */
     .listo { text-align:center; }
     .listo .ok { width:56px; height:56px; border-radius:50%; background:var(--verde); color:var(--grafito); font-size:28px; font-weight:700; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
     .item-res { background:var(--panel2); border-radius:10px; padding:12px 14px; margin-top:8px; text-align:left; font-size:14px; }
@@ -115,27 +121,32 @@
     <p class="sub">Reserva tu hora en simples pasos.</p>
 
     <div id="wizard">
-      <!-- PASO 1: PERSONAS -->
+      <!-- PASO 1: CUÁNTAS PERSONAS -->
       <div class="paso activo" id="paso1">
         <div class="paso-titulo"><span class="paso-num">1</span> ¿Para cuántas personas? <span class="paso-check" id="check1"></span></div>
         <div class="chips" id="chipsPersonas"></div>
-        <p class="nota">¿Vienen juntos? Reserva a la misma hora, cada uno con su profesional.</p>
+        <div class="progreso" id="progreso"></div>
       </div>
 
-      <!-- PASO 2: SERVICIOS Y PROFESIONAL -->
+      <!-- PASO 2: SERVICIOS -->
       <div class="paso activo" id="paso2">
-        <div class="paso-titulo"><span class="paso-num">2</span> Servicios y profesional <span class="paso-check" id="check2"></span></div>
-        <div id="listaPersonas"></div>
-        <p class="aviso" id="avisoPersonas"></p>
+        <div class="paso-titulo"><span class="paso-num">2</span> <span>Servicios <span class="quien-tag"></span></span> <span class="paso-check" id="check2"></span></div>
+        <div id="listaServ"></div>
         <div class="total-serv">
-          <div><small>Total</small><strong id="totalServ">$0</strong> <small id="durServ"></small></div>
+          <div><small>Subtotal</small><strong id="totalServ">$0</strong> <small id="durServ"></small></div>
           <button class="boton-sec" id="btnServ" onclick="confirmarServicios()" disabled>Continuar</button>
         </div>
       </div>
 
-      <!-- PASO 3: DÍA -->
+      <!-- PASO 3: PROFESIONAL -->
       <div class="paso" id="paso3">
-        <div class="paso-titulo"><span class="paso-num">3</span> ¿Qué día? <span class="paso-check" id="check3"></span></div>
+        <div class="paso-titulo"><span class="paso-num">3</span> <span>¿Con quién? <span class="quien-tag"></span></span> <span class="paso-check" id="check3"></span></div>
+        <div class="pros" id="listaPros"></div>
+      </div>
+
+      <!-- PASO 4: DÍA -->
+      <div class="paso" id="paso4">
+        <div class="paso-titulo"><span class="paso-num">4</span> <span>¿Qué día? <span class="quien-tag"></span></span> <span class="paso-check" id="check4"></span></div>
         <div class="dias-cab">
           <button onclick="cambiarMes(-1)" aria-label="Mes anterior">‹</button>
           <span class="dias-mes" id="diasMes"></span>
@@ -144,21 +155,26 @@
         <div class="dias-fila" id="diasFila"></div>
       </div>
 
-      <!-- PASO 4: HORA -->
-      <div class="paso" id="paso4">
-        <div class="paso-titulo"><span class="paso-num">4</span> ¿A qué hora? <span class="paso-check" id="check4"></span></div>
+      <!-- PASO 5: HORA -->
+      <div class="paso" id="paso5">
+        <div class="paso-titulo"><span class="paso-num">5</span> <span>¿A qué hora? <span class="quien-tag"></span></span> <span class="paso-check" id="check5"></span></div>
         <div id="listaHoras"></div>
+        <div id="horaElegida"></div>
       </div>
 
-      <!-- PASO 5: DATOS -->
-      <div class="paso" id="paso5">
-        <div class="paso-titulo"><span class="paso-num">5</span> Tus datos</div>
+      <!-- PASO 6: DATOS -->
+      <div class="paso" id="paso6">
+        <div class="paso-titulo"><span class="paso-num">6</span> Tus datos</div>
         <div class="resumen" id="resumen"></div>
-        <input type="text" id="nombreCliente" placeholder="Tu nombre">
+        <label class="lbl" for="nombreCliente">Tu nombre</label>
+        <input type="text" id="nombreCliente" placeholder="Nombre y apellido">
         <div id="acompanantes"></div>
-        <input type="email" id="correoCliente" placeholder="Tu correo">
-        <input type="tel" id="telefonoCliente" placeholder="Tu WhatsApp (ej. +56 9 1234 5678)">
-        <textarea id="mensajeCliente" placeholder="Mensaje para el profesional (opcional). Ej: degradado bajo, traigo foto de referencia."></textarea>
+        <label class="lbl" for="correoCliente">Correo</label>
+        <input type="email" id="correoCliente" placeholder="tu@correo.com">
+        <label class="lbl" for="telefonoCliente">WhatsApp</label>
+        <input type="tel" id="telefonoCliente" placeholder="+56 9 1234 5678">
+        <label class="lbl" for="mensajeCliente">Mensaje para el profesional (opcional)</label>
+        <textarea id="mensajeCliente" placeholder="Ej: degradado bajo, traigo foto de referencia."></textarea>
         <button class="boton" id="btnReservar" onclick="reservar()">Confirmar reserva</button>
         <p class="estado" id="estado"></p>
       </div>
@@ -192,174 +208,158 @@
   <script>
     const SUPABASE_URL = "https://ugchyfulwkzmxwqjwkwp.supabase.co";
     const SUPABASE_KEY = "sb_publishable__WRIUNVBq6-nxTAwPD360g_5UICkBn_";
-    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const PASO_MIN = 30;          // cada cuántos minutos se ofrece una hora (09:00, 09:30, ...)
+    const PASO_MIN = 30;          // cada cuántos minutos se ofrece una hora
     const MAX_PERSONAS = 3;
     const DIAS_ADELANTE = 120;
-    const AUTO = "auto";          // "Primer profesional disponible"
+    const AUTO = "auto";          // "Cualquier profesional"
 
-    // Datos que vienen de Supabase (agenda_config)
     let CFG = { servicios:[], trabajadores:[], horarios:[], ahora:"" };
-    // Estado del wizard
-    let personas = [ nuevaPersona() ];
-    let fechaElegida = "", horaElegida = null, asignacion = [], ocupacion = [];
+    let n = 1;                    // cuántas personas
+    let citas = [];               // citas ya elegidas: { servicios, eleccion, tid, fecha, t }
+    let draft = nuevoDraft();     // la cita de la persona que se está eligiendo
+    let ocupacion = [], carga = {}, libres = [];
     let fechaVista = new Date();
 
     const $ = id => document.getElementById(id);
     const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const clp = n => "$" + Number(n||0).toLocaleString("es-CL");
+    const clp = x => "$" + Number(x||0).toLocaleString("es-CL");
     const aMin = hhmm => { const [h,m] = hhmm.split(':').map(Number); return h*60+m; };
     const aHora = min => `${String(Math.floor(min/60)).padStart(2,'0')}:${String(min%60).padStart(2,'0')}`;
     const fechaTexto = f => `${f.getFullYear()}-${String(f.getMonth()+1).padStart(2,'0')}-${String(f.getDate()).padStart(2,'0')}`;
+    const deTexto = t => { const [a,m,d] = t.split('-').map(Number); return new Date(a, m-1, d); };
+    const fechaLinda = t => deTexto(t).toLocaleDateString('es-CL', { weekday:'short', day:'numeric', month:'short' });
     const nombreTrab = id => CFG.trabajadores.find(t => t.id === id)?.nombre || '';
+    function nuevoDraft(){ return { servicios:[], eleccion:null, tid:null, fecha:'', t:null }; }
     function activar(id){ $(id).classList.add('activo'); }
     function desactivar(id){ $(id).classList.remove('activo'); }
-    function nuevaPersona(){ return { servicios:[], trabajador:AUTO }; }
 
-    // ----- cálculos por persona -----
-    const servDe  = p => CFG.servicios.filter(s => p.servicios.includes(s.id));
-    const durDe   = p => servDe(p).reduce((a,s) => a + s.duracion, 0);
-    const totalDe = p => servDe(p).reduce((a,s) => a + s.precio, 0);
-    const totalGrupo = () => personas.reduce((a,p) => a + totalDe(p), 0);
+    const servDe  = c => CFG.servicios.filter(s => c.servicios.includes(s.id));
+    const durDe   = c => servDe(c).reduce((a,s) => a + s.duracion, 0);
+    const totalDe = c => servDe(c).reduce((a,s) => a + s.precio, 0);
+    const actual  = () => citas.length;                               // índice de la persona que se está eligiendo
+    const etiqueta = i => n === 1 ? '' : (i === 0 ? 'Persona 1 (tú)' : `Persona ${i+1}`);
 
-    // ---------- CARGA INICIAL ----------
+    // ---------- CARGA ----------
     async function iniciar(){
       const { data, error } = await db.rpc('agenda_config');
-      if (error){ $('wizard').innerHTML = `<p class="estado">No pudimos cargar la agenda: ${esc(error.message)}</p>`; return; }
+      if (error){ $('wizard').innerHTML = `<p class="aviso">No pudimos cargar la agenda: ${esc(error.message)}</p>`; return; }
       CFG = data;
-      const [f] = CFG.ahora.split('T'); const [a,m] = f.split('-').map(Number);
+      const [a, m] = CFG.ahora.split('T')[0].split('-').map(Number);
       fechaVista = new Date(a, m-1, 1);
-      dibujarChipsPersonas(); dibujarPersonas(); dibujarDias();
+      dibujarTodo();
     }
 
-    // ---------- PASO 1: PERSONAS ----------
-    function maxPersonas(){ return Math.max(1, Math.min(MAX_PERSONAS, CFG.trabajadores.length)); }
-    function dibujarChipsPersonas(){
-      let html = '';
-      for (let n=1; n<=maxPersonas(); n++)
-        html += `<button class="chip ${n===personas.length?'sel':''}" onclick="elegirPersonas(${n})">${n} ${n===1?'persona':'personas'}</button>`;
-      $('chipsPersonas').innerHTML = html;
-      $('check1').textContent = '✓ ' + personas.length;
-    }
-    function elegirPersonas(n){
-      while (personas.length < n) personas.push(nuevaPersona());
-      personas = personas.slice(0, n);
-      dibujarChipsPersonas(); dibujarPersonas(); reiniciarDesde(3);
-    }
-
-    // ---------- PASO 2: SERVICIOS Y PROFESIONAL ----------
-    function dibujarPersonas(){
-      $('listaPersonas').innerHTML = personas.map((p, i) => {
-        const titulo = personas.length === 1 ? 'Tus servicios' : (i === 0 ? 'Persona 1 (tú)' : `Persona ${i+1}`);
-        const serv = CFG.servicios.map(s => {
-          const sel = p.servicios.includes(s.id);
-          return `<div class="card-serv ${sel?'sel':''}" onclick="toggleServicio(${i}, ${s.id})">
-            <div class="caja-check">${sel?'✓':''}</div>
-            <div class="serv-info"><div class="serv-nom">${esc(s.nombre)}</div><div class="serv-desc">${esc(s.descripcion||'')} · ${s.duracion} min</div></div>
-            <div class="serv-precio">${clp(s.precio)}</div></div>`;
-        }).join('');
-        const tomados = personas.filter((q, k) => k !== i && q.trabajador !== AUTO).map(q => q.trabajador);
-        const pros = `<button class="pro ${p.trabajador===AUTO?'sel':''}" onclick="elegirProfesional(${i}, '${AUTO}')">
-            <span class="pro-av alt">⚡</span><span>Cualquier profesional<small>Te asignamos al más disponible</small></span></button>` +
-          CFG.trabajadores.map(t => `<button class="pro ${p.trabajador===t.id?'sel':''}" ${tomados.includes(t.id)?'disabled title="Ya elegido para otra persona"':''} onclick="elegirProfesional(${i}, ${t.id})">
-            <span class="pro-av">${esc(t.nombre[0])}</span><span>${esc(t.nombre)}<small>${tomados.includes(t.id)?'Ya elegido':'Ver sus horas'}</small></span></button>`).join('');
-        return `<div class="persona">
-          <div class="persona-cab"><span>${titulo}</span><small>${p.servicios.length ? clp(totalDe(p)) + ' · ' + durDe(p) + ' min' : ''}</small></div>
-          ${serv}
-          <div class="etq-prof">¿Con quién?</div>
-          <div class="pros">${pros}</div>
-        </div>`;
+    // ---------- DIBUJO GENERAL ----------
+    function dibujarTodo(){
+      // Paso 1
+      let chips = '';
+      const max = Math.max(1, Math.min(MAX_PERSONAS, CFG.trabajadores.length));
+      for (let k=1; k<=max; k++) chips += `<button class="chip ${k===n?'sel':''}" onclick="elegirPersonas(${k})">${k} ${k===1?'persona':'personas'}</button>`;
+      $('chipsPersonas').innerHTML = chips;
+      $('check1').textContent = '✓ ' + n;
+      $('progreso').innerHTML = n === 1 ? '' : [...Array(n)].map((_, i) => {
+        const c = citas[i];
+        if (c) return `<div class="prog lista"><b>✓ ${etiqueta(i)}</b><span>${fechaLinda(c.fecha)} · ${aHora(c.t)} · ${esc(nombreTrab(c.tid))}</span><br><button onclick="editarPersona(${i})">Cambiar</button></div>`;
+        return `<div class="prog ${i === actual() ? 'actual' : ''}"><b>${etiqueta(i)}</b><span>${i === actual() ? 'Eligiendo ahora…' : 'Pendiente'}</span></div>`;
       }).join('');
-      actualizarTotal();
+      document.querySelectorAll('.quien-tag').forEach(e => e.textContent = n > 1 && actual() < n ? '· ' + etiqueta(actual()) : '');
+
+      const enDatos = actual() >= n;
+      ['paso2','paso3','paso4','paso5'].forEach(id => $(id).classList.toggle('oculto', enDatos));
+      $('paso6').classList.toggle('activo', enDatos);
+      if (enDatos){ dibujarDatos(); return; }
+      dibujarServicios(); dibujarPros(); dibujarDias();
     }
-    function toggleServicio(i, id){
-      const p = personas[i];
-      p.servicios = p.servicios.includes(id) ? p.servicios.filter(x => x !== id) : [...p.servicios, id];
-      dibujarPersonas(); reiniciarDesde(3);
+
+    function elegirPersonas(k){
+      n = k; citas = citas.slice(0, Math.min(citas.length, k)); draft = nuevoDraft();
+      reiniciar(2); dibujarTodo();
     }
-    function elegirProfesional(i, valor){
-      personas[i].trabajador = valor === AUTO ? AUTO : Number(valor);
-      dibujarPersonas(); reiniciarDesde(3);
+    function editarPersona(i){
+      // Se vuelve a elegir desde esa persona (las siguientes también, porque dependen de sus horas)
+      draft = { ...citas[i], t:null, tid:null };
+      citas = citas.slice(0, i);
+      reiniciar(3); dibujarTodo();
+      $('paso2').scrollIntoView({ behavior:'smooth', block:'start' });
     }
-    function problemaPersonas(){
-      if (personas.some(p => !p.servicios.length)) return personas.length > 1 ? 'Elige al menos un servicio para cada persona.' : '';
-      const fijos = personas.filter(p => p.trabajador !== AUTO).map(p => p.trabajador);
-      if (new Set(fijos).size !== fijos.length) return 'Para ir a la misma hora, cada persona necesita un profesional distinto.';
-      return '';
+    // Deja sin elegir los pasos desde "desde" en adelante (2 = servicios … 5 = hora)
+    function reiniciar(desde){
+      if (desde <= 2){ $('check2').textContent = ''; draft.eleccion = null; }
+      if (desde <= 3){ desactivar('paso3'); $('check3').textContent = ''; }
+      if (desde <= 4){ desactivar('paso4'); $('check4').textContent = ''; draft.fecha = ''; }
+      if (desde <= 5){ desactivar('paso5'); $('check5').textContent = ''; $('listaHoras').innerHTML = ''; $('horaElegida').innerHTML = ''; draft.t = null; draft.tid = null; }
+      desactivar('paso6');
     }
-    function actualizarTotal(){
-      $('totalServ').textContent = clp(totalGrupo());
-      const durMax = Math.max(0, ...personas.map(durDe));
-      $('durServ').textContent = durMax ? `· ${durMax} min` : '';
-      const problema = problemaPersonas();
-      $('avisoPersonas').textContent = problema;
-      $('btnServ').disabled = !!problema || personas.some(p => !p.servicios.length);
-      $('check2').textContent = $('paso3').classList.contains('activo') && !$('btnServ').disabled ? '✓ ' + clp(totalGrupo()) : '';
+
+    // ---------- PASO 2: SERVICIOS ----------
+    function dibujarServicios(){
+      $('listaServ').innerHTML = CFG.servicios.map(s => {
+        const sel = draft.servicios.includes(s.id);
+        return `<div class="card-serv ${sel?'sel':''}" onclick="toggleServicio(${s.id})">
+          <div class="caja-check">${sel?'✓':''}</div>
+          <div class="serv-info"><div class="serv-nom">${esc(s.nombre)}</div><div class="serv-desc">${esc(s.descripcion||'')} · ${s.duracion} min</div></div>
+          <div class="serv-precio">${clp(s.precio)}</div></div>`;
+      }).join('');
+      $('totalServ').textContent = clp(totalDe(draft));
+      $('durServ').textContent = draft.servicios.length ? `· ${durDe(draft)} min` : '';
+      $('btnServ').disabled = !draft.servicios.length;
+    }
+    function toggleServicio(id){
+      draft.servicios = draft.servicios.includes(id) ? draft.servicios.filter(x => x !== id) : [...draft.servicios, id];
+      $('check2').textContent = '';
+      reiniciar(3); dibujarServicios();
     }
     function confirmarServicios(){
-      if ($('btnServ').disabled) return;
-      activar('paso3'); actualizarTotal(); dibujarDias();
+      if (!draft.servicios.length) return;
+      $('check2').textContent = '✓ ' + clp(totalDe(draft));
+      activar('paso3'); dibujarPros();
       $('paso3').scrollIntoView({ behavior:'smooth', block:'start' });
     }
-    // Si cambia algo arriba, lo de abajo se vuelve a elegir
-    function reiniciarDesde(n){
-      if (n <= 3){ fechaElegida = ''; $('check3').textContent = ''; desactivar('paso3'); dibujarDias(); }
-      if (n <= 4){ horaElegida = null; $('check4').textContent = ''; desactivar('paso4'); $('listaHoras').innerHTML = ''; }
-      desactivar('paso5'); actualizarTotal();
+
+    // ---------- PASO 3: PROFESIONAL ----------
+    function dibujarPros(){
+      $('listaPros').innerHTML =
+        `<button class="pro ${draft.eleccion===AUTO?'sel':''}" onclick="elegirPro('${AUTO}')"><span class="pro-av alt">⚡</span><span>Cualquier profesional<small>Te asignamos al más disponible</small></span></button>` +
+        CFG.trabajadores.map(t => `<button class="pro ${draft.eleccion===t.id?'sel':''}" onclick="elegirPro(${t.id})"><span class="pro-av">${esc(t.nombre[0])}</span><span>${esc(t.nombre)}<small>Ver sus horas</small></span></button>`).join('');
+    }
+    function elegirPro(v){
+      draft.eleccion = v === AUTO ? AUTO : Number(v);
+      $('check3').textContent = '✓ ' + (draft.eleccion === AUTO ? 'Cualquiera' : nombreTrab(draft.eleccion));
+      reiniciar(4); activar('paso3'); activar('paso4'); dibujarPros(); dibujarDias();
+      $('paso4').scrollIntoView({ behavior:'smooth', block:'start' });
     }
 
     // ---------- DISPONIBILIDAD ----------
     function horarioDe(tid, dow){ return CFG.horarios.find(h => h.trabajador_id === tid && h.dia === dow); }
-    let carga = {};   // minutos ya agendados por profesional en el día elegido
-    function candidatos(p){
-      if (p.trabajador !== AUTO) return [p.trabajador];
-      return CFG.trabajadores.map(t => t.id).sort((a, b) => (carga[a]||0) - (carga[b]||0));
+    function candidatos(){
+      if (draft.eleccion !== AUTO) return [draft.eleccion];
+      return CFG.trabajadores.map(t => t.id).sort((a, b) => (carga[a]||0) - (carga[b]||0));   // el menos cargado primero
     }
-    function trabajaAlguien(dow){
-      return personas.every(p => candidatos(p).some(tid => horarioDe(tid, dow)));
-    }
-    // ¿El trabajador puede atender de "desde" a "hasta" (minutos) ese día?
+    function trabaja(dow){ return draft.eleccion !== null && candidatos().some(tid => horarioDe(tid, dow)); }
     function estaLibre(tid, dow, desde, hasta, minimo){
       const h = horarioDe(tid, dow);
       if (!h || desde < aMin(h.inicio) || hasta > aMin(h.fin) || desde < minimo) return false;
       if (h.almuerzo_inicio && desde < aMin(h.almuerzo_fin) && hasta > aMin(h.almuerzo_inicio)) return false;
       return !ocupacion.some(o => o.trabajador_id === tid && desde < o.hasta && hasta > o.desde);
     }
-    // Busca una combinación válida: cada persona con un profesional distinto y libre (prueba todas, son pocas)
-    function buscarAsignacion(dow, desde, minimo){
-      const orden = personas.map((p,i) => i).sort((a,b) => candidatos(personas[a]).length - candidatos(personas[b]).length);
-      const res = [], usados = new Set();
-      function probar(k){
-        if (k === orden.length) return true;
-        const i = orden[k], p = personas[i];
-        for (const tid of candidatos(p)){
-          if (usados.has(tid) || !estaLibre(tid, dow, desde, desde + durDe(p), minimo)) continue;
-          usados.add(tid); res[i] = tid;
-          if (probar(k+1)) return true;
-          usados.delete(tid);
-        }
-        return false;
-      }
-      return probar(0) ? res.slice() : null;
-    }
 
-    // ---------- PASO 3: DÍA ----------
+    // ---------- PASO 4: DÍA ----------
     const NOMBRES_DIA = ["dom","lun","mar","mié","jue","vie","sáb"];
     function dibujarDias(){
       if (!CFG.ahora) return;
       const año = fechaVista.getFullYear(), mes = fechaVista.getMonth();
       $('diasMes').textContent = fechaVista.toLocaleDateString('es-CL', { month:'long', year:'numeric' });
       const hoyTxt = CFG.ahora.split('T')[0];
-      const limite = new Date(hoyTxt + 'T00:00'); limite.setDate(limite.getDate() + DIAS_ADELANTE);
+      const limite = deTexto(hoyTxt); limite.setDate(limite.getDate() + DIAS_ADELANTE);
       const diasEnMes = new Date(año, mes+1, 0).getDate();
       let html = '';
       for (let d=1; d<=diasEnMes; d++){
-        const f = new Date(año, mes, d), ft = fechaTexto(f);
-        const off = ft < hoyTxt || f > limite || !trabajaAlguien(f.getDay());
-        html += `<div class="dia-card ${off?'off':''} ${ft===fechaElegida?'sel':''}" ${off?'':`onclick="elegirDia('${ft}', this)"`}>
+        const f = new Date(año, mes, d), ft = fechaTexto(f), abre = trabaja(f.getDay());
+        const off = ft < hoyTxt || f > limite || !abre;
+        html += `<div class="dia-card ${off?'off':''} ${ft===draft.fecha?'sel':''}" ${off?'':`onclick="elegirDia('${ft}', this)"`}>
           <div class="dia-nom">${NOMBRES_DIA[f.getDay()]}</div><div class="dia-num">${d}</div>
-          ${!trabajaAlguien(f.getDay()) ? '<div class="dia-extra">cerrado</div>' : ''}</div>`;
+          ${draft.eleccion !== null && !abre ? '<div class="dia-extra">no atiende</div>' : ''}</div>`;
       }
       $('diasFila').innerHTML = html;
       const sel = $('diasFila').querySelector('.sel') || $('diasFila').querySelector('.dia-card:not(.off)');
@@ -367,76 +367,78 @@
     }
     function cambiarMes(delta){ fechaVista.setMonth(fechaVista.getMonth() + delta); dibujarDias(); }
     function elegirDia(ft, el){
-      fechaElegida = ft;
+      draft.fecha = ft;
       document.querySelectorAll('.dia-card').forEach(c => c.classList.remove('sel'));
       el.classList.add('sel');
-      $('check3').textContent = '✓ ' + ft;
-      activar('paso4');
-      cargarHoras();
+      $('check4').textContent = '✓ ' + fechaLinda(ft);
+      reiniciar(5); activar('paso5'); cargarHoras();
     }
 
-    // ---------- PASO 4: HORA ----------
+    // ---------- PASO 5: HORA ----------
     async function cargarHoras(){
-      reiniciarDesde(4); activar('paso4');
       const cont = $('listaHoras');
-      if (!fechaElegida) return;
       cont.innerHTML = '<p class="nota">Buscando horas libres…</p>';
-      const { data, error } = await db.rpc('ocupacion', { p_fecha: fechaElegida });
+      const { data, error } = await db.rpc('ocupacion', { p_fecha: draft.fecha });
       if (error){ cont.innerHTML = `<p class="aviso">Error: ${esc(error.message)}</p>`; return; }
-      ocupacion = data;
-      carga = {};
-      ocupacion.forEach(o => { carga[o.trabajador_id] = (carga[o.trabajador_id]||0) + (o.hasta - o.desde); });
+      // Lo ocupado = reservas y bloqueos del servidor + las horas que ya elegiste para las otras personas
+      ocupacion = data.concat(citas.filter(c => c.fecha === draft.fecha).map(c => ({ trabajador_id: c.tid, desde: c.t, hasta: c.t + durDe(c) })));
+      carga = {}; ocupacion.forEach(o => { carga[o.trabajador_id] = (carga[o.trabajador_id]||0) + (o.hasta - o.desde); });
 
-      const [a,m,d] = fechaElegida.split('-').map(Number), dow = new Date(a, m-1, d).getDay();
+      const dow = deTexto(draft.fecha).getDay(), dur = durDe(draft);
       const [hoy, hhmm] = CFG.ahora.split('T');
-      const minimo = fechaElegida === hoy ? aMin(hhmm) + 15 : 0;   // hoy: al menos 15 min de aviso
-      const hs = CFG.horarios.filter(h => h.dia === dow);
+      const minimo = draft.fecha === hoy ? aMin(hhmm) + 15 : 0;
+      const cands = candidatos(), hs = cands.map(tid => horarioDe(tid, dow)).filter(Boolean);
       if (!hs.length){ cont.innerHTML = '<p class="nota">Ese día no atendemos.</p>'; return; }
       const desdeDia = Math.min(...hs.map(h => aMin(h.inicio))), hastaDia = Math.max(...hs.map(h => aMin(h.fin)));
-
-      const libres = [];
-      for (let t = desdeDia; t < hastaDia; t += PASO_MIN){
-        const asig = buscarAsignacion(dow, t, minimo);
-        if (asig) libres.push({ t, asig });
+      libres = [];
+      for (let t = desdeDia; t + dur <= hastaDia; t += PASO_MIN){
+        const tid = cands.find(id => estaLibre(id, dow, t, t + dur, minimo));
+        if (tid) libres.push({ t, tid });
       }
-      if (!libres.length){
-        cont.innerHTML = `<p class="nota">No quedan horas este día${personas.length>1?' para '+personas.length+' personas juntas':''}. Prueba otro día.</p>`;
-        return;
-      }
-      window._libres = libres;
-      const boton = (x, k) => `<button class="hora" onclick="elegirHora(${k}, this)">${aHora(x.t)}</button>`;
-      const man = libres.map((x,k) => [x,k]).filter(([x]) => x.t < 13*60), tar = libres.map((x,k) => [x,k]).filter(([x]) => x.t >= 13*60);
-      let html = '';
-      if (man.length) html += '<div class="franja">Mañana</div><div class="fila-horas">' + man.map(([x,k]) => boton(x,k)).join('') + '</div>';
-      if (tar.length) html += '<div class="franja">Tarde</div><div class="fila-horas">' + tar.map(([x,k]) => boton(x,k)).join('') + '</div>';
-      cont.innerHTML = html;
+      if (!libres.length){ cont.innerHTML = '<p class="nota">No quedan horas este día. Prueba otro día.</p>'; return; }
+      const boton = k => `<button class="hora" onclick="elegirHora(${k}, this)">${aHora(libres[k].t)}</button>`;
+      const idx = libres.map((_, k) => k);
+      const man = idx.filter(k => libres[k].t < 13*60), tar = idx.filter(k => libres[k].t >= 13*60);
+      cont.innerHTML = (man.length ? '<div class="franja">Mañana</div><div class="fila-horas">' + man.map(boton).join('') + '</div>' : '') +
+                       (tar.length ? '<div class="franja">Tarde</div><div class="fila-horas">' + tar.map(boton).join('') + '</div>' : '');
     }
     function elegirHora(k, el){
-      const x = window._libres[k];
-      horaElegida = x.t; asignacion = x.asig;
+      draft.t = libres[k].t; draft.tid = libres[k].tid;
       document.querySelectorAll('.hora').forEach(b => b.classList.remove('sel'));
       el.classList.add('sel');
-      $('check4').textContent = '✓ ' + aHora(x.t);
-      dibujarResumen(); dibujarAcompanantes();
-      activar('paso5');
-      $('paso5').scrollIntoView({ behavior:'smooth', block:'start' });
+      $('check5').textContent = '✓ ' + aHora(draft.t);
+      const siguiente = actual() + 1 < n ? `Listo, seguir con ${etiqueta(actual()+1)} →` : 'Continuar a tus datos →';
+      $('horaElegida').innerHTML = `<div class="elegida">
+        <b>${esc(servDe(draft).map(s => s.nombre).join(' + '))}</b><br>
+        ${fechaLinda(draft.fecha)} · ${aHora(draft.t)}–${aHora(draft.t + durDe(draft))} · con <b>${esc(nombreTrab(draft.tid))}</b> · ${clp(totalDe(draft))}
+        <button class="boton-sec" onclick="guardarCita()">${siguiente}</button></div>`;
+    }
+    function guardarCita(){
+      citas.push({ ...draft });
+      draft = nuevoDraft();
+      if (actual() < n){
+        // La siguiente persona parte en el mismo día (lo más común cuando vienen juntos)
+        draft.fecha = '';
+        reiniciar(2); dibujarTodo();
+        $('paso1').scrollIntoView({ behavior:'smooth', block:'start' });
+      } else {
+        dibujarTodo();
+        $('paso6').scrollIntoView({ behavior:'smooth', block:'start' });
+      }
     }
 
-    // ---------- PASO 5: DATOS ----------
-    function dibujarResumen(){
-      const bloques = personas.map((p, i) => `
-        <div class="res-persona">
-          ${personas.length > 1 ? `<div class="res-linea"><span>${i===0?'Tú':'Persona '+(i+1)}</span><span>${clp(totalDe(p))}</span></div>` : ''}
-          <div class="res-linea"><span>${esc(servDe(p).map(s=>s.nombre).join(' + '))}</span><span>${personas.length===1?clp(totalDe(p)):''}</span></div>
-          <div class="res-linea"><span>Con ${esc(nombreTrab(asignacion[i]))}</span><span>${aHora(horaElegida)} – ${aHora(horaElegida + durDe(p))}</span></div>
-        </div>`).join('');
-      $('resumen').innerHTML = `<div class="res-linea" style="margin-bottom:4px;"><span>Fecha</span><span>${fechaElegida}</span></div>` +
-        bloques + `<div class="res-total"><span>Total</span><span>${clp(totalGrupo())}</span></div>`;
-    }
-    function dibujarAcompanantes(){
+    // ---------- PASO 6: DATOS ----------
+    function dibujarDatos(){
+      const total = citas.reduce((a, c) => a + totalDe(c), 0);
+      $('resumen').innerHTML = citas.map((c, i) => `
+        <div class="res-item">
+          ${n > 1 ? `<div class="res-linea"><span>${etiqueta(i)}</span><span><button class="link-mini" onclick="editarPersona(${i})" style="background:none;border:none;color:var(--gris);text-decoration:underline;cursor:pointer;font-size:12px;">Cambiar</button></span></div>` : ''}
+          <div class="res-linea"><span>${esc(servDe(c).map(s => s.nombre).join(' + '))}</span><span>${clp(totalDe(c))}</span></div>
+          <div class="res-linea"><span>${fechaLinda(c.fecha)} · con ${esc(nombreTrab(c.tid))}</span><span>${aHora(c.t)} – ${aHora(c.t + durDe(c))}</span></div>
+        </div>`).join('') + `<div class="res-total"><span>Total</span><span>${clp(total)}</span></div>`;
       const previos = [...document.querySelectorAll('.acomp')].map(x => x.value);
-      $('acompanantes').innerHTML = personas.slice(1).map((p,i) =>
-        `<input type="text" class="acomp" placeholder="Nombre de la persona ${i+2}" value="${esc(previos[i]||'')}">`).join('');
+      $('acompanantes').innerHTML = citas.slice(1).map((c, i) =>
+        `<label class="lbl">Nombre de la persona ${i+2}</label><input type="text" class="acomp" placeholder="Nombre" value="${esc(previos[i]||'')}">`).join('');
     }
 
     async function reservar(){
@@ -445,41 +447,35 @@
       const acomp = [...document.querySelectorAll('.acomp')].map(x => x.value.trim());
       const est = $('estado');
       if (!nombre){ est.textContent = "Escribe tu nombre."; return; }
+      if (acomp.some(a => !a)){ est.textContent = "Escribe el nombre de cada acompañante."; return; }
       if (!/^\S+@\S+\.\S+$/.test(correo)){ est.textContent = "Escribe un correo válido."; return; }
       if (telefono.replace(/\D/g,'').length < 8){ est.textContent = "Escribe tu WhatsApp."; return; }
-      if (acomp.some(a => !a)){ est.textContent = "Escribe el nombre de cada acompañante."; return; }
 
       $('btnReservar').disabled = true; est.textContent = "Reservando...";
-      const payload = {
-        fecha: fechaElegida, hora: aHora(horaElegida), nombre, correo, telefono, mensaje,
-        personas: personas.map((p, i) => ({ nombre: i===0 ? nombre : acomp[i-1], servicios: p.servicios, trabajador_id: asignacion[i] }))
-      };
+      const payload = { nombre, correo, telefono, mensaje,
+        personas: citas.map((c, i) => ({ nombre: i === 0 ? nombre : acomp[i-1], servicios: c.servicios, trabajador_id: c.tid, fecha: c.fecha, hora: aHora(c.t) })) };
       const { data, error } = await db.rpc('reservar_grupo', { p: payload });
       $('btnReservar').disabled = false;
       if (error){
-        if (error.message.includes('HORA_OCUPADA')){ est.textContent = "Alguien acaba de tomar esa hora. Te mostramos las horas actualizadas."; cargarHoras(); }
-        else est.textContent = "No se pudo reservar: " + error.message;
+        est.textContent = error.message.includes('HORA_OCUPADA') || error.message.includes('bloqueado')
+          ? "Alguien acaba de tomar una de esas horas. Toca \"Cambiar\" en esa persona para elegir otra."
+          : "No se pudo reservar: " + error.message;
         return;
       }
-
-      // Aviso al admin por correo (Formspree)
-      const detalle = data.map(r => `${r.nombre}: ${r.servicios} con ${r.trabajador} ${r.desde}-${r.hasta} (${clp(r.total)})`).join('\n');
+      const detalle = data.map(r => `${r.nombre}: ${r.servicios} con ${r.trabajador} ${r.fecha} ${r.desde}-${r.hasta} (${clp(r.total)})`).join('\n');
       try {
-        await fetch("https://formspree.io/f/xzezawgo", { method:"POST",
-          headers:{ "Content-Type":"application/json", "Accept":"application/json" },
-          body: JSON.stringify({ _subject:`Nueva reserva ClipperLab (${data.length} persona${data.length>1?'s':''})`,
-            fecha: fechaElegida, hora: aHora(horaElegida), reservas: detalle,
+        await fetch("https://formspree.io/f/xzezawgo", { method:"POST", headers:{ "Content-Type":"application/json", "Accept":"application/json" },
+          body: JSON.stringify({ _subject:`Nueva reserva ClipperLab (${data.length} persona${data.length>1?'s':''})`, reservas: detalle,
             total: clp(data.reduce((a,r)=>a+r.total,0)), nombre, correo, telefono, mensaje }) });
       } catch(e) {}
-
       mostrarConfirmacion(data);
     }
 
     function mostrarConfirmacion(data){
       $('wizard').classList.add('oculto');
       $('vistaListo').classList.remove('oculto');
-      $('listoSub').textContent = `${fechaElegida} · Total ${clp(data.reduce((a,r)=>a+r.total,0))}`;
-      $('listoLista').innerHTML = data.map(r => `<div class="item-res"><b>${esc(r.desde)} – ${esc(r.hasta)}</b> · ${esc(r.nombre)}<br>${esc(r.servicios)} con ${esc(r.trabajador)} · ${clp(r.total)}</div>`).join('') +
+      $('listoSub').textContent = `Total ${clp(data.reduce((a,r)=>a+r.total,0))}`;
+      $('listoLista').innerHTML = data.map(r => `<div class="item-res"><b>${fechaLinda(r.fecha)} · ${esc(r.desde)} – ${esc(r.hasta)}</b> · ${esc(r.nombre)}<br>${esc(r.servicios)} con ${esc(r.trabajador)} · ${clp(r.total)}</div>`).join('') +
         `<p class="nota" style="margin-top:12px;">Puedes revisar tus reservas en "Mis reservas" con tu correo y WhatsApp.</p>`;
       window.scrollTo({ top:0, behavior:'smooth' });
     }
@@ -498,18 +494,17 @@
       if (error){ cont.innerHTML = `<p class="aviso">Error: ${esc(error.message)}</p>`; return; }
       if (!data.length){ cont.innerHTML = '<p class="nota" style="margin-top:10px;">No encontramos reservas próximas con esos datos.</p>'; return; }
       const est = { confirmada:'Confirmada', completada:'Completada', cancelada:'Cancelada', no_asistio:'No asistió' };
-      cont.innerHTML = data.map(r => `<div class="item-res"><b>${esc(r.fecha)} · ${esc(r.desde)} – ${esc(r.hasta)}</b> · ${esc(r.nombre)}<br>
+      cont.innerHTML = data.map(r => `<div class="item-res"><b>${fechaLinda(r.fecha)} · ${esc(r.desde)} – ${esc(r.hasta)}</b> · ${esc(r.nombre)}<br>
         ${esc(r.servicios || 'Reserva')} con ${esc(r.trabajador)}${r.total ? ' · ' + clp(r.total) : ''} · ${est[r.estado] || esc(r.estado)}</div>`).join('');
     }
 
     // Si algo falla, se muestra en pantalla en vez de quedar en blanco
     window.addEventListener('error', e => {
-      const w = document.getElementById('wizard');
-      if (w) w.insertAdjacentHTML('afterbegin', `<p class="aviso" style="margin-bottom:12px;">Error en la página: ${esc(e.message)}</p>`);
+      const w = $('wizard'); if (w) w.insertAdjacentHTML('afterbegin', `<p class="aviso" style="margin-bottom:12px;">Error en la página: ${esc(e.message)}</p>`);
     });
-    if (typeof supabase === 'undefined') {
-      document.getElementById('wizard').innerHTML = '<p class="aviso">No se pudo cargar la conexión con la base de datos. Revisa tu internet y recarga la página.</p>';
-    } else iniciar();
+    let db;
+    if (typeof supabase === 'undefined') $('wizard').innerHTML = '<p class="aviso">No se pudo conectar con la base de datos. Revisa tu internet y recarga la página.</p>';
+    else { db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); iniciar(); }
   </script>
 </body>
 </html>
