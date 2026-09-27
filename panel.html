@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Panel — ClipperLab</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root { --grafito:#15171c; --panel:#1d2028; --panel2:#23262f; --hueso:#edeae4; --voltaje:#ff7a2f; --gris:#9aa0a8; --verde:#4ade80; --rojo:#f87171; --azul:#60a5fa; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--grafito); color:var(--hueso); font-family:'Inter',system-ui,sans-serif; padding:24px 16px 60px; line-height:1.5; }
+    .caja { max-width:760px; margin:0 auto; }
+    .oculto { display:none !important; }
+    h1 { font-size:24px; margin-bottom:4px; }
+    h1 span { color:var(--voltaje); }
+    .sub { color:var(--gris); font-size:14px; }
+    .tarjeta { background:var(--panel); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:20px; margin-top:16px; }
+    input, select { width:100%; background:var(--panel2); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:11px 13px; color:var(--hueso); font-size:15px; font-family:inherit; }
+    input:focus, select:focus { outline:none; border-color:var(--voltaje); }
+    label { display:block; font-size:13px; color:var(--gris); margin:12px 0 5px; }
+    .boton { background:var(--voltaje); color:var(--grafito); font-weight:600; border:none; padding:12px 18px; border-radius:10px; cursor:pointer; font-size:15px; }
+    .boton.ancho { width:100%; margin-top:16px; }
+    .boton-linea { background:none; border:1px solid rgba(255,255,255,0.18); color:var(--hueso); padding:8px 14px; border-radius:8px; cursor:pointer; font-size:13px; }
+    .boton-linea:hover { border-color:var(--voltaje); }
+    .link { background:none; border:none; color:var(--gris); font-size:13px; cursor:pointer; text-decoration:underline; margin-top:12px; }
+    .estado { font-size:14px; margin-top:12px; min-height:20px; color:var(--gris); }
+
+    /* Cabecera sesión */
+    .cabecera { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+    .quien { display:flex; align-items:center; gap:10px; }
+    .avatar { width:40px; height:40px; border-radius:50%; background:var(--voltaje); color:var(--grafito); display:flex; align-items:center; justify-content:center; font-weight:700; }
+    .rol { display:inline-block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; padding:2px 8px; border-radius:20px; background:rgba(255,122,47,0.15); color:var(--voltaje); }
+    .rol.trabajador { background:rgba(96,165,250,0.15); color:var(--azul); }
+
+    /* Pestañas y filtros */
+    .tabs { display:flex; gap:6px; margin-top:20px; border-bottom:1px solid rgba(255,255,255,0.08); }
+    .tab { background:none; border:none; color:var(--gris); padding:10px 14px; cursor:pointer; font-size:14px; font-weight:600; border-bottom:2px solid transparent; }
+    .tab.sel { color:var(--hueso); border-bottom-color:var(--voltaje); }
+    .filtros { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; align-items:center; }
+    .chip { background:var(--panel2); border:1px solid rgba(255,255,255,0.12); color:var(--hueso); padding:7px 14px; border-radius:20px; cursor:pointer; font-size:13px; }
+    .chip.sel { background:var(--voltaje); border-color:var(--voltaje); color:var(--grafito); font-weight:600; }
+    .filtros select { width:auto; padding:7px 12px; font-size:13px; border-radius:20px; }
+    .resumen-lista { color:var(--gris); font-size:13px; margin-bottom:8px; }
+
+    /* Reservas */
+    .dia-titulo { font-size:13px; font-weight:600; color:var(--voltaje); text-transform:capitalize; margin:18px 0 8px; }
+    .reserva { background:var(--panel); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:14px 16px; margin-bottom:8px; display:grid; grid-template-columns:62px 1fr; gap:4px 14px; }
+    .reserva.cancelada { opacity:0.5; }
+    .r-hora { font-size:18px; font-weight:700; grid-row:span 3; }
+    .r-top { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+    .r-nombre { font-weight:600; }
+    .r-trab { font-size:12px; color:var(--gris); }
+    .r-desc { font-size:13px; color:var(--gris); white-space:pre-line; }
+    .r-acciones { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:6px; }
+    .r-acciones a { color:var(--verde); font-size:13px; text-decoration:none; }
+    .r-acciones select { width:auto; padding:5px 10px; font-size:13px; }
+    .r-acciones .borrar { color:var(--rojo); border-color:rgba(248,113,113,0.4); }
+    .badge { align-self:flex-start; font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; text-transform:uppercase; }
+    .badge.confirmada { background:rgba(74,222,128,0.15); color:var(--verde); }
+    .badge.completada { background:rgba(96,165,250,0.15); color:var(--azul); }
+    .badge.cancelada, .badge.no_asistio { background:rgba(248,113,113,0.15); color:var(--rojo); }
+    .vacio { color:var(--gris); text-align:center; padding:30px 0; font-size:14px; }
+
+    /* Equipo */
+    .fila-equipo { display:grid; grid-template-columns:1fr 1fr 150px auto; gap:8px; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+    .fila-equipo .correo { font-size:12px; color:var(--gris); word-break:break-all; }
+    .ayuda { font-size:13px; color:var(--gris); margin-top:16px; }
+    .ayuda ol { padding-left:18px; margin-top:6px; }
+    @media (max-width:560px){
+      .fila-equipo { grid-template-columns:1fr 1fr; }
+      .fila-equipo .correo { grid-column:1 / -1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="caja">
+
+    <!-- ========== LOGIN ========== -->
+    <section id="vistaLogin" class="oculto">
+      <h1>Panel <span>ClipperLab</span></h1>
+      <p class="sub">Acceso para el equipo.</p>
+      <div class="tarjeta" style="max-width:420px;">
+        <label for="loginCorreo">Correo</label>
+        <input type="email" id="loginCorreo" autocomplete="username">
+        <label for="loginClave">Contraseña</label>
+        <input type="password" id="loginClave" autocomplete="current-password" onkeydown="if(event.key==='Enter')entrar()">
+        <button class="boton ancho" onclick="entrar()">Entrar</button>
+        <button class="link" onclick="recuperarClave()">¿Olvidaste tu contraseña?</button>
+        <p class="estado" id="estadoLogin"></p>
+      </div>
+    </section>
+
+    <!-- ========== NUEVA CONTRASEÑA (link del correo de recuperación) ========== -->
+    <section id="vistaNuevaClave" class="oculto">
+      <h1>Nueva <span>contraseña</span></h1>
+      <div class="tarjeta" style="max-width:420px;">
+        <label for="nuevaClave">Escribe tu nueva contraseña (mínimo 6 caracteres)</label>
+        <input type="password" id="nuevaClave" autocomplete="new-password">
+        <button class="boton ancho" onclick="guardarNuevaClave()">Guardar</button>
+        <p class="estado" id="estadoNuevaClave"></p>
+      </div>
+    </section>
+
+    <!-- ========== SIN ROL ========== -->
+    <section id="vistaPendiente" class="oculto">
+      <h1>Panel <span>ClipperLab</span></h1>
+      <div class="tarjeta">
+        <p>Tu cuenta (<strong id="pendCorreo"></strong>) todavía no tiene acceso.</p>
+        <p class="sub" style="margin-top:6px;">Pídele al administrador que te asigne un rol.</p>
+        <button class="boton-linea" style="margin-top:14px;" onclick="salir()">Cerrar sesión</button>
+      </div>
+    </section>
+
+    <!-- ========== PANEL ========== -->
+    <section id="vistaPanel" class="oculto">
+      <div class="cabecera">
+        <div>
+          <h1>Panel <span>ClipperLab</span></h1>
+          <div class="quien" style="margin-top:8px;">
+            <div class="avatar" id="yoAvatar"></div>
+            <div><div id="yoNombre" style="font-weight:600;"></div><span class="rol" id="yoRol"></span></div>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <a class="boton-linea" href="agenda.html" style="text-decoration:none;">Ver agenda pública</a>
+          <button class="boton-linea" onclick="salir()">Salir</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab sel" id="tabReservas" onclick="verTab('reservas')">Reservas</button>
+        <button class="tab oculto" id="tabEquipo" onclick="verTab('equipo')">Equipo</button>
+      </div>
+
+      <!-- Reservas -->
+      <div id="panelReservas">
+        <div class="filtros">
+          <button class="chip sel" data-f="hoy" onclick="filtrar('hoy')">Hoy</button>
+          <button class="chip" data-f="proximas" onclick="filtrar('proximas')">Próximas</button>
+          <button class="chip" data-f="pasadas" onclick="filtrar('pasadas')">Pasadas</button>
+          <button class="chip" data-f="todas" onclick="filtrar('todas')">Todas</button>
+          <select id="filtroTrab" class="oculto" onchange="dibujarReservas()"></select>
+        </div>
+        <p class="resumen-lista" id="resumenLista"></p>
+        <div id="listaReservas"></div>
+      </div>
+
+      <!-- Equipo (solo admin) -->
+      <div id="panelEquipo" class="oculto">
+        <div class="tarjeta">
+          <div id="listaEquipo"></div>
+          <p class="estado" id="estadoEquipo"></p>
+          <div class="ayuda">
+            <strong style="color:var(--hueso);">Para agregar a alguien al equipo:</strong>
+            <ol>
+              <li>En Supabase: <em>Authentication → Users → Add user</em> (correo + contraseña, marca "Auto Confirm User").</li>
+              <li>Recarga esta pestaña: aparecerá como <em>pendiente</em>.</li>
+              <li>Ponle el nombre <strong>exactamente</strong> como aparece en la agenda (ej. "Juan"), elige rol <em>trabajador</em> y guarda.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://ugchyfulwkzmxwqjwkwp.supabase.co";
+    const SUPABASE_KEY = "sb_publishable__WRIUNVBq6-nxTAwPD360g_5UICkBn_";
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const ESTADOS = { confirmada:"Confirmada", completada:"Completada", no_asistio:"No asistió", cancelada:"Cancelada" };
+    const $ = id => document.getElementById(id);
+    const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const hoyTxt = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+
+    let yo = null;          // { id, nombre, rol, correo }
+    let reservas = [];
+    let filtro = 'hoy';
+    let modoRecuperacion = false;
+
+    function mostrar(vista){
+      ['vistaLogin','vistaNuevaClave','vistaPendiente','vistaPanel'].forEach(v => $(v).classList.toggle('oculto', v !== vista));
+    }
+
+    // ---------- SESIÓN ----------
+    async function entrar(){
+      const email = $('loginCorreo').value.trim(), password = $('loginClave').value;
+      const est = $('estadoLogin');
+      if (!email || !password){ est.textContent = "Escribe tu correo y contraseña."; return; }
+      est.textContent = "Entrando...";
+      const { error } = await db.auth.signInWithPassword({ email, password });
+      if (error){ est.textContent = error.message.includes('Invalid') ? "Correo o contraseña incorrectos." : "Error: " + error.message; return; }
+      est.textContent = "";
+    }
+    async function salir(){ await db.auth.signOut(); }
+
+    async function recuperarClave(){
+      const email = $('loginCorreo').value.trim(), est = $('estadoLogin');
+      if (!email){ est.textContent = "Escribe tu correo arriba y vuelve a pulsar."; return; }
+      const redirectTo = location.origin + location.pathname;
+      const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo });
+      est.textContent = error ? "Error: " + error.message : "Te enviamos un correo para crear una nueva contraseña.";
+    }
+    async function guardarNuevaClave(){
+      const password = $('nuevaClave').value, est = $('estadoNuevaClave');
+      if (password.length < 6){ est.textContent = "Mínimo 6 caracteres."; return; }
+      const { error } = await db.auth.updateUser({ password });
+      if (error){ est.textContent = "Error: " + error.message; return; }
+      modoRecuperacion = false;
+      const { data } = await db.auth.getSession();
+      cargarSesion(data.session);
+    }
+
+    async function cargarSesion(session){
+      if (modoRecuperacion){ mostrar('vistaNuevaClave'); return; }
+      if (!session){ yo = null; mostrar('vistaLogin'); return; }
+      const user = session.user;
+      const { data:perfil } = await db.from('perfiles').select('id,nombre,rol').eq('id', user.id).maybeSingle();
+      if (!perfil || perfil.rol === 'pendiente'){ $('pendCorreo').textContent = user.email; mostrar('vistaPendiente'); return; }
+      yo = { ...perfil, correo:user.email };
+      $('yoAvatar').textContent = yo.nombre[0]?.toUpperCase() || '?';
+      $('yoNombre').textContent = yo.nombre;
+      $('yoRol').textContent = yo.rol;
+      $('yoRol').className = 'rol ' + yo.rol;
+      const esAdmin = yo.rol === 'admin';
+      $('tabEquipo').classList.toggle('oculto', !esAdmin);
+      $('filtroTrab').classList.toggle('oculto', !esAdmin);
+      mostrar('vistaPanel');
+      verTab('reservas');
+      cargarReservas();
+    }
+
+    db.auth.onAuthStateChange((evento, session) => {
+      if (evento === 'PASSWORD_RECOVERY') modoRecuperacion = true;
+      // setTimeout: Supabase recomienda no hacer consultas dentro del mismo callback
+      setTimeout(() => cargarSesion(session), 0);
+    });
+
+    // ---------- PESTAÑAS ----------
+    function verTab(t){
+      $('tabReservas').classList.toggle('sel', t==='reservas');
+      $('tabEquipo').classList.toggle('sel', t==='equipo');
+      $('panelReservas').classList.toggle('oculto', t!=='reservas');
+      $('panelEquipo').classList.toggle('oculto', t!=='equipo');
+      if (t === 'equipo') cargarEquipo();
+    }
+
+    // ---------- RESERVAS ----------
+    async function cargarReservas(){
+      $('listaReservas').innerHTML = '<p class="vacio">Cargando…</p>';
+      // RLS decide qué filas llegan: admin = todas, trabajador = solo las suyas
+      const { data, error } = await db.from('reservas').select('*').order('fecha').order('hora');
+      if (error){ $('listaReservas').innerHTML = `<p class="vacio">Error: ${esc(error.message)}</p>`; return; }
+      reservas = data;
+      if (yo.rol === 'admin'){
+        const nombres = [...new Set(reservas.map(r => r.trabajador).filter(Boolean))].sort();
+        const actual = $('filtroTrab').value;
+        $('filtroTrab').innerHTML = '<option value="">Todo el equipo</option>' + nombres.map(n => `<option ${n===actual?'selected':''}>${esc(n)}</option>`).join('');
+      }
+      dibujarReservas();
+    }
+
+    function filtrar(f){
+      filtro = f;
+      document.querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c.dataset.f === f));
+      dibujarReservas();
+    }
+
+    function dibujarReservas(){
+      const hoy = hoyTxt(), trab = yo.rol === 'admin' ? $('filtroTrab').value : '';
+      let lista = reservas.filter(r => !trab || r.trabajador === trab);
+      if (filtro === 'hoy')      lista = lista.filter(r => r.fecha === hoy);
+      if (filtro === 'proximas') lista = lista.filter(r => r.fecha >= hoy);
+      if (filtro === 'pasadas')  lista = lista.filter(r => r.fecha < hoy).reverse();
+
+      const activas = lista.filter(r => r.estado !== 'cancelada').length;
+      $('resumenLista').textContent = `${lista.length} reserva${lista.length===1?'':'s'}` + (activas !== lista.length ? ` · ${activas} activas` : '');
+
+      if (!lista.length){ $('listaReservas').innerHTML = '<p class="vacio">No hay reservas aquí.</p>'; return; }
+
+      let html = '', diaActual = '';
+      for (const r of lista){
+        if (r.fecha !== diaActual){
+          diaActual = r.fecha;
+          const [a,m,d] = r.fecha.split('-').map(Number);
+          const titulo = new Date(a, m-1, d).toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' });
+          html += `<div class="dia-titulo">${r.fecha === hoy ? 'Hoy · ' : ''}${titulo}</div>`;
+        }
+        const est = r.estado || 'confirmada';
+        const tel = (r.telefono || '').replace(/[^\d]/g, '');
+        html += `<div class="reserva ${est}">
+          <div class="r-hora">${esc(r.hora)}</div>
+          <div class="r-top">
+            <div><div class="r-nombre">${esc(r.nombre)}</div>${yo.rol==='admin' ? `<div class="r-trab">con ${esc(r.trabajador)}</div>` : ''}</div>
+            <span class="badge ${est}">${ESTADOS[est] || est}</span>
+          </div>
+          <div class="r-desc">${esc(r.descripcion)}</div>
+          <div class="r-acciones">
+            ${tel ? `<a href="https://wa.me/${tel}" target="_blank" rel="noopener">WhatsApp</a>` : ''}
+            ${r.correo ? `<a href="mailto:${esc(r.correo)}">Correo</a>` : ''}
+            <select onchange="cambiarEstado(${r.id}, this.value)">
+              ${Object.entries(ESTADOS).map(([k,v]) => `<option value="${k}" ${k===est?'selected':''}>${v}</option>`).join('')}
+            </select>
+            ${yo.rol==='admin' ? `<button class="boton-linea borrar" onclick="borrarReserva(${r.id})">Eliminar</button>` : ''}
+          </div>
+        </div>`;
+      }
+      $('listaReservas').innerHTML = html;
+    }
+
+    async function cambiarEstado(id, estado){
+      const { error } = await db.from('reservas').update({ estado }).eq('id', id);
+      if (error){
+        alert(error.code === '23505' ? "No se puede reactivar: esa hora ya la tomó otra persona." : "Error: " + error.message);
+        cargarReservas(); return;
+      }
+      const r = reservas.find(x => x.id === id); if (r) r.estado = estado;
+      dibujarReservas();
+    }
+
+    async function borrarReserva(id){
+      const r = reservas.find(x => x.id === id);
+      if (!confirm(`¿Eliminar la reserva de ${r?.nombre} (${r?.fecha} ${r?.hora})? Esto no se puede deshacer.\n\nTip: si solo no vino o canceló, mejor cambia el estado.`)) return;
+      const { error } = await db.from('reservas').delete().eq('id', id);
+      if (error){ alert("Error: " + error.message); return; }
+      reservas = reservas.filter(x => x.id !== id);
+      dibujarReservas();
+    }
+
+    // ---------- EQUIPO (admin) ----------
+    async function cargarEquipo(){
+      const { data, error } = await db.from('perfiles').select('id,nombre,rol,creado').order('creado');
+      if (error){ $('listaEquipo').innerHTML = `<p class="vacio">Error: ${esc(error.message)}</p>`; return; }
+      $('listaEquipo').innerHTML = data.map(p => `
+        <div class="fila-equipo" data-id="${p.id}">
+          <input value="${esc(p.nombre)}" aria-label="Nombre">
+          <select aria-label="Rol">
+            ${['admin','trabajador','pendiente'].map(r => `<option ${r===p.rol?'selected':''}>${r}</option>`).join('')}
+          </select>
+          <button class="boton-linea" onclick="guardarPerfil('${p.id}', this)">Guardar</button>
+          <span class="correo">${p.id === yo.id ? '(tú)' : ''}</span>
+        </div>`).join('');
+    }
+
+    async function guardarPerfil(id, boton){
+      const fila = boton.closest('.fila-equipo');
+      const nombre = fila.querySelector('input').value.trim();
+      const rol = fila.querySelector('select').value;
+      const est = $('estadoEquipo');
+      if (!nombre){ est.textContent = "El nombre no puede quedar vacío."; return; }
+      if (id === yo.id && rol !== 'admin' && !confirm("Te vas a quitar el rol de admin a ti mismo. ¿Seguro?")) return;
+      const { error } = await db.from('perfiles').update({ nombre, rol }).eq('id', id);
+      est.textContent = error ? "Error: " + error.message : `✓ Guardado: ${nombre} (${rol})`;
+      if (!error && id === yo.id){ const { data } = await db.auth.getSession(); cargarSesion(data.session); }
+    }
+  </script>
+</body>
+</html>
