@@ -86,6 +86,43 @@
     .acciones-rapidas { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
     .boton-linea.verde { color:var(--verde); border-color:rgba(74,222,128,0.45); }
 
+    /* Fase 3: notificaciones, bloqueos, formularios */
+    .campana { position:relative; background:none; border:1px solid rgba(255,255,255,0.18); color:var(--hueso); width:40px; height:36px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .campana:hover { border-color:var(--voltaje); }
+    .contador { position:absolute; top:-7px; right:-7px; background:var(--rojo); color:#fff; font-size:11px; font-weight:700; min-width:19px; height:19px; border-radius:10px; display:flex; align-items:center; justify-content:center; padding:0 5px; }
+    .panel-notif { position:absolute; top:44px; right:0; width:min(380px, calc(100vw - 32px)); max-height:70vh; overflow:auto; background:var(--panel); border:1px solid rgba(255,255,255,0.14); border-radius:12px; box-shadow:0 12px 40px rgba(0,0,0,0.5); z-index:20; }
+    .pn-cab { display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border-bottom:1px solid var(--linea); position:sticky; top:0; background:var(--panel); }
+    .notif { display:flex; gap:10px; padding:11px 14px; border-bottom:1px solid var(--linea); cursor:pointer; font-size:13px; }
+    .notif:hover { background:var(--panel2); }
+    .notif.nueva { background:rgba(255,122,47,0.07); }
+    .notif .ico { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:14px; background:var(--panel2); }
+    .notif .ico.nueva { background:rgba(74,222,128,0.15); } .notif .ico.cancelada, .notif .ico.eliminada { background:rgba(248,113,113,0.15); }
+    .notif .ico.bloqueo, .notif .ico.desbloqueo { background:rgba(154,160,168,0.18); } .notif .ico.modificada { background:rgba(96,165,250,0.15); }
+    .notif b { display:block; font-size:13px; }
+    .notif .cuando { color:var(--gris); font-size:11px; margin-top:2px; }
+    .notif .punto { width:8px; height:8px; border-radius:50%; background:var(--voltaje); flex-shrink:0; margin-top:6px; }
+    .barra-der { margin-left:auto; display:flex; gap:8px; }
+    .ag-col.clicable { cursor:copy; }
+    .ag-col.clicable:hover { background:rgba(255,255,255,0.015); }
+    .ag-bloq { position:absolute; left:4px; right:4px; border-radius:7px; padding:3px 8px; font-size:12px; overflow:hidden; cursor:pointer; color:#fca5a5;
+      background:repeating-linear-gradient(135deg, rgba(248,113,113,0.16) 0 8px, rgba(248,113,113,0.07) 8px 16px); border:1px dashed rgba(248,113,113,0.45); z-index:1; }
+    .acciones-dia { display:flex; gap:8px; flex-wrap:wrap; margin:4px 0 12px; }
+    .bloq-item { background:rgba(248,113,113,0.08); border:1px dashed rgba(248,113,113,0.4); color:#fca5a5; border-radius:10px; padding:10px 14px; margin-top:8px; font-size:14px; cursor:pointer; }
+    .tabs-modal { display:flex; gap:6px; margin:4px 0 14px; }
+    .tabs-modal button { flex:1; background:var(--panel2); border:1px solid rgba(255,255,255,0.12); color:var(--gris); padding:9px; border-radius:9px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:600; }
+    .tabs-modal button.sel { border-color:var(--voltaje); color:var(--hueso); background:rgba(255,122,47,0.12); }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 10px; }
+    .form-grid .full { grid-column:1 / -1; }
+    .serv-checks { display:flex; flex-direction:column; gap:6px; margin-top:2px; }
+    .serv-checks label { display:flex; align-items:center; gap:8px; margin:0; background:var(--panel2); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:8px 10px; color:var(--hueso); font-size:13px; cursor:pointer; }
+    .serv-checks label span { margin-left:auto; color:var(--gris); }
+    .motivos { display:flex; gap:6px; flex-wrap:wrap; }
+    .motivos button { background:var(--panel2); border:1px solid rgba(255,255,255,0.12); color:var(--hueso); padding:6px 12px; border-radius:16px; cursor:pointer; font-size:12px; font-family:inherit; }
+    .motivos button.sel { border-color:var(--voltaje); background:rgba(255,122,47,0.14); }
+    .check-linea { display:flex !important; align-items:center; gap:8px; color:var(--hueso) !important; font-size:13px !important; margin-top:12px !important; }
+    .resumen-form { font-size:13px; color:var(--gris); margin-top:8px; }
+    .ventana { max-width:480px; }
+
     /* Lista */
     .filtros { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; align-items:center; }
     .chip { background:var(--panel2); border:1px solid rgba(255,255,255,0.12); color:var(--hueso); padding:7px 14px; border-radius:20px; cursor:pointer; font-size:13px; font-family:inherit; }
@@ -130,6 +167,12 @@
     .detalle-horario summary { cursor:pointer; color:var(--voltaje); font-size:13px; font-weight:600; }
     .serv-fila { display:grid; grid-template-columns:1.2fr 2fr 110px 90px 60px 130px; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid var(--linea); }
     .serv-fila.cab { color:var(--gris); font-size:12px; border-bottom:none; padding-bottom:0; }
+    @media (max-width:640px){
+      .panel-notif { position:fixed; top:64px; left:12px; right:12px; width:auto; }
+      .barra-der { margin-left:0; width:100%; }
+      .barra-der .boton { flex:1; }
+      .form-grid { grid-template-columns:1fr; }
+    }
     @media (max-width:720px){
       .trab-cab { grid-template-columns:auto 1fr; }
       .trab-cab .ancho-full { grid-column:1 / -1; }
@@ -190,7 +233,15 @@
             <div><div id="yoNombre" style="font-weight:600;"></div><span class="rol" id="yoRol"></span></div>
           </div>
         </div>
-        <div style="display:flex; gap:8px;">
+        <div style="display:flex; gap:8px; align-items:flex-start; position:relative;">
+          <button class="campana" id="btnCampana" onclick="toggleNotif()" aria-label="Notificaciones">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            <span class="contador oculto" id="nNoLeidas"></span>
+          </button>
+          <div class="panel-notif oculto" id="panelNotif">
+            <div class="pn-cab"><b>Notificaciones</b><button class="link" style="margin:0;" onclick="marcarTodasLeidas()">Marcar todas como leídas</button></div>
+            <div id="listaNotif"></div>
+          </div>
           <a class="boton-linea" href="agenda.html">Ver agenda pública</a>
           <button class="boton-linea" onclick="salir()">Salir</button>
         </div>
@@ -211,7 +262,12 @@
         <h2 id="saludo" style="margin-top:18px;font-size:22px;"></h2>
         <p class="sub" id="saludoSub" style="text-transform:capitalize;margin-bottom:12px;"></p>
         <div class="kpis" id="kpisTrab"></div>
+        <div class="acciones-dia">
+          <button class="boton" onclick="abrirAccion({ modo:'agendar', fecha: hoyTxt(), tid: yo.trabajador_id })">+ Agendar cliente</button>
+          <button class="boton-linea" onclick="abrirAccion({ modo:'bloquear', fecha: hoyTxt(), tid: yo.trabajador_id })">🔒 Bloquear horario</button>
+        </div>
         <div id="proxima"></div>
+        <div id="bloqueosHoy"></div>
         <h3 style="margin-top:18px;">Citas de hoy</h3>
         <div id="citasHoy"></div>
       </div>
@@ -224,6 +280,8 @@
           <button class="boton-linea" onclick="moverSemana(1)" aria-label="Semana siguiente">›</button>
           <button class="boton-linea" onclick="irSemanaActual()">Esta semana</button>
           <select id="semanaTrab" class="solo-admin" style="width:auto;" onchange="dibujarSemana()"></select>
+          <span class="barra-der"><button class="boton" onclick="abrirAccion({ modo:'agendar', fecha: semanaFechaDefecto(), tid: semanaTid() })">+ Agendar</button>
+          <button class="boton-linea" onclick="abrirAccion({ modo:'bloquear', fecha: semanaFechaDefecto(), tid: semanaTid() })">🔒 Bloquear</button></span>
         </div>
         <div class="kpis" id="kpisSemana"></div>
         <div class="agenda-scroll"><div class="agenda" id="agendaSemana"></div></div>
@@ -237,8 +295,11 @@
           <button class="boton-linea" onclick="moverDia(1)" aria-label="Día siguiente">›</button>
           <button class="boton-linea" onclick="irHoy()">Hoy</button>
           <input type="date" id="diaInput" onchange="irFecha(this.value)">
+          <span class="barra-der"><button class="boton" onclick="abrirAccion({ modo:'agendar', fecha: diaVista })">+ Agendar</button>
+          <button class="boton-linea" onclick="abrirAccion({ modo:'bloquear', fecha: diaVista })">🔒 Bloquear</button></span>
         </div>
         <div class="kpis" id="kpis"></div>
+        <p class="nota" style="margin-bottom:8px;">Toca un espacio libre para agendar un cliente o bloquear ese horario.</p>
         <div class="agenda-scroll"><div class="agenda" id="agendaDia"></div></div>
         <p class="nota" style="margin-top:8px;">Toca una reserva para ver el detalle, escribir por WhatsApp o cambiar su estado.</p>
       </div>
@@ -316,6 +377,7 @@
     function estado(id, texto, tipo){ const e = $(id); e.textContent = texto; e.className = 'estado ' + (tipo||''); }
 
     let yo = null;               // { rol, nombre, trabajador_id, correo }
+    let bloqueosTodos = [], serviciosActivos = [], notificaciones = [], ultimoNoLeidas = -1;
     let trabajadores = [], horarios = [], servicios = [], reservasTodas = [];
     let diaVista = hoyTxt(), filtro = 'proximas', modoRecuperacion = false;
 
@@ -337,7 +399,7 @@
       if (error) estado('estadoLogin', error.message.includes('Invalid') ? "Correo o contraseña incorrectos." :
                                        error.message.includes('confirm') ? "Falta confirmar tu correo: revisa tu bandeja de entrada." : "Error: " + error.message, 'error');
     }
-    async function salir(){ await db.auth.signOut(); }
+    async function salir(){ clearInterval(relojNotif); await db.auth.signOut(); }
     async function recuperarClave(){
       const email = $('loginCorreo').value.trim();
       if (!email){ estado('estadoLogin', "Escribe tu correo arriba y vuelve a pulsar.", 'error'); return; }
@@ -374,6 +436,7 @@
       mostrar('vistaPanel');
       await cargarBase();
       verTab(yo.rol === 'admin' ? 'dia' : 'midia');
+      iniciarNotif();
     }
     db.auth.onAuthStateChange((evento, session) => {
       if (evento === 'PASSWORD_RECOVERY') modoRecuperacion = true;
@@ -383,12 +446,15 @@
 
     // Trabajadores, horarios y reservas (RLS decide qué ve cada uno)
     async function cargarBase(){
-      const [t, h, r] = await Promise.all([
+      const [t, h, r, b, c] = await Promise.all([
         db.from('trabajadores').select('*').order('orden').order('id'),
         db.from('horarios').select('*'),
         db.from('reservas').select('*').order('fecha').order('hora'),
+        db.from('bloqueos').select('*').order('inicio'),
+        db.rpc('agenda_config'),
       ]);
       trabajadores = t.data || []; horarios = h.data || []; reservasTodas = r.data || [];
+      bloqueosTodos = b.data || []; serviciosActivos = (c.data && c.data.servicios) || [];
       const f = $('filtroTrab'), actual = f.value;
       f.innerHTML = '<option value="">Todo el equipo</option>' + trabajadores.map(x => `<option value="${x.id}" ${String(x.id)===actual?'selected':''}>${esc(x.nombre)}</option>`).join('');
     }
@@ -437,18 +503,38 @@
           if (h.almuerzo_inicio){ const ai = aMin(h.almuerzo_inicio), af = aMin(h.almuerzo_fin);
             x += `<div class="ag-colacion" style="top:${y(ai)}px;height:${(af-ai)*PX_MIN}px">Colación ${aHora(ai)}–${aHora(af)}</div>`; }
         }
+        (c.bloqueos || []).forEach(b => {
+          const bi = Math.max(b.desde, desde), bf = Math.min(b.hasta, hasta);
+          if (bf <= bi) return;
+          x += `<div class="ag-bloq" style="top:${y(bi)}px;height:${(bf-bi)*PX_MIN}px" onclick="event.stopPropagation(); abrirBloqueo(${b.id})">🔒 ${esc(b.motivo || 'Bloqueado')}</div>`;
+        });
         c.reservas.forEach(r => {
           const [ri, rf] = rangoDe(r), est = r.estado || 'confirmada';
-          x += `<div class="ag-res ${est}" style="top:${y(ri)+1}px;height:${Math.max((rf-ri)*PX_MIN-2, 18)}px" onclick="abrirDetalle(${r.id})" title="${esc(r.nombre)}">
+          x += `<div class="ag-res ${est}" style="top:${y(ri)+1}px;height:${Math.max((rf-ri)*PX_MIN-2, 18)}px" onclick="event.stopPropagation(); abrirDetalle(${r.id})" title="${esc(r.nombre)}">
             <b>${aHora(ri)} ${esc(r.nombre)}</b>${(rf-ri) >= 30 ? `<br>${esc(r.servicios || r.descripcion || '')}` : ''}</div>`;
         });
         if (c.esHoy && ahoraMin > desde && ahoraMin < hasta) x += `<div class="ag-ahora" style="top:${y(ahoraMin)}px"></div>`;
-        return `<div class="ag-col" style="height:${alto}px">${x}</div>`;
+        const clic = c.tid ? `onclick="clicGrilla(event, ${c.tid}, '${c.fecha}', ${desde})"` : '';
+        return `<div class="ag-col ${c.tid ? 'clicable' : ''}" style="height:${alto}px" ${clic}>${x}</div>`;
       }).join('');
       el.style.gridTemplateColumns = `56px repeat(${columnas.length}, minmax(${columnas.length > 4 ? 120 : 150}px, 1fr))`;
       el.innerHTML = html;
     }
     const activa = r => !['cancelada','no_asistio'].includes(r.estado);
+    // Bloqueos de un profesional en un día, recortados a ese día (en minutos)
+    function bloqueosDe(tid, fecha){
+      return bloqueosTodos.filter(b => b.trabajador_id === tid && b.inicio.slice(0,10) <= fecha && b.fin > fecha + 'T00:00')
+        .map(b => ({ ...b, desde: b.inicio.slice(0,10) < fecha ? 0 : aMin(b.inicio.slice(11,16)),
+                            hasta: b.fin.slice(0,10) > fecha ? 1440 : aMin(b.fin.slice(11,16)) }));
+    }
+    function clicGrilla(ev, tid, fecha, desde){
+      if (yo.rol !== 'admin' && tid !== yo.trabajador_id) return;
+      const y = ev.clientY - ev.currentTarget.getBoundingClientRect().top;
+      const t = Math.floor((desde + y / PX_MIN) / 15) * 15;
+      abrirAccion({ modo:'agendar', tid, fecha, t });
+    }
+    function semanaTid(){ return yo.rol === 'admin' ? Number($('semanaTrab').value) || undefined : yo.trabajador_id; }
+    function semanaFechaDefecto(){ const h = hoyTxt(), ini = fechaTexto(semanaInicio); const f = new Date(semanaInicio); f.setDate(f.getDate()+6); return h >= ini && h <= fechaTexto(f) ? h : ini; }
     const sumaTotal = lista => lista.filter(activa).reduce((a,r) => a + (r.total||0), 0);
     const porHora = (a, b) => rangoDe(a)[0] - rangoDe(b)[0];
 
@@ -474,6 +560,7 @@
         const res = delDia.filter(r => r.trabajador_id === t.id);
         const n = res.filter(activa).length;
         return { titulo: t.nombre, avatar: t.nombre[0], horario: h, reservas: res, esHoy: diaVista === hoyTxt(),
+                 tid: t.id, fecha: diaVista, bloqueos: bloqueosDe(t.id, diaVista),
                  sub: h ? `${h.inicio.slice(0,5)}–${h.fin.slice(0,5)} · ${n} reserva${n===1?'':'s'}` : 'No trabaja' };
       }));
     }
@@ -501,6 +588,7 @@
         const res = deSemana.filter(r => r.fecha === txt[i]);
         const h = horarios.find(x => x.trabajador_id === tid && x.dia === d.getDay());
         return { titulo: DIAS[d.getDay()], avatar: String(d.getDate()), horario: h, reservas: res,
+                 tid, fecha: txt[i], bloqueos: bloqueosDe(tid, txt[i]),
                  esHoy: txt[i] === hoyTxt(), sub: h ? `${res.filter(activa).length} reserva${res.filter(activa).length===1?'':'s'}` : 'Libre' };
       }));
     }
@@ -533,6 +621,8 @@
           <div class="r-sub">${esc(destacada.servicios || '')}${destacada.total ? ' · ' + clp(destacada.total) : ''}</div></div>`;
       } else $('proxima').innerHTML = deHoy.length ? '<div class="proxima libre">No te quedan citas pendientes hoy 👌</div>' : '';
 
+      const bq = bloqueosDe(yo.trabajador_id, hoy);
+      $('bloqueosHoy').innerHTML = bq.map(b => `<div class="bloq-item" onclick="abrirBloqueo(${b.id})">🔒 <b>${aHora(b.desde)}–${b.hasta >= 1440 ? '24:00' : aHora(b.hasta)}</b> · ${esc(b.motivo || 'Bloqueado')}</div>`).join('');
       if (!deHoy.length){ $('citasHoy').innerHTML = '<p class="vacio">Hoy no tienes citas agendadas.</p>'; return; }
       $('citasHoy').innerHTML = deHoy.map(r => {
         const [ri, rf] = rangoDe(r), est = r.estado || 'confirmada', tel = (r.telefono || '').replace(/\D/g, '');
@@ -602,6 +692,7 @@
         <h3 style="font-size:18px;">${esc(r.nombre)}</h3>
         <div class="det-fila"><span>Fecha</span><span>${esc(r.fecha)} · ${aHora(ri)}–${aHora(rf)}</span></div>
         <div class="det-fila"><span>Profesional</span><span>${esc(r.trabajador)}</span></div>
+        ${r.creado_por ? `<div class="det-fila"><span>Agendada por</span><span>${esc(r.creado_por)}${r.origen === 'panel' ? ' (panel)' : ''}</span></div>` : ''}
         <div class="det-fila"><span>Servicios</span><span>${esc(r.servicios || '—')}</span></div>
         <div class="det-fila"><span>Total</span><span>${r.total ? clp(r.total) : '—'}</span></div>
         <div class="det-fila"><span>WhatsApp</span><span>${esc(r.telefono || '—')}</span></div>
@@ -613,6 +704,8 @@
           <select onchange="cambiarEstado(${r.id}, this.value)">
             ${Object.entries(ESTADOS).map(([k,v]) => `<option value="${k}" ${k===est?'selected':''}>${v}</option>`).join('')}
           </select>
+          ${yo.rol === 'admin' ? `<button class="boton" onclick="abrirEditar(${r.id})">✎ Editar</button>` : ''}
+          ${est === 'confirmada' ? `<button class="boton-linea rojo" onclick="cancelarReserva(${r.id})">Cancelar reserva</button>` : ''}
           ${yo.rol === 'admin' ? `<button class="boton-linea rojo" onclick="borrarReserva(${r.id})">Eliminar</button>` : ''}
           <button class="boton-linea" style="margin-left:auto;" onclick="cerrarDetalle()">Cerrar</button>
         </div>
@@ -642,6 +735,213 @@
       if (error){ estado('estadoDetalle', "Error: " + error.message, 'error'); return; }
       reservasTodas = reservasTodas.filter(x => x.id !== id);
       cerrarDetalle(); refrescarVista();
+    }
+
+    // ================= AGENDAR / BLOQUEAR DESDE EL PANEL =================
+    let accion = {};
+    const MOTIVOS = ['Colación extra', 'Trámite', 'Médico', 'Día libre', 'Vacaciones', 'Capacitación'];
+    function opcionesProfesionales(sel){
+      const lista = yo.rol === 'admin' ? trabajadores.filter(t => t.activo) : trabajadores.filter(t => t.id === yo.trabajador_id);
+      return lista.map(t => `<option value="${t.id}" ${t.id === sel ? 'selected' : ''}>${esc(t.nombre)}</option>`).join('');
+    }
+    function checksServicios(marcados){
+      return serviciosActivos.map(s => `<label><input type="checkbox" class="f-serv" value="${s.id}" ${marcados.includes(s.id) ? 'checked' : ''} onchange="resumenForm()"> ${esc(s.nombre)} <span>${s.duracion} min · ${clp(s.precio)}</span></label>`).join('');
+    }
+    // o = { modo:'agendar'|'bloquear', tid, fecha, t (minutos) }
+    function abrirAccion(o){
+      const tid = o.tid || (yo.rol === 'admin' ? (trabajadores.find(t => t.activo) || {}).id : yo.trabajador_id);
+      let t = o.t;
+      if (t == null){ const a = new Date(); t = o.fecha === hoyTxt() ? Math.min(Math.ceil((a.getHours()*60 + a.getMinutes()) / 15) * 15, 23*60) : 10*60; }
+      accion = { modo: o.modo || 'agendar', tid, fecha: o.fecha || hoyTxt(), t, motivo: '' };
+      dibujarAccion();
+      $('fondoDetalle').classList.remove('oculto');
+    }
+    function dibujarAccion(){
+      const a = accion;
+      const tabs = `<div class="tabs-modal">
+        <button class="${a.modo === 'agendar' ? 'sel' : ''}" onclick="leerComunes(); accion.modo='agendar'; dibujarAccion()">+ Agendar cliente</button>
+        <button class="${a.modo === 'bloquear' ? 'sel' : ''}" onclick="leerComunes(); accion.modo='bloquear'; dibujarAccion()">🔒 Bloquear horario</button></div>`;
+      const comunes = `<div class="form-grid">
+          <div class="full"><label>Profesional</label><select id="fTid" ${yo.rol !== 'admin' ? 'disabled' : ''}>${opcionesProfesionales(a.tid)}</select></div>
+          <div><label>Fecha</label><input type="date" id="fFecha" value="${a.fecha}"></div>
+          <div><label>${a.modo === 'agendar' ? 'Hora' : 'Desde'}</label><input type="time" id="fHora" step="300" value="${aHora(a.t)}" oninput="resumenForm()"></div>`;
+      let cuerpo;
+      if (a.modo === 'agendar'){
+        cuerpo = comunes + `
+          <div class="full"><label>Servicios</label><div class="serv-checks">${checksServicios([])}</div></div>
+          <div class="full"><label>Nombre del cliente *</label><input id="fNombre" placeholder="Ej: Pedro Soto"></div>
+          <div><label>WhatsApp</label><input id="fTel" type="tel" placeholder="+56 9 …"></div>
+          <div><label>Correo</label><input id="fCorreo" type="email" placeholder="opcional"></div>
+          <div class="full"><label>Nota</label><input id="fMsg" placeholder="opcional"></div>
+          <div class="full"><label class="check-linea"><input type="checkbox" id="fForzar"> Permitir fuera de horario o en colación</label></div>
+        </div>
+        <p class="resumen-form" id="resumenForm"></p>
+        <div class="det-acciones"><button class="boton" onclick="guardarAgendar()">Agendar</button>
+          <button class="boton-linea" style="margin-left:auto;" onclick="cerrarDetalle()">Cerrar</button></div>`;
+      } else {
+        cuerpo = comunes + `
+          <div><label>Hasta el día</label><input type="date" id="fFechaFin" value="${a.fecha}"></div>
+          <div><label>Hasta la hora</label><input type="time" id="fHasta" step="300" value="${aHora(Math.min(a.t + 60, 23*60 + 55))}"></div>
+          <div class="full"><label class="check-linea"><input type="checkbox" id="fDiaCompleto" onchange="$('fHora').disabled = $('fHasta').disabled = this.checked"> Día(s) completo(s) — para vacaciones o días libres</label></div>
+          <div class="full"><label>Motivo</label><div class="motivos">${MOTIVOS.map(m => `<button type="button" onclick="elegirMotivo(this, '${m}')">${m}</button>`).join('')}</div>
+            <input id="fMotivo" style="margin-top:8px;" placeholder="O escribe otro motivo"></div>
+        </div>
+        <div class="det-acciones"><button class="boton" onclick="guardarBloqueo()">Bloquear</button>
+          <button class="boton-linea" style="margin-left:auto;" onclick="cerrarDetalle()">Cerrar</button></div>`;
+      }
+      $('ventanaDetalle').innerHTML = `<h3 style="font-size:18px;">Nuevo en la agenda</h3>${tabs}${cuerpo}<p class="estado" id="estadoAccion"></p>`;
+      if (a.modo === 'agendar') resumenForm();
+    }
+    function elegirMotivo(btn, m){
+      $('fMotivo').value = m;
+      btn.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('sel', x === btn));
+      if (m === 'Vacaciones' || m === 'Día libre'){ $('fDiaCompleto').checked = true; $('fHora').disabled = $('fHasta').disabled = true; }
+    }
+    function leerComunes(){ if ($('fTid')){ accion.tid = Number($('fTid').value); accion.fecha = $('fFecha').value; accion.t = aMin($('fHora').value || '10:00'); } }
+    function servSeleccionados(){ return [...document.querySelectorAll('.f-serv:checked')].map(x => Number(x.value)); }
+    function resumenForm(){
+      const e = $('resumenForm'); if (!e) return;
+      const ids = servSeleccionados(), ss = serviciosActivos.filter(s => ids.includes(s.id));
+      const dur = ss.reduce((a, s) => a + s.duracion, 0), tot = ss.reduce((a, s) => a + s.precio, 0), ini = aMin($('fHora').value || '00:00');
+      e.textContent = ids.length ? `${aHora(ini)}–${aHora(ini + dur)} · ${dur} min · ${clp(tot)}` : 'Elige al menos un servicio.';
+    }
+    function mensajeError(error){ const m = error.message || ''; return m.includes('HORA_OCUPADA') ? 'Ese horario ya tiene otra reserva.' : m; }
+
+    async function guardarAgendar(){
+      const p = { trabajador_id: Number($('fTid').value), fecha: $('fFecha').value, hora: $('fHora').value, servicios: servSeleccionados(),
+                  nombre: $('fNombre').value.trim(), telefono: $('fTel').value.trim(), correo: $('fCorreo').value.trim(),
+                  mensaje: $('fMsg').value.trim(), forzar: $('fForzar').checked };
+      if (!p.servicios.length) return estado('estadoAccion', 'Elige al menos un servicio.', 'error');
+      if (!p.nombre) return estado('estadoAccion', 'Escribe el nombre del cliente.', 'error');
+      estado('estadoAccion', 'Agendando…');
+      const { data, error } = await db.rpc('crear_reserva_staff', { p });
+      if (error) return estado('estadoAccion', mensajeError(error), 'error');
+      await recargarTodo();
+      estado('estadoAccion', `✓ Agendado con ${data.trabajador}, ${data.desde}–${data.hasta}.`, 'ok');
+      setTimeout(cerrarDetalle, 900);
+    }
+    async function guardarBloqueo(){
+      const tid = Number($('fTid').value), f1 = $('fFecha').value, f2 = $('fFechaFin').value || f1, completo = $('fDiaCompleto').checked;
+      let ini, fin;
+      if (completo){ ini = `${f1} 00:00`; const d = deTexto(f2); d.setDate(d.getDate() + 1); fin = `${fechaTexto(d)} 00:00`; }
+      else { ini = `${f1} ${$('fHora').value}`; fin = `${f2} ${$('fHasta').value}`; }
+      estado('estadoAccion', 'Bloqueando…');
+      const { error } = await db.rpc('crear_bloqueo', { p_trabajador_id: tid, p_inicio: ini, p_fin: fin, p_motivo: $('fMotivo').value.trim() });
+      if (error) return estado('estadoAccion', mensajeError(error), 'error');
+      await recargarTodo();
+      estado('estadoAccion', '✓ Horario bloqueado. Ya no se ofrece en la agenda pública.', 'ok');
+      setTimeout(cerrarDetalle, 900);
+    }
+    function abrirBloqueo(id){
+      const b = bloqueosTodos.find(x => x.id === id); if (!b) return;
+      const t = trabajadores.find(x => x.id === b.trabajador_id);
+      const puede = yo.rol === 'admin' || b.trabajador_id === yo.trabajador_id;
+      const f = x => deTexto(x.slice(0, 10)).toLocaleDateString('es-CL', { weekday:'short', day:'numeric', month:'short' }) + ' ' + x.slice(11, 16);
+      $('ventanaDetalle').innerHTML = `<h3 style="font-size:18px;">🔒 Horario bloqueado</h3>
+        <div class="det-fila"><span>Profesional</span><span>${esc(t ? t.nombre : '')}</span></div>
+        <div class="det-fila"><span>Desde</span><span>${f(b.inicio)}</span></div>
+        <div class="det-fila"><span>Hasta</span><span>${f(b.fin)}</span></div>
+        <div class="det-fila"><span>Motivo</span><span>${esc(b.motivo || '—')}</span></div>
+        <div class="det-fila"><span>Creado por</span><span>${esc(b.creado_por || '—')}</span></div>
+        <div class="det-acciones">${puede ? `<button class="boton-linea rojo" onclick="quitarBloqueo(${b.id})">Quitar bloqueo</button>` : ''}
+          <button class="boton-linea" style="margin-left:auto;" onclick="cerrarDetalle()">Cerrar</button></div>
+        <p class="estado" id="estadoAccion"></p>`;
+      $('fondoDetalle').classList.remove('oculto');
+    }
+    async function quitarBloqueo(id){
+      const { error } = await db.rpc('eliminar_bloqueo', { p_id: id });
+      if (error) return estado('estadoAccion', mensajeError(error), 'error');
+      await recargarTodo(); cerrarDetalle();
+    }
+
+    // ================= EDITAR RESERVA (admin) =================
+    function abrirEditar(id){
+      const r = reservasTodas.find(x => x.id === id); if (!r) return;
+      const [ri] = rangoDe(r), nombres = (r.servicios || '').split(' + ');
+      const marcados = serviciosActivos.filter(s => nombres.includes(s.nombre)).map(s => s.id);
+      $('ventanaDetalle').innerHTML = `<h3 style="font-size:18px;">Editar reserva</h3>
+        <div class="form-grid">
+          <div class="full"><label>Profesional</label><select id="fTid">${trabajadores.map(t => `<option value="${t.id}" ${t.id === r.trabajador_id ? 'selected' : ''}>${esc(t.nombre)}${t.activo ? '' : ' (inactivo)'}</option>`).join('')}</select></div>
+          <div><label>Fecha</label><input type="date" id="fFecha" value="${r.fecha}"></div>
+          <div><label>Hora</label><input type="time" id="fHora" step="300" value="${aHora(ri)}" oninput="resumenForm()"></div>
+          <div class="full"><label>Servicios</label><div class="serv-checks">${checksServicios(marcados)}</div>
+            ${r.servicios && !marcados.length ? `<p class="nota" style="margin-top:6px;">Servicio original: ${esc(r.servicios)}. Si no marcas ninguno, se mantiene.</p>` : ''}</div>
+          <div class="full"><label>Cliente</label><input id="fNombre" value="${esc(r.nombre)}"></div>
+          <div><label>WhatsApp</label><input id="fTel" value="${esc(r.telefono || '')}"></div>
+          <div><label>Correo</label><input id="fCorreo" value="${esc(r.correo || '')}"></div>
+          <div class="full"><label>Nota</label><input id="fMsg" value="${esc(r.descripcion || '')}"></div>
+          <div class="full"><label class="check-linea"><input type="checkbox" id="fForzar"> Permitir fuera de horario o en colación</label></div>
+        </div>
+        <p class="resumen-form" id="resumenForm"></p>
+        <div class="det-acciones"><button class="boton" onclick="guardarEdicion(${r.id})">Guardar cambios</button>
+          <button class="boton-linea" onclick="abrirDetalle(${r.id})">Volver</button></div>
+        <p class="estado" id="estadoAccion"></p>`;
+      resumenForm();
+    }
+    async function guardarEdicion(id){
+      const p = { id, trabajador_id: Number($('fTid').value), fecha: $('fFecha').value, hora: $('fHora').value,
+                  nombre: $('fNombre').value.trim(), telefono: $('fTel').value.trim(), correo: $('fCorreo').value.trim(),
+                  mensaje: $('fMsg').value.trim(), forzar: $('fForzar').checked };
+      const ids = servSeleccionados(); if (ids.length) p.servicios = ids;
+      estado('estadoAccion', 'Guardando…');
+      const { error } = await db.rpc('editar_reserva', { p });
+      if (error) return estado('estadoAccion', mensajeError(error), 'error');
+      await recargarTodo();
+      abrirDetalle(id); estado('estadoDetalle', '✓ Reserva actualizada. El profesional recibió una notificación.', 'ok');
+    }
+    async function cancelarReserva(id){
+      if (!confirm('¿Cancelar esta reserva? La hora queda libre y se avisa al profesional.')) return;
+      await cambiarEstado(id, 'cancelada'); abrirDetalle(id);
+    }
+    async function recargarTodo(){ await cargarBase(); refrescarVista(); }
+
+    // ================= NOTIFICACIONES =================
+    let relojNotif = null;
+    function iniciarNotif(){ clearInterval(relojNotif); ultimoNoLeidas = -1; cargarNotif(); relojNotif = setInterval(cargarNotif, 30000); }
+    async function cargarNotif(){
+      if (!yo) return;
+      const { data, error } = await db.from('notificaciones').select('*').order('creado', { ascending:false }).limit(40);
+      if (error) return;
+      notificaciones = data;
+      const n = notificaciones.filter(x => !x.leida).length;
+      $('nNoLeidas').textContent = n > 9 ? '9+' : n; $('nNoLeidas').classList.toggle('oculto', !n);
+      if (ultimoNoLeidas >= 0 && n > ultimoNoLeidas) recargarTodo();     // llegó algo nuevo: la agenda se actualiza sola
+      ultimoNoLeidas = n;
+      dibujarNotif();
+    }
+    const ICONOS = { nueva:'＋', cancelada:'✕', eliminada:'🗑', modificada:'✎', bloqueo:'🔒', desbloqueo:'🔓' };
+    function haceCuanto(iso){
+      const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+      if (m < 1) return 'recién'; if (m < 60) return `hace ${m} min`;
+      const h = Math.round(m / 60); if (h < 24) return `hace ${h} h`;
+      return new Date(iso).toLocaleDateString('es-CL', { day:'numeric', month:'short' });
+    }
+    function dibujarNotif(){
+      $('listaNotif').innerHTML = notificaciones.length ? notificaciones.map(x => `
+        <div class="notif ${x.leida ? '' : 'nueva'}" onclick="abrirNotif(${x.id})">
+          <div class="ico ${x.tipo}">${ICONOS[x.tipo] || '•'}</div>
+          <div style="flex:1;"><b>${esc(x.titulo)}</b>${esc(x.detalle || '')}<div class="cuando">${haceCuanto(x.creado)}</div></div>
+          ${x.leida ? '' : '<div class="punto"></div>'}
+        </div>`).join('') : '<p class="vacio">Sin notificaciones.</p>';
+    }
+    function toggleNotif(){ $('panelNotif').classList.toggle('oculto'); }
+    document.addEventListener('click', e => { if (!e.target.closest('#panelNotif') && !e.target.closest('#btnCampana')) $('panelNotif')?.classList.add('oculto'); });
+    async function abrirNotif(id){
+      const x = notificaciones.find(n => n.id === id); if (!x) return;
+      if (!x.leida) await db.from('notificaciones').update({ leida:true }).eq('id', id);
+      $('panelNotif').classList.add('oculto');
+      await cargarBase(); await cargarNotif();
+      if (x.fecha){
+        if (yo.rol === 'admin'){ diaVista = x.fecha; verTab('dia'); }
+        else if (x.fecha === hoyTxt()) verTab('midia');
+        else { semanaInicio = lunesDe(deTexto(x.fecha)); verTab('semana'); }
+      }
+      if (x.reserva_id && reservasTodas.some(r => r.id === x.reserva_id)) abrirDetalle(x.reserva_id);
+    }
+    async function marcarTodasLeidas(){
+      const ids = notificaciones.filter(x => !x.leida).map(x => x.id);
+      if (ids.length) await db.from('notificaciones').update({ leida:true }).in('id', ids);
+      cargarNotif();
     }
 
     // ================= EQUIPO Y HORARIOS (admin) =================
