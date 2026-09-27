@@ -89,6 +89,9 @@
     .hora { padding:10px 16px; border-radius:8px; cursor:pointer; font-size:14px; border:1px solid rgba(255,255,255,0.15); background:var(--panel2); color:var(--hueso); font-family:inherit; }
     .hora:hover { border-color:var(--verde); }
     .hora.sel { background:var(--verde); color:var(--grafito); border-color:var(--verde); font-weight:600; }
+    .hora.con-pro { padding:7px 14px; line-height:1.2; text-align:center; }
+    .hora small { display:block; font-size:10px; color:var(--gris); font-weight:400; }
+    .hora.sel small { color:var(--grafito); }
     .elegida { margin-top:14px; padding:12px 14px; border-radius:10px; background:rgba(74,222,128,0.1); border:1px solid rgba(74,222,128,0.35); font-size:14px; }
     .elegida .boton-sec { width:100%; margin-top:10px; padding:12px; }
 
@@ -254,7 +257,7 @@
     function dibujarTodo(){
       // Paso 1
       let chips = '';
-      const max = Math.max(1, Math.min(MAX_PERSONAS, CFG.trabajadores.length));
+      const max = MAX_PERSONAS;
       for (let k=1; k<=max; k++) chips += `<button class="chip ${k===n?'sel':''}" onclick="elegirPersonas(${k})">${k} ${k===1?'persona':'personas'}</button>`;
       $('chipsPersonas').innerHTML = chips;
       $('check1').textContent = '✓ ' + n;
@@ -396,10 +399,12 @@
         if (tid) libres.push({ t, tid });
       }
       if (!libres.length){ cont.innerHTML = '<p class="nota">No quedan horas este día. Prueba otro día.</p>'; return; }
-      const boton = k => `<button class="hora" onclick="elegirHora(${k}, this)">${aHora(libres[k].t)}</button>`;
+      const auto = draft.eleccion === AUTO;
+      const boton = k => `<button class="hora ${auto ? 'con-pro' : ''}" onclick="elegirHora(${k}, this)">${aHora(libres[k].t)}${auto ? `<small>${esc(nombreTrab(libres[k].tid))}</small>` : ''}</button>`;
       const idx = libres.map((_, k) => k);
       const man = idx.filter(k => libres[k].t < 13*60), tar = idx.filter(k => libres[k].t >= 13*60);
-      cont.innerHTML = (man.length ? '<div class="franja">Mañana</div><div class="fila-horas">' + man.map(boton).join('') + '</div>' : '') +
+      const aviso = auto ? `<p class="nota" style="margin-bottom:10px;">Te asignamos al profesional con menos reservas ese día; si está ocupado a esa hora, pasa al siguiente.</p>` : '';
+      cont.innerHTML = aviso + (man.length ? '<div class="franja">Mañana</div><div class="fila-horas">' + man.map(boton).join('') + '</div>' : '') +
                        (tar.length ? '<div class="franja">Tarde</div><div class="fila-horas">' + tar.map(boton).join('') + '</div>' : '');
     }
     function elegirHora(k, el){
