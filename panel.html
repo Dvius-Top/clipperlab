@@ -72,6 +72,20 @@
     .ag-ahora { position:absolute; left:0; right:0; border-top:2px solid var(--verde); z-index:3; }
     .ag-libre { position:absolute; top:50%; left:0; right:0; text-align:center; color:var(--gris); font-size:12px; }
 
+    /* Mi día (profesional) */
+    .ag-cab.hoy { background:rgba(255,122,47,0.14); }
+    .proxima { background:linear-gradient(135deg, rgba(255,122,47,0.22), rgba(255,122,47,0.06)); border:1px solid rgba(255,122,47,0.4); border-radius:14px; padding:16px 18px; margin-top:4px; cursor:pointer; }
+    .proxima.libre { background:var(--panel); border-color:var(--linea); cursor:default; color:var(--gris); }
+    .proxima .etq { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--voltaje); }
+    .proxima .p-hora { font-size:26px; font-weight:700; margin-top:2px; }
+    .proxima .p-nombre { font-size:17px; font-weight:600; }
+    .cita { background:var(--panel); border:1px solid var(--linea); border-radius:12px; padding:14px 16px; margin-bottom:8px; display:grid; grid-template-columns:80px 1fr; gap:14px; }
+    .cita.completada { opacity:.7; } .cita.cancelada, .cita.no_asistio { opacity:.45; }
+    .cita.pendiente { border-color:rgba(255,122,47,0.5); }
+    .r-msg { font-size:13px; color:var(--hueso); font-style:italic; margin-top:4px; }
+    .acciones-rapidas { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .boton-linea.verde { color:var(--verde); border-color:rgba(74,222,128,0.45); }
+
     /* Lista */
     .filtros { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; align-items:center; }
     .chip { background:var(--panel2); border:1px solid rgba(255,255,255,0.12); color:var(--hueso); padding:7px 14px; border-radius:20px; cursor:pointer; font-size:13px; font-family:inherit; }
@@ -114,7 +128,7 @@
     .tabla-horario tr.no-trabaja input[type=time] { opacity:.3; }
     .detalle-horario { margin-top:10px; }
     .detalle-horario summary { cursor:pointer; color:var(--voltaje); font-size:13px; font-weight:600; }
-    .serv-fila { display:grid; grid-template-columns:1.2fr 2fr 110px 90px 60px auto; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid var(--linea); }
+    .serv-fila { display:grid; grid-template-columns:1.2fr 2fr 110px 90px 60px 130px; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid var(--linea); }
     .serv-fila.cab { color:var(--gris); font-size:12px; border-bottom:none; padding-bottom:0; }
     @media (max-width:720px){
       .trab-cab { grid-template-columns:auto 1fr; }
@@ -177,21 +191,46 @@
           </div>
         </div>
         <div style="display:flex; gap:8px;">
-          <a class="boton-linea" href="agenda.html" target="_blank">Ver agenda pública</a>
+          <a class="boton-linea" href="agenda.html">Ver agenda pública</a>
           <button class="boton-linea" onclick="salir()">Salir</button>
         </div>
       </div>
 
       <div class="tabs">
-        <button class="tab sel" data-tab="dia" onclick="verTab('dia')">Agenda del día</button>
-        <button class="tab" data-tab="lista" onclick="verTab('lista')">Lista</button>
+        <button class="tab solo-trab" data-tab="midia" onclick="verTab('midia')">Mi día</button>
+        <button class="tab solo-admin" data-tab="dia" onclick="verTab('dia')">Agenda del día</button>
+        <button class="tab" data-tab="semana" onclick="verTab('semana')">Semana</button>
+        <button class="tab" data-tab="lista" onclick="verTab('lista')">Historial</button>
         <button class="tab solo-admin" data-tab="equipo" onclick="verTab('equipo')">Equipo y horarios</button>
         <button class="tab solo-admin" data-tab="servicios" onclick="verTab('servicios')">Servicios</button>
         <button class="tab solo-trab" data-tab="mihorario" onclick="verTab('mihorario')">Mi horario</button>
       </div>
 
+      <!-- Mi día (profesional) -->
+      <div id="tab-midia" class="oculto">
+        <h2 id="saludo" style="margin-top:18px;font-size:22px;"></h2>
+        <p class="sub" id="saludoSub" style="text-transform:capitalize;margin-bottom:12px;"></p>
+        <div class="kpis" id="kpisTrab"></div>
+        <div id="proxima"></div>
+        <h3 style="margin-top:18px;">Citas de hoy</h3>
+        <div id="citasHoy"></div>
+      </div>
+
+      <!-- Semana -->
+      <div id="tab-semana" class="oculto">
+        <div class="barra">
+          <button class="boton-linea" onclick="moverSemana(-1)" aria-label="Semana anterior">‹</button>
+          <span class="fecha-txt" id="semanaTxt"></span>
+          <button class="boton-linea" onclick="moverSemana(1)" aria-label="Semana siguiente">›</button>
+          <button class="boton-linea" onclick="irSemanaActual()">Esta semana</button>
+          <select id="semanaTrab" class="solo-admin" style="width:auto;" onchange="dibujarSemana()"></select>
+        </div>
+        <div class="kpis" id="kpisSemana"></div>
+        <div class="agenda-scroll"><div class="agenda" id="agendaSemana"></div></div>
+      </div>
+
       <!-- Agenda del día -->
-      <div id="tab-dia">
+      <div id="tab-dia" class="oculto">
         <div class="barra">
           <button class="boton-linea" onclick="moverDia(-1)" aria-label="Día anterior">‹</button>
           <span class="fecha-txt" id="diaTxt"></span>
@@ -334,7 +373,7 @@
       document.querySelectorAll('.solo-trab').forEach(e => e.classList.toggle('oculto', yo.rol !== 'trabajador'));
       mostrar('vistaPanel');
       await cargarBase();
-      verTab('dia');
+      verTab(yo.rol === 'admin' ? 'dia' : 'midia');
     }
     db.auth.onAuthStateChange((evento, session) => {
       if (evento === 'PASSWORD_RECOVERY') modoRecuperacion = true;
@@ -356,40 +395,24 @@
 
     function verTab(t){
       document.querySelectorAll('.tab').forEach(b => b.classList.toggle('sel', b.dataset.tab === t));
-      ['dia','lista','equipo','servicios','mihorario'].forEach(x => $('tab-'+x).classList.toggle('oculto', x !== t));
+      ['midia','dia','semana','lista','equipo','servicios','mihorario'].forEach(x => $('tab-'+x).classList.toggle('oculto', x !== t));
+      if (t === 'midia') dibujarMiDia();
       if (t === 'dia') dibujarDia();
+      if (t === 'semana') dibujarSemana();
       if (t === 'lista') dibujarLista();
       if (t === 'equipo') cargarEquipo();
       if (t === 'servicios') cargarServicios();
       if (t === 'mihorario') dibujarMiHorario();
     }
 
-    // ================= AGENDA DEL DÍA =================
-    function moverDia(n){ const f = deTexto(diaVista); f.setDate(f.getDate() + n); diaVista = fechaTexto(f); dibujarDia(); }
-    function irHoy(){ diaVista = hoyTxt(); dibujarDia(); }
-    function irFecha(v){ if (v){ diaVista = v; dibujarDia(); } }
-
-    function dibujarDia(){
-      const f = deTexto(diaVista), dow = f.getDay();
-      $('diaTxt').textContent = (diaVista === hoyTxt() ? 'Hoy · ' : '') + f.toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' });
-      $('diaInput').value = diaVista;
-
-      const cols = trabajadores.filter(t => t.activo || reservasTodas.some(r => r.fecha === diaVista && r.trabajador_id === t.id));
-      const delDia = reservasTodas.filter(r => r.fecha === diaVista);
-      const activas = delDia.filter(r => r.estado !== 'cancelada');
-      $('kpis').innerHTML =
-        `<div class="kpi"><b>${activas.length}</b><span>reservas</span></div>` +
-        `<div class="kpi"><b>${clp(activas.reduce((a,r) => a + (r.total||0), 0))}</b><span>total del día</span></div>` +
-        `<div class="kpi"><b>${activas.filter(r => r.estado === 'completada').length}</b><span>completadas</span></div>`;
-
-      if (!cols.length){ $('agendaDia').innerHTML = '<p class="vacio">No hay trabajadores.</p>'; return; }
-
-      // Rango visible: desde el primero que entra hasta el último que sale (o 09–18)
-      const hs = cols.map(t => horarios.find(h => h.trabajador_id === t.id && h.dia === dow)).filter(Boolean);
-      const rangos = delDia.map(rangoDe);
-      let desde = Math.min(...hs.map(h => aMin(h.inicio)), ...rangos.map(r => r[0]), 9*60);
-      let hasta = Math.max(...hs.map(h => aMin(h.fin)), ...rangos.map(r => r[1]), 18*60);
-      if (hs.length){ desde = Math.min(...hs.map(h => aMin(h.inicio)), ...rangos.map(r => r[0])); hasta = Math.max(...hs.map(h => aMin(h.fin)), ...rangos.map(r => r[1])); }
+    // ================= GRILLA DE AGENDA (se usa en "día" y en "semana") =================
+    // columnas: [{ titulo, avatar, sub, horario, reservas, esHoy }]
+    function grillaAgenda(el, columnas){
+      const hs = columnas.map(c => c.horario).filter(Boolean);
+      const rangos = columnas.flatMap(c => c.reservas.map(rangoDe));
+      let desde = Math.min(...hs.map(h => aMin(h.inicio)), ...rangos.map(r => r[0]));
+      let hasta = Math.max(...hs.map(h => aMin(h.fin)), ...rangos.map(r => r[1]));
+      if (!isFinite(desde)) { desde = 9*60; hasta = 18*60; }
       desde = Math.floor(desde/60)*60; hasta = Math.ceil(hasta/60)*60;
       const alto = (hasta - desde) * PX_MIN, y = m => (m - desde) * PX_MIN;
 
@@ -399,37 +422,141 @@
         lineas += `<div class="ag-linea" style="top:${y(m)}px; ${m % 60 ? 'border-top-style:dashed;' : ''}"></div>`;
       }
       const ahora = new Date(), ahoraMin = ahora.getHours()*60 + ahora.getMinutes();
-      const lineaAhora = diaVista === hoyTxt() && ahoraMin > desde && ahoraMin < hasta ? `<div class="ag-ahora" style="top:${y(ahoraMin)}px"></div>` : '';
 
-      let html = `<div></div>` + cols.map(t => {
-        const h = horarios.find(x => x.trabajador_id === t.id && x.dia === dow);
-        const n = delDia.filter(r => r.trabajador_id === t.id && r.estado !== 'cancelada').length;
-        return `<div class="ag-cab"><div class="avatar mini">${esc(t.nombre[0])}</div><div>${esc(t.nombre)}<small>${h ? `${h.inicio.slice(0,5)}–${h.fin.slice(0,5)} · ${n} reserva${n===1?'':'s'}` : 'No trabaja'}</small></div></div>`;
-      }).join('');
-
+      let html = `<div class="ag-cab" style="border-left:none;"></div>` + columnas.map(c =>
+        `<div class="ag-cab ${c.esHoy ? 'hoy' : ''}"><div class="avatar mini">${esc(c.avatar)}</div><div>${esc(c.titulo)}<small>${c.sub}</small></div></div>`).join('');
       html += `<div class="ag-horas" style="height:${alto}px">${marcas}</div>`;
-      html += cols.map(t => {
-        const h = horarios.find(x => x.trabajador_id === t.id && x.dia === dow);
-        let c = lineas;
-        if (!h) c += `<div class="ag-fuera" style="top:0;height:${alto}px"></div><div class="ag-libre">No trabaja</div>`;
+      html += columnas.map(c => {
+        const h = c.horario;
+        let x = lineas;
+        if (!h) x += `<div class="ag-fuera" style="top:0;height:${alto}px"></div>${c.reservas.length ? '' : '<div class="ag-libre">No trabaja</div>'}`;
         else {
           const hi = aMin(h.inicio), hf = aMin(h.fin);
-          if (hi > desde) c += `<div class="ag-fuera" style="top:0;height:${y(hi)}px"></div>`;
-          if (hf < hasta) c += `<div class="ag-fuera" style="top:${y(hf)}px;height:${alto - y(hf)}px"></div>`;
+          if (hi > desde) x += `<div class="ag-fuera" style="top:0;height:${y(hi)}px"></div>`;
+          if (hf < hasta) x += `<div class="ag-fuera" style="top:${y(hf)}px;height:${alto - y(hf)}px"></div>`;
           if (h.almuerzo_inicio){ const ai = aMin(h.almuerzo_inicio), af = aMin(h.almuerzo_fin);
-            c += `<div class="ag-colacion" style="top:${y(ai)}px;height:${(af-ai)*PX_MIN}px">Colación ${aHora(ai)}–${aHora(af)}</div>`; }
+            x += `<div class="ag-colacion" style="top:${y(ai)}px;height:${(af-ai)*PX_MIN}px">Colación ${aHora(ai)}–${aHora(af)}</div>`; }
         }
-        delDia.filter(r => r.trabajador_id === t.id).forEach(r => {
+        c.reservas.forEach(r => {
           const [ri, rf] = rangoDe(r), est = r.estado || 'confirmada';
-          c += `<div class="ag-res ${est}" style="top:${y(ri)+1}px;height:${Math.max((rf-ri)*PX_MIN-2, 18)}px" onclick="abrirDetalle(${r.id})" title="${esc(r.nombre)}">
+          x += `<div class="ag-res ${est}" style="top:${y(ri)+1}px;height:${Math.max((rf-ri)*PX_MIN-2, 18)}px" onclick="abrirDetalle(${r.id})" title="${esc(r.nombre)}">
             <b>${aHora(ri)} ${esc(r.nombre)}</b>${(rf-ri) >= 30 ? `<br>${esc(r.servicios || r.descripcion || '')}` : ''}</div>`;
         });
-        return `<div class="ag-col" style="height:${alto}px">${c}${lineaAhora}</div>`;
+        if (c.esHoy && ahoraMin > desde && ahoraMin < hasta) x += `<div class="ag-ahora" style="top:${y(ahoraMin)}px"></div>`;
+        return `<div class="ag-col" style="height:${alto}px">${x}</div>`;
       }).join('');
+      el.style.gridTemplateColumns = `56px repeat(${columnas.length}, minmax(${columnas.length > 4 ? 120 : 150}px, 1fr))`;
+      el.innerHTML = html;
+    }
+    const activa = r => !['cancelada','no_asistio'].includes(r.estado);
+    const sumaTotal = lista => lista.filter(activa).reduce((a,r) => a + (r.total||0), 0);
+    const porHora = (a, b) => rangoDe(a)[0] - rangoDe(b)[0];
 
-      const agenda = $('agendaDia');
-      agenda.style.gridTemplateColumns = `56px repeat(${cols.length}, minmax(150px, 1fr))`;
-      agenda.innerHTML = html;
+    // ================= AGENDA DEL DÍA (admin: una columna por profesional) =================
+    function moverDia(n){ const f = deTexto(diaVista); f.setDate(f.getDate() + n); diaVista = fechaTexto(f); dibujarDia(); }
+    function irHoy(){ diaVista = hoyTxt(); dibujarDia(); }
+    function irFecha(v){ if (v){ diaVista = v; dibujarDia(); } }
+
+    function dibujarDia(){
+      const f = deTexto(diaVista), dow = f.getDay();
+      $('diaTxt').textContent = (diaVista === hoyTxt() ? 'Hoy · ' : '') + f.toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' });
+      $('diaInput').value = diaVista;
+      const delDia = reservasTodas.filter(r => r.fecha === diaVista);
+      const vivas = delDia.filter(activa);
+      $('kpis').innerHTML =
+        `<div class="kpi"><b>${vivas.length}</b><span>reservas</span></div>` +
+        `<div class="kpi"><b>${clp(sumaTotal(delDia))}</b><span>total del día</span></div>` +
+        `<div class="kpi"><b>${delDia.filter(r => r.estado === 'completada').length}</b><span>completadas</span></div>`;
+      const cols = trabajadores.filter(t => t.activo || delDia.some(r => r.trabajador_id === t.id));
+      if (!cols.length){ $('agendaDia').innerHTML = '<p class="vacio">No hay profesionales.</p>'; return; }
+      grillaAgenda($('agendaDia'), cols.map(t => {
+        const h = horarios.find(x => x.trabajador_id === t.id && x.dia === dow);
+        const res = delDia.filter(r => r.trabajador_id === t.id);
+        const n = res.filter(activa).length;
+        return { titulo: t.nombre, avatar: t.nombre[0], horario: h, reservas: res, esHoy: diaVista === hoyTxt(),
+                 sub: h ? `${h.inicio.slice(0,5)}–${h.fin.slice(0,5)} · ${n} reserva${n===1?'':'s'}` : 'No trabaja' };
+      }));
+    }
+
+    // ================= SEMANA (una columna por día, de un profesional) =================
+    let semanaInicio = lunesDe(new Date());
+    function lunesDe(f){ const d = new Date(f.getFullYear(), f.getMonth(), f.getDate()); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d; }
+    function moverSemana(n){ semanaInicio.setDate(semanaInicio.getDate() + 7*n); dibujarSemana(); }
+    function irSemanaActual(){ semanaInicio = lunesDe(new Date()); dibujarSemana(); }
+    function dibujarSemana(){
+      const sel = $('semanaTrab');
+      if (yo.rol === 'admin' && !sel.options.length)
+        sel.innerHTML = trabajadores.filter(t => t.activo).map(t => `<option value="${t.id}">${esc(t.nombre)}</option>`).join('');
+      const tid = yo.rol === 'admin' ? Number(sel.value) : yo.trabajador_id;
+      const dias = [...Array(7)].map((_, i) => { const d = new Date(semanaInicio); d.setDate(d.getDate() + i); return d; });
+      const txt = dias.map(fechaTexto), fin = dias[6];
+      $('semanaTxt').textContent = `${dias[0].getDate()} ${dias[0].toLocaleDateString('es-CL',{month:'short'})} – ${fin.getDate()} ${fin.toLocaleDateString('es-CL',{month:'short', year:'numeric'})}`;
+      const deSemana = reservasTodas.filter(r => r.trabajador_id === tid && r.fecha >= txt[0] && r.fecha <= txt[6]);
+      $('kpisSemana').innerHTML =
+        `<div class="kpi"><b>${deSemana.filter(activa).length}</b><span>reservas en la semana</span></div>` +
+        `<div class="kpi"><b>${clp(sumaTotal(deSemana))}</b><span>total de la semana</span></div>` +
+        `<div class="kpi"><b>${deSemana.filter(r => r.estado === 'completada').length}</b><span>completadas</span></div>`;
+      if (!tid){ $('agendaSemana').innerHTML = '<p class="vacio">Elige un profesional.</p>'; return; }
+      grillaAgenda($('agendaSemana'), dias.map((d, i) => {
+        const res = deSemana.filter(r => r.fecha === txt[i]);
+        const h = horarios.find(x => x.trabajador_id === tid && x.dia === d.getDay());
+        return { titulo: DIAS[d.getDay()], avatar: String(d.getDate()), horario: h, reservas: res,
+                 esHoy: txt[i] === hoyTxt(), sub: h ? `${res.filter(activa).length} reserva${res.filter(activa).length===1?'':'s'}` : 'Libre' };
+      }));
+    }
+
+    // ================= MI DÍA (vista principal del profesional) =================
+    function dibujarMiDia(){
+      const hoy = hoyTxt(), ahora = new Date(), ahoraMin = ahora.getHours()*60 + ahora.getMinutes();
+      const mias = reservasTodas.filter(r => r.trabajador_id === yo.trabajador_id);
+      const deHoy = mias.filter(r => r.fecha === hoy).sort(porHora);
+      const lunes = fechaTexto(lunesDe(ahora)), dom = (() => { const d = lunesDe(ahora); d.setDate(d.getDate()+6); return fechaTexto(d); })();
+      const semana = mias.filter(r => r.fecha >= lunes && r.fecha <= dom), mes = mias.filter(r => r.fecha.slice(0,7) === hoy.slice(0,7));
+      const hora = ahora.getHours();
+      $('saludo').textContent = `${hora < 12 ? 'Buenos días' : hora < 20 ? 'Buenas tardes' : 'Buenas noches'}, ${yo.nombre}`;
+      $('saludoSub').textContent = ahora.toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' });
+      $('kpisTrab').innerHTML =
+        `<div class="kpi"><b>${deHoy.filter(activa).length}</b><span>citas hoy</span></div>` +
+        `<div class="kpi"><b>${clp(sumaTotal(deHoy))}</b><span>hoy</span></div>` +
+        `<div class="kpi"><b>${clp(sumaTotal(semana))}</b><span>esta semana</span></div>` +
+        `<div class="kpi"><b>${clp(sumaTotal(mes))}</b><span>este mes</span></div>`;
+
+      const enCurso = deHoy.find(r => r.estado === 'confirmada' && rangoDe(r)[0] <= ahoraMin && rangoDe(r)[1] > ahoraMin);
+      const proxima = deHoy.find(r => r.estado === 'confirmada' && rangoDe(r)[0] > ahoraMin);
+      const destacada = enCurso || proxima;
+      if (destacada){
+        const falta = rangoDe(destacada)[0] - ahoraMin;
+        $('proxima').innerHTML = `<div class="proxima" onclick="abrirDetalle(${destacada.id})">
+          <span class="etq">${enCurso ? 'Atendiendo ahora' : falta < 60 ? `Próxima cita en ${falta} min` : 'Próxima cita'}</span>
+          <div class="p-hora">${aHora(rangoDe(destacada)[0])} – ${aHora(rangoDe(destacada)[1])}</div>
+          <div class="p-nombre">${esc(destacada.nombre)}</div>
+          <div class="r-sub">${esc(destacada.servicios || '')}${destacada.total ? ' · ' + clp(destacada.total) : ''}</div></div>`;
+      } else $('proxima').innerHTML = deHoy.length ? '<div class="proxima libre">No te quedan citas pendientes hoy 👌</div>' : '';
+
+      if (!deHoy.length){ $('citasHoy').innerHTML = '<p class="vacio">Hoy no tienes citas agendadas.</p>'; return; }
+      $('citasHoy').innerHTML = deHoy.map(r => {
+        const [ri, rf] = rangoDe(r), est = r.estado || 'confirmada', tel = (r.telefono || '').replace(/\D/g, '');
+        const pasada = rf <= ahoraMin;
+        return `<div class="cita ${est} ${pasada && est === 'confirmada' ? 'pendiente' : ''}">
+          <div class="r-hora">${aHora(ri)}<small>hasta ${aHora(rf)}</small></div>
+          <div>
+            <div class="r-top"><div class="r-nombre">${esc(r.nombre)}</div><span class="badge ${est}">${ESTADOS[est] || est}</span></div>
+            <div class="r-sub">${esc(r.servicios || '')}${r.total ? ' · ' + clp(r.total) : ''}</div>
+            ${r.descripcion ? `<div class="r-msg">“${esc(r.descripcion)}”</div>` : ''}
+            <div class="acciones-rapidas">
+              ${tel ? `<a class="boton-linea" href="https://wa.me/${tel}" target="_blank" rel="noopener">WhatsApp</a>` : ''}
+              ${est !== 'completada' ? `<button class="boton-linea verde" onclick="estadoRapido(${r.id}, 'completada')">✓ Atendido</button>` : ''}
+              ${est === 'confirmada' ? `<button class="boton-linea rojo" onclick="estadoRapido(${r.id}, 'no_asistio')">No vino</button>` : ''}
+              ${est !== 'confirmada' ? `<button class="boton-linea" onclick="estadoRapido(${r.id}, 'confirmada')">Deshacer</button>` : ''}
+            </div>
+          </div></div>`;
+      }).join('');
+    }
+    async function estadoRapido(id, nuevo){
+      const { error } = await db.from('reservas').update({ estado: nuevo }).eq('id', id);
+      if (error){ alert(error.code === '23P01' ? 'No se puede: esa hora ya la tomó otra persona.' : 'Error: ' + error.message); return; }
+      const r = reservasTodas.find(x => x.id === id); if (r) r.estado = nuevo;
+      dibujarMiDia();
     }
 
     // ================= LISTA =================
@@ -496,6 +623,7 @@
     function refrescarVista(){
       const t = document.querySelector('.tab.sel')?.dataset.tab;
       if (t === 'dia') dibujarDia(); if (t === 'lista') dibujarLista();
+      if (t === 'semana') dibujarSemana(); if (t === 'midia') dibujarMiDia();
     }
     async function cambiarEstado(id, nuevo){
       const { error } = await db.from('reservas').update({ estado: nuevo }).eq('id', id);
@@ -657,8 +785,20 @@
         <input data-c="precio" type="number" min="0" step="500" value="${s.precio ?? ''}" placeholder="Precio">
         <input data-c="duracion" type="number" min="5" step="5" value="${s.duracion ?? ''}" placeholder="Min">
         <input data-c="activo" type="checkbox" ${s.activo !== false ? 'checked' : ''} aria-label="Activo">
-        <button class="boton-linea" onclick="guardarServicio(this)">Guardar</button>
+        <div style="display:flex;gap:6px;">
+          <button class="boton-linea" onclick="guardarServicio(this)">Guardar</button>
+          <button class="boton-linea rojo" onclick="eliminarServicio(this)" title="Eliminar">✕</button>
+        </div>
       </div>`;
+    }
+    async function eliminarServicio(btn){
+      const f = btn.closest('.serv-fila'), id = f.dataset.id, nombre = f.querySelector('[data-c=nombre]').value || 'este servicio';
+      if (!id){ f.remove(); return; }
+      if (!confirm(`¿Eliminar "${nombre}"? Las reservas antiguas lo conservan en su historial.\n\nSi solo quieres ocultarlo por un tiempo, desmarca "Activo".`)) return;
+      const { error } = await db.from('servicios').delete().eq('id', id);
+      if (error) return estado('estadoServ', 'Error: ' + error.message, 'error');
+      estado('estadoServ', `✓ "${nombre}" eliminado.`, 'ok');
+      cargarServicios();
     }
     function nuevoServicio(){ $('listaServ').insertAdjacentHTML('beforeend', filaServicio({ nombre:'', activo:true })); }
     async function guardarServicio(btn){
