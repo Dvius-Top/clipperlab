@@ -326,7 +326,8 @@
 
     let db;
     if (typeof supabase === 'undefined') aviso('Sin conexión', 'No se pudo cargar la página. Revisa tu internet y vuelve a intentar.');
-    else { db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); iniciar(); }
+    else { // sin sesión: la página pública nunca usa la cuenta del panel abierta en este navegador
+      db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'clipperlab-publico' } }); iniciar(); }
   </script>
 </body>
 </html>

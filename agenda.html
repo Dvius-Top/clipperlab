@@ -339,7 +339,7 @@
 
     <div id="vistaInsc" class="oculto">
       <button class="volver" onclick="volverDeMis()">← Volver</button>
-      <h2>Inscríbete y recibe 10% en tu primera visita</h2>
+      <h2 id="tituloInsc">Inscríbete y recibe 10% en tu primera visita</h2>
       <p class="ayuda">Déjanos tus datos: el descuento se aplica solo cuando reserves con este mismo WhatsApp.</p>
       <div class="tarjeta">
         <div class="fila2">
@@ -386,7 +386,18 @@
     const DIAS_ADELANTE = 120;
     const AUTO = "auto";          // "Cualquiera disponible"
     const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-    const PASOS = ['Sucursal', 'Servicio', 'Barbero', 'Fecha', 'Datos'];
+    // Textos según el tipo de negocio: barbería (clientes que se cortan el pelo) o servicio técnico (ClipperLab: mantención de equipos)
+    const TEXTOS = {
+      barberia: { pasos:['Sucursal', 'Servicio', 'Barbero', 'Fecha', 'Datos'], donde:'¿Dónde te quieres atender?', dondeAyuda:'Elige la barbería. Cada local tiene su propio equipo y precios.',
+                  prof:'barbero', profs:'barberos', conQuien:'¿Con quién agendas?', volverProf:'← Volver a barberos',
+                  obs:'Ej: degradado bajo, dejar largo arriba…', fotoLbl:'Foto del corte que quieres (opcional)', fotoAyuda:'Así tu barbero sabe qué corte quieres',
+                  primera:'primera visita', personas:true, barberia:false },
+      tecnico:  { pasos:['Lugar', 'Servicio', 'Técnico', 'Fecha', 'Datos'], donde:'¿Dónde te atendemos?', dondeAyuda:'Elige el taller o la zona de servicio técnico.',
+                  prof:'técnico', profs:'técnicos', conQuien:'¿Qué técnico te atiende?', volverProf:'← Volver a técnicos',
+                  obs:'Ej: marca y modelo, qué falla tiene (se calienta, no corta, ruido…), dirección si es visita a tu barbería', fotoLbl:'Foto del equipo o de la falla (opcional)',
+                  fotoAyuda:'Así el técnico ve el problema antes de atenderte', primera:'primer servicio', personas:false, barberia:true },
+    };
+    let TX = TEXTOS.barberia;
     const DOMINIOS = ['@gmail.com', '@hotmail.com', '@outlook.com', '@yahoo.com', '@icloud.com', '@live.cl'];
     const PAISES = [['+56','🇨🇱 +56'],['+54','🇦🇷 +54'],['+51','🇵🇪 +51'],['+57','🇨🇴 +57'],['+58','🇻🇪 +58'],['+593','🇪🇨 +593'],
                     ['+591','🇧🇴 +591'],['+595','🇵🇾 +595'],['+598','🇺🇾 +598'],['+55','🇧🇷 +55'],['+1','🇺🇸 +1'],['+34','🇪🇸 +34']];
@@ -444,6 +455,7 @@
         return;
       }
       CFG = data;
+      TX = TEXTOS[CFG.negocio?.tipo] || TEXTOS.barberia;
       pintarMarca(CFG.negocio || {});
       CFG.locales = CFG.locales || [];
       CFG.trabajadores.forEach(t => t.servicios = t.servicios || []);
@@ -560,7 +572,7 @@
     }
 
     function dibujar(haciaAtras){
-      $('stepper').innerHTML = PASOS.map((p, i) => {
+      $('stepper').innerHTML = TX.pasos.map((p, i) => {
         const k = i + 1, cls = k < paso ? 'hecho' : k === paso ? 'actual' : '';
         return `<button class="st ${cls}" onclick="irAPaso(${k})" ${k < paso ? '' : 'tabindex="-1"'}><span class="st-num">${k < paso ? '✓' : k}</span><span class="st-txt">${p.toUpperCase()}</span></button>`;
       }).join('');
@@ -600,10 +612,11 @@
     // ---------- INSCRIPCIÓN: 10% en la primera visita ----------
     function bannerPromo(){
       if (!promoActiva()) return '';
-      if (leerLocal(K_INSCRITO)) return `<div class="promo ok"><span class="pct">✓</span><span><b>Estás inscrito</b><span class="s">Tu 10% de primera visita se aplica solo al reservar con tu WhatsApp.</span></span></div>`;
-      return `<button class="promo" onclick="verInscripcion()"><span class="pct">10%</span><span><b>¿Primera vez? Inscríbete y obtén 10% en tu primera visita</b><span class="s">Toma 20 segundos · Toca aquí</span></span></button>`;
+      if (leerLocal(K_INSCRITO)) return `<div class="promo ok"><span class="pct">✓</span><span><b>Estás inscrito</b><span class="s">Tu 10% de ${TX.primera} se aplica solo al reservar con tu WhatsApp.</span></span></div>`;
+      return `<button class="promo" onclick="verInscripcion()"><span class="pct">10%</span><span><b>¿Primera vez? Inscríbete y obtén 10% en tu ${TX.primera}</b><span class="s">Toma 20 segundos · Toca aquí</span></span></button>`;
     }
     function verInscripcion(){
+      $('tituloInsc').textContent = 'Inscríbete y recibe 10% en tu ' + TX.primera;
       $('asistente').classList.add('oculto'); $('vistaListo').classList.add('oculto'); $('vistaMis').classList.add('oculto'); $('vistaInsc').classList.remove('oculto'); barra(null);
       if (!$('iCod').options.length) $('iCod').innerHTML = PAISES.map(([v, t]) => `<option value="${v}">${t}</option>`).join('');
       if (!misAbierto){ misAbierto = true; empujar({ insc:true }); }
@@ -626,14 +639,14 @@
       guardarLocal('clipperlab-cliente', { ...(leerLocal('clipperlab-cliente') || {}), nombre: p.nombre, apellido: p.apellido,
         email: DOMINIOS.includes('@' + dom) ? us : p.correo, dominio: DOMINIOS.includes('@' + dom) ? '@' + dom : 'otro', cod, tel: $('iTel').value, promos: p.promos });
       datosCliente = leerLocal('clipperlab-cliente') || {};
-      $('vistaInsc').querySelector('.tarjeta').innerHTML = `<div class="listo"><div class="ok">✓</div><h2>${data.beneficio ? '¡Listo! Tienes 10% en tu primera visita' : '¡Datos actualizados!'}</h2>
-        <p class="ayuda">${data.beneficio ? 'Se aplica automáticamente cuando reserves con este WhatsApp.' : 'Como ya te has atendido con nosotros, el 10% de primera visita no aplica, pero te llegarán nuestras promociones.'}</p>
+      $('vistaInsc').querySelector('.tarjeta').innerHTML = `<div class="listo"><div class="ok">✓</div><h2>${data.beneficio ? '¡Listo! Tienes 10% en tu ' + TX.primera : '¡Datos actualizados!'}</h2>
+        <p class="ayuda">${data.beneficio ? 'Se aplica automáticamente cuando reserves con este WhatsApp.' : 'Como ya te has atendido con nosotros, el 10% de ' + TX.primera + ' no aplica, pero te llegarán nuestras promociones.'}</p>
         <button class="boton" onclick="volverDeMis()">Reservar ahora</button></div>`;
     }
 
     // ---------- 1) SUCURSAL ----------
     function capaSucursal(){
-      $('vista').innerHTML = `<h2>¿Dónde te quieres atender?</h2><p class="ayuda">Elige la barbería. Cada local tiene su propio equipo y precios.</p>
+      $('vista').innerHTML = `<h2>${TX.donde}</h2><p class="ayuda">${TX.dondeAyuda}</p>
         <div class="locales">${CFG.locales.map(l => {
           const nb = CFG.trabajadores.filter(t => t.local_id === l.id).length;
           const mapa = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(l.direccion || l.nombre);
@@ -641,7 +654,7 @@
             <div class="local-ic">📍</div><b>${esc(l.nombre)}</b>
             <div class="dir">${esc(l.direccion || '')}</div>
             ${l.referencia ? `<div class="ref">🚇 ${esc(l.referencia)}</div>` : ''}
-            <div class="pie-local"><span>${nb} ${nb === 1 ? 'barbero' : 'barberos'}</span><a href="${mapa}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Cómo llegar ↗</a></div>
+            <div class="pie-local"><span>${nb} ${nb === 1 ? TX.prof : TX.profs}</span><a href="${mapa}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Cómo llegar ↗</a></div>
           </button>`; }).join('')}</div>`;
     }
     function elegirLocal(id){
@@ -659,11 +672,11 @@
       const quien = persona() === 0 ? '' : ` para ${etiqueta(persona()).toLowerCase()}`;
       $('vista').innerHTML = `${persona() > 0 ? '<button class="volver" onclick="atras()">← Volver</button>' : (CFG.locales.length > 1 ? '<button class="volver" onclick="atras()">← Cambiar sucursal</button>' : '')}
         <h2>Elige tu servicio${quien}</h2><p class="ayuda">Puedes elegir más de uno. Los precios son de ${esc(localSel().nombre)}.</p>
-        ${persona() === 0 ? `<div class="personas"><span>¿Para cuántas personas es la reserva?</span>${[1,2,3].slice(0, MAX_PERSONAS).map(k =>
+        ${persona() === 0 && TX.personas ? `<div class="personas"><span>¿Para cuántas personas es la reserva?</span>${[1,2,3].slice(0, MAX_PERSONAS).map(k =>
           `<button class="chip ${k === n ? 'sel' : ''}" onclick="elegirPersonas(${k})">${k} ${k === 1 ? 'persona' : 'personas'}</button>`).join('')}</div>` : ''}
         ${cats.map(c => `<div class="cat">${esc(c)}</div><div class="servicios">${servs.filter(s => (s.categoria || 'Servicios') === c).map(s => {
           const sel = draft.servicios.includes(s.id), ok = sel || posible(s.id);
-          return `<button class="serv ${sel ? 'sel' : ''} ${ok ? '' : 'no'}" ${ok ? `onclick="toggleServicio(${s.id})"` : 'title="Ningún barbero hace este servicio junto a lo que ya elegiste"'}>
+          return `<button class="serv ${sel ? 'sel' : ''} ${ok ? '' : 'no'}" ${ok ? `onclick="toggleServicio(${s.id})"` : `title="Ningún ${TX.prof} hace este servicio junto a lo que ya elegiste"`}>
             <span class="serv-check">${sel ? '✓' : ''}</span>
             <span class="serv-info"><span class="serv-nom">${esc(s.nombre)}</span>${s.descripcion ? `<span class="serv-desc" style="display:block">${esc(s.descripcion)}</span>` : ''}
               <span class="serv-meta"><span class="dur">⏱ ${s.duracion} min</span><span class="precio">${clp(s.precio)}</span></span></span>
@@ -693,12 +706,12 @@
       const lista = aptos(draft.servicios);
       const foto = t => t.foto_url ? `style="background-image:url('${esc(t.foto_url)}')"` : '';
       $('vista').innerHTML = `<button class="volver" onclick="atras()">← Volver a servicios</button>
-        <h2>¿Con quién agendas?</h2><p class="ayuda">Solo aparecen los barberos de ${esc(localSel().nombre)} que realizan lo que elegiste.</p>
+        <h2>${TX.conQuien}</h2><p class="ayuda">Solo aparecen los ${TX.profs} de ${esc(localSel().nombre)} que realizan lo que elegiste.</p>
         ${lista.length ? `<div class="barberos">
           <button class="barbero cualquiera ${draft.eleccion === AUTO ? 'sel' : ''}" onclick="elegirBarbero('${AUTO}')"><div class="foto">⚡</div><b>Cualquiera disponible</b><small>Más horas para elegir</small></button>
           ${lista.map(t => `<button class="barbero ${draft.eleccion === t.id ? 'sel' : ''}" onclick="elegirBarbero(${t.id})">
             <div class="foto" ${foto(t)}>${t.foto_url ? '' : esc(t.nombre[0])}</div><b>${esc(t.nombre)}</b><small>Ver sus horas</small></button>`).join('')}
-        </div>` : '<div class="vacio">Ningún barbero de este local realiza todos esos servicios juntos. Vuelve y quita alguno.</div>'}`;
+        </div>` : `<div class="vacio">Ningún ${TX.prof} de este local realiza todos esos servicios juntos. Vuelve y quita alguno.</div>`}`;
     }
     function elegirBarbero(v){
       const e = v === AUTO ? AUTO : Number(v);
@@ -729,8 +742,8 @@
       if (draft.fecha && !dias.some(f => fechaTexto(f) === draft.fecha)) dias.push(deTexto(draft.fecha));
       if (!draft.fecha){ const primero = dias.find(f => trabaja(f.getDay())); if (primero) draft.fecha = fechaTexto(primero); }
       const top = (f, i) => i === 0 && fechaTexto(f) === hoyTxt() ? 'Hoy' : i === 1 ? 'Mañana' : f.toLocaleDateString('es-CL', { weekday:'short' }).replace('.', '');
-      $('vista').innerHTML = `<button class="volver" onclick="atras()">${aptos(draft.servicios).length === 1 ? "← Volver a servicios" : "← Volver a barberos"}</button>
-        <h2>Elige fecha y hora</h2><p class="ayuda">${draft.eleccion === AUTO ? 'Te asignamos al barbero con menos reservas ese día; si está ocupado a esa hora, pasa al siguiente.' : 'Horas libres de ' + esc(nombreTrab(draft.eleccion)) + '.'}</p>
+      $('vista').innerHTML = `<button class="volver" onclick="atras()">${aptos(draft.servicios).length === 1 ? "← Volver a servicios" : TX.volverProf}</button>
+        <h2>Elige fecha y hora</h2><p class="ayuda">${draft.eleccion === AUTO ? 'Te asignamos al ' + TX.prof + ' con menos reservas ese día; si está ocupado a esa hora, pasa al siguiente.' : 'Horas libres de ' + esc(nombreTrab(draft.eleccion)) + '.'}</p>
         <div class="dias" id="dias">${dias.map((f, i) => {
           const ft = fechaTexto(f), abre = trabaja(f.getDay());
           return `<button class="dia ${ft === draft.fecha ? 'sel' : ''} ${abre ? '' : 'off'}" ${abre ? `onclick="elegirDia('${ft}')"` : 'title="Cerrado"'}>
@@ -832,9 +845,10 @@
               <input id="fTel" type="tel" inputmode="tel" autocomplete="tel-national" value="${esc(d.tel ?? (cod === '+56' ? '9 ' : ''))}" placeholder="${cod === '+56' ? '9 1234 5678' : 'Número'}" oninput="formatoTel()"></div></div>
           <label class="check"><input type="checkbox" id="fWsp" ${d.wsp === false ? '' : 'checked'}><span>Quiero recibir la confirmación y recordatorios por <b>WhatsApp</b></span></label>
           <label class="check"><input type="checkbox" id="fPromos" ${d.promos ? 'checked' : ''}><span>Quiero recibir promociones y descuentos</span></label>
-          ${promoActiva() && leerLocal(K_INSCRITO) ? '<p class="nota" style="margin:-6px 0 12px;">🎁 Si es tu primera visita, tu 10% se aplica al confirmar.</p>' : ''}
-          <div class="campo"><label class="lbl" for="fObs">Observaciones (opcional)</label><textarea id="fObs" placeholder="Ej: degradado bajo, dejar largo arriba…">${esc(d.obs || '')}</textarea></div>
-          <label class="lbl">Foto del corte que quieres (opcional)</label>
+          ${promoActiva() && leerLocal(K_INSCRITO) ? '<p class="nota" style="margin:-6px 0 12px;">🎁 Si es tu ${TX.primera}, tu 10% se aplica al confirmar.</p>' : ''}
+          ${TX.barberia ? `<div class="campo"><label class="lbl" for="fBarb">Nombre de tu barbería (opcional)</label><input id="fBarb" value="${esc(d.barb || '')}" placeholder="Ej: Barbería Mina de Oro"></div>` : ''}
+          <div class="campo"><label class="lbl" for="fObs">Observaciones (opcional)</label><textarea id="fObs" placeholder="${TX.obs}">${esc(d.obs || '')}</textarea></div>
+          <label class="lbl">${TX.fotoLbl}</label>
           <label class="subir" id="subir">${cajaFoto()}<input type="file" accept="image/*" class="oculto" onchange="cargarFoto(this.files[0])"></label>
         </div>
 
@@ -846,7 +860,7 @@
     }
     function cajaFoto(){
       return foto ? `<img src="${foto}" alt="Foto de referencia"><span style="flex:1;">Foto agregada ✓<br><span class="nota">Toca para cambiarla</span></span><button class="link" onclick="event.preventDefault(); quitarFoto()">Quitar</button>`
-                  : `<span class="ic">📷</span><span style="flex:1;">Agregar foto de referencia<br><span class="nota">Así tu barbero sabe qué corte quieres</span></span>`;
+                  : `<span class="ic">📷</span><span style="flex:1;">Agregar foto de referencia<br><span class="nota">${TX.fotoAyuda}</span></span>`;
     }
     function quitarFoto(){ foto = null; $('subir').innerHTML = cajaFoto() + '<input type="file" accept="image/*" class="oculto" onchange="cargarFoto(this.files[0])">'; }
     // La foto se achica en el teléfono (máx. 800 px, ~200 KB) para que suba rápido y no llene la base de datos
@@ -905,7 +919,7 @@
     }
     function leerFormulario(){
       datosCliente = { nombre: $('fNombre').value.trim(), apellido: $('fApellido').value.trim(), email: $('fEmail').value.trim(),
-        dominio: $('fDominio').value, cod: $('fCod').value, tel: $('fTel').value, wsp: $('fWsp').checked, promos: $('fPromos').checked, obs: $('fObs').value.trim(),
+        dominio: $('fDominio').value, cod: $('fCod').value, tel: $('fTel').value, wsp: $('fWsp').checked, promos: $('fPromos').checked, obs: $('fObs').value.trim(), barb: $('fBarb')?.value.trim() || '',
         acomp: [...document.querySelectorAll('.acomp')].map(x => x.value.trim()) };
       return datosCliente;
     }
@@ -928,7 +942,7 @@
 
       $('btnReservar').disabled = true; est.style.color = 'var(--gris)'; est.textContent = "Reservando…";
       const nombre = `${d.nombre} ${d.apellido}`;
-      const payload = { nombre, nombre_pila: d.nombre, apellido: d.apellido, correo, telefono: tel.texto, mensaje: d.obs, whatsapp: d.wsp, promos: d.promos, foto,
+      const payload = { nombre, nombre_pila: d.nombre, apellido: d.apellido, correo, telefono: tel.texto, mensaje: [d.barb ? 'Barbería: ' + d.barb : '', d.obs].filter(Boolean).join(' · '), whatsapp: d.wsp, promos: d.promos, foto,
         personas: citas.map((c, i) => ({ nombre: i === 0 ? nombre : d.acomp[i-1], servicios: c.servicios, trabajador_id: c.tid, fecha: c.fecha, hora: aHora(c.t) })) };
       payload.negocio = SLUG || null;
       const { data, error } = await db.rpc('reservar_grupo', { p: payload });
@@ -1012,7 +1026,8 @@
     });
     let db;
     if (typeof supabase === 'undefined') $('vista').innerHTML = '<p class="aviso">No se pudo conectar con la base de datos. Revisa tu internet y recarga la página.</p>';
-    else { db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); iniciar(); }
+    else { // sin sesión: la página pública nunca usa la cuenta del panel abierta en este navegador
+      db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'clipperlab-publico' } }); iniciar(); }
   </script>
 </body>
 </html>

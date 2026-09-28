@@ -639,6 +639,15 @@
         </div>
         <div class="tarjeta"><h3>Negocios en la plataforma</h3><div style="overflow-x:auto;" id="tablaNeg"></div>
           <p class="nota" style="margin-top:8px;">"Entrar" te deja ver y administrar ese negocio como su admin (para ayudarlo o configurarlo). "Suspender" corta su agenda y su panel, pero conserva todos sus datos.</p></div>
+        <div class="tarjeta"><h3>🔀 Mover un local a otro negocio</h3>
+          <p class="nota">Pasa un local completo (sus barberos, servicios, reservas, bloqueos y clientes) a otro negocio. Útil para separar tu barbería del servicio técnico de ClipperLab.
+            Si el destino tiene plan Solo o Barbería y ya tiene un local, cámbialo antes a plan Multi.</p>
+          <div class="form-grid" style="margin-top:6px;">
+            <div><label for="mvLocal">Local a mover</label><select id="mvLocal"></select></div>
+            <div><label for="mvDestino">Llevarlo a</label><select id="mvDestino"></select></div>
+          </div>
+          <button class="boton" style="margin-top:10px;" onclick="moverLocal()">Mover local</button>
+          <p class="estado" id="estadoMover"></p></div>
       </div>
 
       <!-- Mi horario (trabajador) -->
@@ -2302,7 +2311,9 @@
             <label class="mini-lbl">Dominio propio</label>`}
             <input class="dominio-neg ${esPrincipal(n) ? 'oculto' : ''}" placeholder="dominio.cl (opcional)" value="${esc(n.dominio || '')}" title="Dominio propio de la barbería. Déjalo vacío si no tiene."
               onchange="cambiarDominio(${n.id}, this)"></td>
-          <td><select onchange="actualizarNegocio(${n.id}, { plan: this.value })">${Object.entries(PLANES).map(([k, v]) => `<option value="${k}" ${k === n.plan ? 'selected' : ''}>${v}</option>`).join('')}</select></td>
+          <td><select onchange="actualizarNegocio(${n.id}, { plan: this.value })">${Object.entries(PLANES).map(([k, v]) => `<option value="${k}" ${k === n.plan ? 'selected' : ''}>${v}</option>`).join('')}</select>
+            <select style="margin-top:6px;display:block;" title="Qué agenda: cortes (barbería) o mantención de equipos (servicio técnico)" onchange="actualizarNegocio(${n.id}, { tipo: this.value })">
+              <option value="barberia" ${n.tipo !== 'tecnico' ? 'selected' : ''}>✂️ Barbería</option><option value="tecnico" ${n.tipo === 'tecnico' ? 'selected' : ''}>🔧 Servicio técnico</option></select></td>
           <td><span class="badge-plan ${esc(n.estado)}">${esc(n.estado)}</span></td>
           <td><label class="switch-promo"><input type="checkbox" ${n.promo_10 ? 'checked' : ''} onchange="cambiarPromo(${n.id}, this)"> ${n.promo_10 ? 'Activo' : 'Apagado'}</label></td>
           <td><input type="date" value="${n.vence || ''}" style="width:auto;padding:5px 8px;font-size:12.5px;${n.vence && n.vence < hoy && n.estado !== 'suspendido' ? 'border-color:var(--rojo);' : ''}" onchange="actualizarNegocio(${n.id}, { vence: this.value })"></td>
@@ -2310,6 +2321,24 @@
           <td style="white-space:normal;font-size:12px;">${esc(n.admins || '—')}${n.whatsapp ? `<br><a class="link" style="margin:0;" href="https://wa.me/${esc(n.whatsapp.replace(/\D/g, ''))}" target="_blank" rel="noopener">WhatsApp</a>` : ''}</td>
           </tr>`).join('')}
       </table>`;
+      cargarLocalesMover();
+    }
+    async function cargarLocalesMover(){
+      const { data, error } = await db.rpc('super_locales');
+      if (error){ $('mvLocal').innerHTML = '<option>— instala la Fase 14 —</option>'; return; }
+      $('mvLocal').innerHTML = (data || []).map(l => `<option value="${l.id}">${esc(l.nombre)} · de ${esc(l.negocio)} (${l.profesionales} prof., ${l.reservas} reservas)</option>`).join('');
+      $('mvDestino').innerHTML = negocios.map(n => `<option value="${n.id}">${esc(n.nombre)} · plan ${PLANES[n.plan] || n.plan}</option>`).join('');
+    }
+    async function moverLocal(){
+      const loc = Number($('mvLocal').value), dest = Number($('mvDestino').value);
+      const tl = $('mvLocal').selectedOptions[0]?.textContent || '', td = $('mvDestino').selectedOptions[0]?.textContent || '';
+      if (!loc || !dest) return;
+      if (!confirm(`¿Mover el local\n${tl}\n\na\n${td}?\n\nSus barberos, servicios, reservas y clientes pasan a ese negocio.`)) return;
+      estado('estadoMover', 'Moviendo…');
+      const { data, error } = await db.rpc('super_mover_local', { p_local: loc, p_destino: dest });
+      if (error) return estado('estadoMover', error.message, 'error');
+      estado('estadoMover', `✓ Listo: se movieron ${data.profesionales} profesionales, ${data.servicios} servicios, ${data.reservas} reservas y ${data.clientes} clientes.`, 'ok');
+      cargarNegocios();
     }
     function sugerirSlug(){
       const s = $('nnNombre').value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
