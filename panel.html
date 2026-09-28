@@ -14,6 +14,12 @@
     .caja { max-width:1100px; margin:0 auto; }
     .oculto { display:none !important; }
     h1 { font-size:24px; }
+    h1.marca-neg { display:flex; align-items:center; gap:10px; }
+    h1.marca-neg .logo-neg { height:42px; width:42px; object-fit:contain; border-radius:10px; background:#fff1; }
+    .prev-img { display:flex; align-items:center; gap:10px; margin-top:6px; flex-wrap:wrap; }
+    .prev-img img { max-height:70px; max-width:220px; border-radius:8px; border:1px solid var(--linea); object-fit:cover; }
+    .switch-promo { display:inline-flex; align-items:center; gap:6px; font-size:12.5px; cursor:pointer; white-space:nowrap; }
+    .switch-promo input { width:auto; margin:0; }
     h1 span { color:var(--voltaje); }
     h3 { font-size:15px; margin-bottom:10px; }
     .sub { color:var(--gris); font-size:14px; }
@@ -282,7 +288,7 @@
 
     <!-- ========== LOGIN ========== -->
     <section id="vistaLogin" class="oculto">
-      <h1>Panel <span>ClipperLab</span></h1>
+      <h1 class="marca-neg"><img class="logo-neg oculto" alt=""><span>ClipperLab</span></h1>
       <p class="sub">Acceso para el equipo.</p>
       <div class="tarjeta" style="max-width:420px;">
         <label for="loginCorreo">Correo</label>
@@ -316,7 +322,7 @@
 
     <!-- ========== SIN ACCESO ========== -->
     <section id="vistaSuspendido" class="oculto">
-      <h1>Panel <span id="suspNombre">ClipperLab</span></h1>
+      <h1 class="marca-neg"><img class="logo-neg oculto" alt=""><span id="suspNombre">ClipperLab</span></h1>
       <div class="tarjeta">
         <p><b>⏸ Esta cuenta está suspendida.</b></p>
         <p class="sub" style="margin-top:6px;">La agenda y el panel están pausados, pero <b>todos tus datos están guardados</b>. Para reactivarla, contacta a ClipperLab.</p>
@@ -325,7 +331,7 @@
     </section>
 
     <section id="vistaPendiente" class="oculto">
-      <h1>Panel <span>ClipperLab</span></h1>
+      <h1 class="marca-neg"><img class="logo-neg oculto" alt=""><span>ClipperLab</span></h1>
       <div class="tarjeta">
         <p>Tu cuenta (<strong id="pendCorreo"></strong>) todavía no tiene acceso.</p>
         <p class="sub" style="margin-top:6px;">Pídele al administrador que te agregue en <em>Equipo</em> con este mismo correo. Si recién creaste la cuenta, confirma tu correo desde el mensaje que te llegó.</p>
@@ -338,7 +344,7 @@
     <section id="vistaPanel" class="oculto">
       <div class="cabecera">
         <div>
-          <h1>Panel <span>ClipperLab</span></h1>
+          <h1 class="marca-neg"><img class="logo-neg oculto" alt=""><span>ClipperLab</span></h1>
           <div class="quien">
             <div class="avatar" id="yoAvatar"></div>
             <div><div id="yoNombre" style="font-weight:600;"></div><span class="rol" id="yoRol"></span>
@@ -599,8 +605,13 @@
     const linkAgenda = () => new URL('agenda.html' + (NEG.slug ? '?b=' + NEG.slug : ''), location.href).href;
     // Nombre, color, link de agenda y (para el dueño) en qué negocio está
     function pintarNegocio(){
-      document.title = 'Panel — ' + (NEG.nombre || 'ClipperLab');
-      document.querySelectorAll('h1 span').forEach(e => e.textContent = NEG.nombre || 'ClipperLab');
+      document.title = NEG.nombre || 'ClipperLab';
+      document.querySelectorAll('h1.marca-neg span').forEach(e => e.textContent = NEG.nombre || 'ClipperLab');
+      document.querySelectorAll('h1.marca-neg .logo-neg').forEach(img => {
+        if (NEG.logo_url) { img.src = NEG.logo_url; img.classList.remove('oculto'); } else { img.removeAttribute('src'); img.classList.add('oculto'); }
+      });
+      let fav = document.querySelector('link[rel="icon"]');
+      if (NEG.logo_url) { if (!fav) { fav = document.createElement('link'); fav.rel = 'icon'; document.head.appendChild(fav); } fav.href = NEG.logo_url; }
       if (/^#[0-9a-f]{6}$/i.test(NEG.color || '')) document.documentElement.style.setProperty('--voltaje', NEG.color);
       $('linkAgenda').href = linkAgenda();
       const plan = { solo:'Solo', barberia:'Barbería', multi:'Multi' }[NEG.plan] || '';
@@ -1498,6 +1509,7 @@
 
     // ================= MI CUENTA =================
     function abrirMiCuenta(msg){
+      imgNegNueva = {};
       const permiso = 'Notification' in window ? Notification.permission : 'no';
       $('ventanaDetalle').innerHTML = `<h3 style="font-size:18px;">Mi cuenta</h3>
         ${msg ? `<p class="ok" style="font-size:14px;margin-bottom:8px;">${esc(msg)}</p>` : ''}
@@ -1519,8 +1531,17 @@
             <div class="full"><label>Nombre que ven tus clientes</label><input id="fNegNombre" value="${esc(NEG.nombre || '')}"></div>
             <div><label>WhatsApp</label><input id="fNegWsp" value="${esc(NEG.whatsapp || '')}" placeholder="+56 9 …"></div>
             <div><label>Color de tu marca</label><input id="fNegColor" type="color" value="${/^#[0-9a-f]{6}$/i.test(NEG.color || '') ? NEG.color : '#ff7a2f'}" style="height:42px;padding:4px;"></div>
-            <div class="full"><label>Logo (link https de una imagen, opcional)</label><input id="fNegLogo" value="${esc(NEG.logo_url || '')}" placeholder="https://…/logo.png"></div>
+            <div><label>Instagram</label><input id="fNegInsta" value="${esc(NEG.instagram || '')}" placeholder="@tubarberia"></div>
+            <div class="full"><label>Frase de bienvenida en tu agenda (opcional, máx. 160)</label><input id="fNegBienv" maxlength="160" value="${esc(NEG.bienvenida || '')}" placeholder="Ej: Cortes clásicos y fade desde 2015 · Te esperamos"></div>
+            <div class="full"><label>Logo (cuadrado, se ve arriba en tu panel y agenda)</label>
+              <input type="file" id="fNegLogoArch" accept="image/*" onchange="subirImagenNegocio('logo', this)">
+              <div class="prev-img" id="prevLogo">${NEG.logo_url ? `<img src="${esc(NEG.logo_url)}" alt="logo"><button class="link" style="margin:0;" onclick="quitarImagenNegocio('logo')">Quitar logo</button>` : '<span class="nota">Sin logo: se muestra el nombre.</span>'}</div></div>
+            <div class="full"><label>Imagen de portada (foto de tu local o de un corte; se ve arriba de tu agenda)</label>
+              <input type="file" id="fNegPortadaArch" accept="image/*" onchange="subirImagenNegocio('portada', this)">
+              <div class="prev-img" id="prevPortada">${NEG.portada_url ? `<img src="${esc(NEG.portada_url)}" alt="portada"><button class="link" style="margin:0;" onclick="quitarImagenNegocio('portada')">Quitar portada</button>` : '<span class="nota">Sin portada.</span>'}</div></div>
           </div>
+          <p class="nota">Las imágenes se achican solas para que tu agenda cargue rápido.</p>
+          <p class="nota" style="margin-top:6px;">🎁 Descuento 10% primera visita para clientes nuevos: <b>${NEG.promo_10 ? 'activo en tu agenda' : 'apagado'}</b>${yo.super ? '' : ' · para activarlo o apagarlo, escríbele a ClipperLab'}.</p>
           <button class="boton" style="margin-top:8px;" onclick="guardarMiNegocio()">Guardar datos del negocio</button>` : ''}
         <div class="det-acciones"><button class="boton-linea" style="margin-left:auto;" onclick="cerrarDetalle()">Cerrar</button></div>
         <p class="estado" id="estadoCuenta"></p>`;
@@ -1530,12 +1551,52 @@
       try { await navigator.clipboard.writeText(linkAgenda()); estado('estadoCuenta', '✓ Link copiado', 'ok'); }
       catch(e) { $('fLinkAgenda').select(); estado('estadoCuenta', 'Selecciona y copia el link', ''); }
     }
+    // Achica una imagen en el navegador y la devuelve como texto (data:image/...) liviano
+    function comprimirImagen(archivo, lado, maxLargo){
+      return new Promise((ok, mal) => {
+        if (!archivo || !/^image\//.test(archivo.type)) return mal(new Error('Elige un archivo de imagen (JPG, PNG o WEBP).'));
+        const url = URL.createObjectURL(archivo), img = new Image();
+        img.onerror = () => { URL.revokeObjectURL(url); mal(new Error('No se pudo leer la imagen.')); };
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          let w = img.naturalWidth, h = img.naturalHeight; const f = Math.min(1, lado / Math.max(w, h));
+          w = Math.max(1, Math.round(w * f)); h = Math.max(1, Math.round(h * f));
+          const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h);
+          const webp = c.toDataURL('image/webp', .8).startsWith('data:image/webp');
+          for (const q of [.85, .75, .65, .55, .45, .35]) {
+            const d = c.toDataURL(webp ? 'image/webp' : 'image/jpeg', q);
+            if (d.length <= maxLargo) return ok(d);
+          }
+          mal(new Error('La imagen sigue muy pesada; prueba con otra.'));
+        };
+        img.src = url;
+      });
+    }
+    const IMG_NEG = { logo: { lado: 256, max: 110000, campo: 'logo_url', prev: 'prevLogo', txt: 'logo' },
+                      portada: { lado: 1200, max: 330000, campo: 'portada_url', prev: 'prevPortada', txt: 'portada' } };
+    let imgNegNueva = {};        // imágenes elegidas y aún no guardadas ('' = quitar)
+    async function subirImagenNegocio(tipo, input){
+      const t = IMG_NEG[tipo];
+      try {
+        estado('estadoCuenta', 'Preparando imagen…');
+        const d = await comprimirImagen(input.files[0], t.lado, t.max);
+        imgNegNueva[t.campo] = d;
+        $(t.prev).innerHTML = `<img src="${d}" alt="${t.txt}"><span class="nota">${Math.round(d.length / 1024)} KB · falta Guardar</span>`;
+        estado('estadoCuenta', 'Listo. Presiona "Guardar datos del negocio".', 'ok');
+      } catch(e) { estado('estadoCuenta', e.message, 'error'); input.value = ''; }
+    }
+    function quitarImagenNegocio(tipo){
+      const t = IMG_NEG[tipo]; imgNegNueva[t.campo] = '';
+      $(t.prev).innerHTML = `<span class="nota">Se quitará al guardar.</span>`;
+    }
     async function guardarMiNegocio(){
-      const logo = $('fNegLogo').value.trim();
-      if (logo && !/^https:\/\//.test(logo)) return estado('estadoCuenta', 'El logo debe ser un link que empiece con https://', 'error');
-      const p = { nombre: $('fNegNombre').value.trim(), whatsapp: $('fNegWsp').value.trim(), color: $('fNegColor').value, logo_url: logo };
+      const p = { nombre: $('fNegNombre').value.trim(), whatsapp: $('fNegWsp').value.trim(), color: $('fNegColor').value,
+                  instagram: $('fNegInsta').value.trim().replace(/^https?:\/\/(www\.)?instagram\.com\//, '').replace(/[/?].*$/, '').replace(/^@?/, '@').replace(/^@$/, ''),
+                  bienvenida: $('fNegBienv').value.trim(), ...imgNegNueva };
+      estado('estadoCuenta', 'Guardando…');
       const { error } = await db.rpc('guardar_mi_negocio', { p });
       if (error) return estado('estadoCuenta', 'Error: ' + error.message, 'error');
+      imgNegNueva = {};
       const { data } = await db.rpc('mi_sesion'); NEG = data.negocio || NEG; pintarNegocio();
       estado('estadoCuenta', '✓ Guardado. Tu agenda ya muestra estos datos.', 'ok');
     }
@@ -2050,9 +2111,10 @@
         `<div class="kpi"><b>${act.length}</b><span>activos (pagando)</span></div>` +
         `<div class="kpi"><b>${pru.length}</b><span>en prueba</span></div>` +
         `<div class="kpi"><b>${vencidos.length}</b><span>con pago vencido</span></div>` +
+        `<div class="kpi"><b>${negocios.filter(n => n.promo_10).length}</b><span>con 10% activo</span></div>` +
         `<div class="kpi"><b>${negocios.reduce((a, n) => a + n.reservas_30d, 0)}</b><span>reservas en 30 días</span></div>`;
       $('tablaNeg').innerHTML = `<table class="tabla-caja tabla-neg">
-        <tr><th>Negocio</th><th>Link</th><th>Plan</th><th>Estado</th><th>Próximo pago</th><th class="num">Barberos</th><th class="num">Reservas 30 d</th><th class="num">Clientes</th><th>Admin</th></tr>
+        <tr><th>Negocio</th><th>Link</th><th>Plan</th><th>Estado</th><th title="Banner 'Inscríbete y obtén 10% en tu primera visita' en su agenda">🎁 10% nuevos</th><th>Próximo pago</th><th class="num">Barberos</th><th class="num">Reservas 30 d</th><th class="num">Clientes</th><th>Admin</th></tr>
         ${negocios.map(n => `<tr class="${n.id === NEG.id ? 'actual' : ''}">
           <td><b>${esc(n.nombre)}</b>${n.id === NEG.id ? ' <span class="nota">(viendo)</span>' : ''}<div class="acciones-neg" style="margin-top:6px;">
             ${n.id === NEG.id ? '' : `<button class="boton" onclick="entrarNegocio(${n.id})">Entrar</button>`}
@@ -2063,6 +2125,7 @@
           <td><a class="link" style="margin:0;" href="${esc(new URL('agenda.html?b=' + n.slug, location.href).href)}" target="_blank" rel="noopener">${esc(n.slug)}</a></td>
           <td><select onchange="actualizarNegocio(${n.id}, { plan: this.value })">${Object.entries(PLANES).map(([k, v]) => `<option value="${k}" ${k === n.plan ? 'selected' : ''}>${v}</option>`).join('')}</select></td>
           <td><span class="badge-plan ${esc(n.estado)}">${esc(n.estado)}</span></td>
+          <td><label class="switch-promo"><input type="checkbox" ${n.promo_10 ? 'checked' : ''} onchange="cambiarPromo(${n.id}, this)"> ${n.promo_10 ? 'Activo' : 'Apagado'}</label></td>
           <td><input type="date" value="${n.vence || ''}" style="width:auto;padding:5px 8px;font-size:12.5px;${n.vence && n.vence < hoy && n.estado !== 'suspendido' ? 'border-color:var(--rojo);' : ''}" onchange="actualizarNegocio(${n.id}, { vence: this.value })"></td>
           <td class="num">${n.profesionales}</td><td class="num">${n.reservas_30d}</td><td class="num">${n.clientes}</td>
           <td style="white-space:normal;font-size:12px;">${esc(n.admins || '—')}${n.whatsapp ? `<br><a class="link" style="margin:0;" href="https://wa.me/${esc(n.whatsapp.replace(/\D/g, ''))}" target="_blank" rel="noopener">WhatsApp</a>` : ''}</td>
@@ -2091,6 +2154,13 @@
       const { error } = await db.rpc('super_actualizar_negocio', { p_id: id, p: cambios });
       if (error) { alert(error.message); return; }
       cargarNegocios();
+    }
+    function cambiarPromo(id, input){
+      const n = negocios.find(x => x.id === id), on = input.checked;
+      const msg = on ? `¿Activar el 10% en la primera visita para "${n?.nombre}"?\n\nSu agenda mostrará "Inscríbete y obtén 10%" y los clientes nuevos que se inscriban tendrán 10% de descuento en su primera hora.`
+                     : `¿Apagar el 10% para "${n?.nombre}"?\n\nSe deja de mostrar en su agenda y las nuevas reservas ya no tendrán descuento (las horas ya reservadas con 10% lo mantienen).`;
+      if (!confirm(msg)) { input.checked = !on; return; }
+      actualizarNegocio(id, { promo_10: on });
     }
     function suspenderNegocio(id){
       const n = negocios.find(x => x.id === id);
