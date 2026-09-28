@@ -177,6 +177,16 @@
     .toast.llegada, .toast.completada { border-left-color:var(--verde); border-color:rgba(74,222,128,0.5); }
     @media (max-width:820px){ .grid-midia { grid-template-columns:1fr; } .resumen-dia { grid-template-columns:repeat(3, 1fr); } }
 
+    /* Fase 6 */
+    .tabs-modal button { font-size:13px; padding:9px 6px; }
+    .info-llegada { background:rgba(74,222,128,0.08); border:1px solid rgba(74,222,128,0.35); border-radius:10px; padding:12px 14px; margin-top:12px; font-size:13px; line-height:1.5; }
+    .en-curso { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:10px; }
+    .en-curso .proxima { margin-top:0; }
+    .propinas { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+    .propinas .chip { padding:6px 12px; }
+    .propinas input { padding:6px 10px; }
+    .ag-res.ahora { animation:parpadeo 1.6s ease-in-out infinite; }
+
     /* Lista */
     .filtros { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; align-items:center; }
     .chip { background:var(--panel2); border:1px solid rgba(255,255,255,0.12); color:var(--hueso); padding:7px 14px; border-radius:20px; cursor:pointer; font-size:13px; font-family:inherit; }
@@ -329,9 +339,8 @@
         <p class="sub" id="saludoSub" style="text-transform:capitalize;margin-bottom:12px;"></p>
         <div class="kpis" id="kpisTrab"></div>
         <div class="acciones-dia">
-          <button class="boton llegada" onclick="ordenLlegada(yo.trabajador_id)">⚡ Orden de llegada</button>
-          <button class="boton-linea" onclick="abrirAccion({ modo:'agendar', fecha: hoyTxt(), tid: yo.trabajador_id })">+ Agendar cliente</button>
-          <button class="boton-linea" onclick="abrirAccion({ modo:'bloquear', fecha: hoyTxt(), tid: yo.trabajador_id })">🔒 Bloquear horario</button>
+          <button class="boton" onclick="abrirAccion({ modo:'llegada', fecha: hoyTxt(), tid: yo.trabajador_id })">+ Nuevo en la agenda</button>
+          <span class="nota" style="align-self:center;">Orden de llegada, agendar un cliente o bloquear. También puedes tocar un espacio de la agenda.</span>
         </div>
         <div id="proxima"></div>
         <div class="grid-midia">
@@ -356,8 +365,7 @@
           <button class="boton-linea" onclick="moverSemana(1)" aria-label="Semana siguiente">›</button>
           <button class="boton-linea" onclick="irSemanaActual()">Esta semana</button>
           <select id="semanaTrab" class="solo-admin" style="width:auto;" onchange="dibujarSemana()"></select>
-          <span class="barra-der"><button class="boton" onclick="abrirAccion({ modo:'agendar', fecha: semanaFechaDefecto(), tid: semanaTid() })">+ Agendar</button>
-          <button class="boton-linea" onclick="abrirAccion({ modo:'bloquear', fecha: semanaFechaDefecto(), tid: semanaTid() })">🔒 Bloquear</button></span>
+          <span class="barra-der"><button class="boton" onclick="abrirAccion({ modo:'agendar', fecha: semanaFechaDefecto(), tid: semanaTid() })">+ Nuevo en la agenda</button></span>
         </div>
         <div class="kpis" id="kpisSemana"></div>
         <div class="agenda-scroll"><div class="agenda" id="agendaSemana"></div></div>
@@ -371,9 +379,7 @@
           <button class="boton-linea" onclick="moverDia(1)" aria-label="Día siguiente">›</button>
           <button class="boton-linea" onclick="irHoy()">Hoy</button>
           <input type="date" id="diaInput" onchange="irFecha(this.value)">
-          <span class="barra-der"><button class="boton-linea llegada-borde" onclick="ordenLlegada(null)">⚡ Llegada</button>
-          <button class="boton" onclick="abrirAccion({ modo:'agendar', fecha: diaVista })">+ Agendar</button>
-          <button class="boton-linea" onclick="abrirAccion({ modo:'bloquear', fecha: diaVista })">🔒 Bloquear</button></span>
+          <span class="barra-der"><button class="boton" onclick="abrirAccion({ modo: diaVista === hoyTxt() ? 'llegada' : 'agendar', fecha: diaVista })">+ Nuevo en la agenda</button></span>
         </div>
         <div class="kpis" id="kpis"></div>
         <p class="nota" style="margin-bottom:8px;">Toca un espacio libre para agendar un cliente o bloquear ese horario.</p>
@@ -652,7 +658,8 @@
         });
         c.reservas.forEach(r => {
           const [ri, rf] = rangoDe(r), est = r.estado || 'confirmada';
-          x += `<div class="ag-res ${est}" style="top:${y(ri)+1}px;height:${Math.max((rf-ri)*PX_MIN-2, 18)}px" onclick="event.stopPropagation(); abrirDetalle(${r.id})" title="${esc(r.nombre)}">
+          const enHora = est === 'confirmada' && c.esHoy && ri <= ahoraMin && rf > ahoraMin;
+          x += `<div class="ag-res ${est} ${enHora ? 'ahora' : ''}" style="top:${y(ri)+1}px;height:${Math.max((rf-ri)*PX_MIN-2, 18)}px" onclick="event.stopPropagation(); abrirDetalle(${r.id})" title="${esc(r.nombre)}">
             <b>${aHora(ri)} ${esc(r.nombre)}</b>${(rf-ri) >= 30 ? `<br>${esc(r.servicios || r.descripcion || '')}` : ''}</div>`;
         });
         if (c.esHoy && ahoraMin > desde && ahoraMin < hasta) x += `<div class="ag-ahora" style="top:${y(ahoraMin)}px"></div>`;
@@ -673,7 +680,9 @@
       if (yo.rol !== 'admin' && tid !== yo.trabajador_id) return;
       const y = ev.clientY - ev.currentTarget.getBoundingClientRect().top;
       const t = Math.floor((desde + y / PX_MIN) / 15) * 15;
-      abrirAccion({ modo:'agendar', tid, fecha, t });
+      const ah = new Date(), ahoraMin = ah.getHours()*60 + ah.getMinutes();
+      const esAhora = fecha === hoyTxt() && Math.abs(t - ahoraMin) <= 20;
+      abrirAccion({ modo: esAhora ? 'llegada' : 'agendar', tid, fecha, t });
     }
     function semanaTid(){ return yo.rol === 'admin' ? Number($('semanaTrab').value) || undefined : yo.trabajador_id; }
     function semanaFechaDefecto(){ const h = hoyTxt(), ini = fechaTexto(semanaInicio); const f = new Date(semanaInicio); f.setDate(f.getDate()+6); return h >= ini && h <= fechaTexto(f) ? h : ini; }
@@ -757,15 +766,21 @@
         `<div class="kpi"><b>${clp(gananciaHecha(semana))}</b><span>esta semana</span></div>` +
         `<div class="kpi"><b>${clp(gananciaHecha(mes))}</b><span>este mes</span></div>`;
 
-      // Tarjeta destacada: quién está en la silla o quién viene
-      const enSilla = deHoy.find(r => r.estado === 'en_atencion');
-      const proxima = deHoy.find(r => r.estado === 'confirmada' && rangoDe(r)[1] > ahoraMin);
-      if (enSilla){
-        $('proxima').innerHTML = `<div class="proxima atendiendo" onclick="abrirTerminar(${enSilla.id})">
-          <span class="etq"><i class="pulso"></i> En atención desde las ${aHora(rangoDe(enSilla)[0])}${enSilla.origen === 'llegada' ? ' · orden de llegada' : ''}</span>
-          <div class="p-nombre" style="margin-top:4px;">${esc(enSilla.nombre)}</div>
-          <div class="r-sub">${esc(enSilla.servicios || 'Toca para marcar el término y el pago')}</div>
-          <button class="boton" style="margin-top:10px;" onclick="event.stopPropagation(); abrirTerminar(${enSilla.id})">✓ Terminó la atención</button></div>`;
+      // En atención ahora: órdenes de llegada + clientes agendados cuya hora ya llegó y aún no se cierran
+      const enCurso = deHoy.filter(r => r.estado === 'en_atencion' || (r.estado === 'confirmada' && rangoDe(r)[0] <= ahoraMin));
+      const proxima = deHoy.find(r => r.estado === 'confirmada' && rangoDe(r)[0] > ahoraMin);
+      if (enCurso.length){
+        $('proxima').innerHTML = `<h3 style="margin:4px 0 8px;"><i class="pulso"></i> En atención ahora</h3><div class="en-curso">` + enCurso.map(r => {
+          const [ri, rf] = rangoDe(r), llegada = r.origen === 'llegada', atrasada = r.estado === 'confirmada' && rf <= ahoraMin;
+          return `<div class="proxima atendiendo" onclick="abrirTerminar(${r.id})">
+            <span class="etq">${llegada ? `⚡ Orden de llegada · desde las ${aHora(ri)}` : `📅 Agendado · ${aHora(ri)}–${aHora(rf)}${atrasada ? ' · falta cerrar' : ''}`}</span>
+            <div class="p-nombre" style="margin-top:4px;">${esc(r.nombre)}</div>
+            <div class="r-sub">${esc(r.servicios || 'Servicio por definir')}</div>
+            <div class="acciones-rapidas">
+              <button class="boton" onclick="event.stopPropagation(); abrirTerminar(${r.id})">✓ Terminó · cobrar</button>
+              ${r.estado === 'confirmada' ? `<button class="boton-linea rojo" onclick="event.stopPropagation(); estadoRapido(${r.id}, 'no_asistio')">No vino</button>` : ''}
+            </div></div>`;
+        }).join('') + `</div>` + (proxima ? `<p class="nota" style="margin-top:8px;">Después: <b>${aHora(rangoDe(proxima)[0])} ${esc(proxima.nombre)}</b> · ${esc(proxima.servicios || '')}</p>` : '');
       } else if (proxima){
         const falta = rangoDe(proxima)[0] - ahoraMin;
         $('proxima').innerHTML = `<div class="proxima" onclick="abrirDetalle(${proxima.id})">
@@ -803,7 +818,7 @@
         <div>
           <div class="r-top"><div class="r-nombre">${esc(r.nombre)}${llegada ? ' <span class="badge grupo">Llegada</span>' : ''}</div>
             <span class="badge ${est}">${est === 'en_atencion' ? '<i class="pulso"></i> ' : ''}${ESTADOS[est] || est}${r.metodo_pago ? ' · ' + PAGOS[r.metodo_pago] : ''}</span></div>
-          <div class="r-sub">${esc(r.servicios || (llegada ? 'Servicio por definir' : ''))}${est === 'completada' && plata(r) ? ` · ${yo.rol === 'admin' ? '' : 'tu parte '}${clp(plata(r))}` : ''}</div>
+          <div class="r-sub">${esc(r.servicios || (llegada ? 'Servicio por definir' : ''))}${est === 'completada' && plata(r) ? ` · ${yo.rol === 'admin' ? '' : 'tu parte '}${clp(plata(r))}` : ''}${est === 'completada' && r.propina ? ` <span class="badge grupo">propina ${clp(r.propina)}</span>` : ''}</div>
           ${r.descripcion ? `<div class="r-msg">“${esc(r.descripcion)}”</div>` : ''}
           <div class="acciones-rapidas">
             ${est === 'confirmada' ? `<button class="boton-linea" onclick="iniciarAtencion(${r.id})">▶ Iniciar</button>` : ''}
@@ -848,7 +863,13 @@
         <div class="det-fila"><span>Inicio</span><span>${aHora(rangoDe(r)[0])}${r.origen === 'llegada' ? ' · orden de llegada' : ''}</span></div>
         ${r.origen === 'llegada' ? `<label for="fNombreLlegada">Nombre del cliente (opcional)</label><input id="fNombreLlegada" placeholder="Ej: Pedro">` : ''}
         <label>Servicios realizados</label><div class="serv-checks">${checksServicios(marcados)}</div>
-        <div class="cobrar">Total a cobrar <b id="totalCobrar">$0</b></div>
+        <label for="fPropina">Propina (opcional, es 100% tuya)</label>
+        <div class="propinas">
+          ${[0, 1000, 2000, 3000, 5000].map(v => `<button class="chip ${v === (r.propina || 0) ? 'sel' : ''}" onclick="elegirPropina(${v}, this)">${v ? clp(v) : 'Sin propina'}</button>`).join('')}
+          <input id="fPropina" type="number" min="0" step="500" value="${r.propina || 0}" oninput="totalACobrar(); document.querySelectorAll('.propinas .chip').forEach(c => c.classList.remove('sel'))" style="width:120px;">
+        </div>
+        <div class="cobrar"><span>Servicios <b id="totalServicios" style="font-size:15px;color:var(--hueso);">$0</b> + propina <b id="totalPropina" style="font-size:15px;color:var(--hueso);">$0</b></span>
+          <span style="text-align:right;">Total recibido<br><b id="totalCobrar">$0</b></span></div>
         <label>¿Cómo pagó?</label>
         <div class="pagos" style="margin-top:0;">${Object.entries(PAGOS).map(([k, v]) => `<button class="chip ${pagoElegido === k ? 'sel' : ''}" data-pago="${k}" onclick="pagoElegido='${k}'; this.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c === this))">${v}</button>`).join('')}</div>
         <div class="det-acciones"><button class="boton" onclick="confirmarTermino(${r.id})">Confirmar pago y terminar</button>
@@ -859,19 +880,26 @@
       $('fondoDetalle').classList.remove('oculto');
     }
     function totalACobrar(){
-      const ids = servSeleccionados();
-      $('totalCobrar').textContent = clp(serviciosActivos.filter(s => ids.includes(s.id)).reduce((a, s) => a + s.precio, 0));
+      const ids = servSeleccionados(), serv = serviciosActivos.filter(s => ids.includes(s.id)).reduce((a, s) => a + s.precio, 0);
+      const prop = Math.max(0, parseInt($('fPropina').value) || 0);
+      $('totalServicios').textContent = clp(serv); $('totalPropina').textContent = clp(prop); $('totalCobrar').textContent = clp(serv + prop);
+    }
+    function elegirPropina(v, btn){
+      $('fPropina').value = v;
+      btn.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c === btn));
+      totalACobrar();
     }
     async function confirmarTermino(id){
       const r = reservasTodas.find(x => x.id === id), ids = servSeleccionados();
       if (!ids.length && !r.total) return estado('estadoAccion', 'Marca los servicios que se hicieron.', 'error');
       if (!pagoElegido) return estado('estadoAccion', 'Elige cómo pagó el cliente.', 'error');
       estado('estadoAccion', 'Guardando…');
+      const propina = Math.max(0, parseInt($('fPropina').value) || 0);
       const { error } = await db.rpc('terminar_atencion', { p_id: id, p_servicios: ids.length ? ids : null, p_pago: pagoElegido,
-                                                            p_nombre: $('fNombreLlegada') ? $('fNombreLlegada').value.trim() : null });
+                                                            p_nombre: $('fNombreLlegada') ? $('fNombreLlegada').value.trim() : null, p_propina: propina });
       if (error) return estado('estadoAccion', mensajeError(error), 'error');
       await recargarTodo(); cerrarDetalle();
-      mostrarToast({ id: 0, tipo: 'completada', titulo: 'Atención terminada', detalle: `${r.nombre} · pagó con ${PAGOS[pagoElegido]}` });
+      mostrarToast({ id: 0, tipo: 'completada', titulo: 'Atención terminada', detalle: `${r.nombre} · pagó con ${PAGOS[pagoElegido]}${propina ? ' · propina ' + clp(propina) : ''}` });
     }
 
     // ================= LISTA =================
@@ -922,6 +950,7 @@
         ${r.creado_por ? `<div class="det-fila"><span>Agendada por</span><span>${esc(r.creado_por)}${r.origen === 'panel' ? ' (panel)' : ''}</span></div>` : ''}
         <div class="det-fila"><span>Servicios</span><span>${esc(r.servicios || '—')}</span></div>
         <div class="det-fila"><span>${admin ? 'Total' : 'Valor del servicio'}</span><span>${r.total ? clp(r.total) : '—'}</span></div>
+        ${est === 'completada' && r.propina ? `<div class="det-fila"><span>Propina</span><span>${clp(r.propina)}</span></div>` : ''}
         ${!admin && est === 'completada' ? `<div class="det-fila"><span>Tu parte</span><span><b>${clp(r.ganancia || 0)}</b></span></div>` : ''}
         ${admin ? `<div class="det-fila"><span>WhatsApp</span><span>${esc(r.telefono || '—')}</span></div>
         <div class="det-fila"><span>Correo</span><span>${esc(r.correo || '—')}</span></div>` : ''}
@@ -1005,14 +1034,25 @@
     function dibujarAccion(){
       const a = accion;
       const tabs = `<div class="tabs-modal">
+        <button class="${a.modo === 'llegada' ? 'sel' : ''}" onclick="leerComunes(); accion.modo='llegada'; dibujarAccion()">⚡ Orden de llegada</button>
         <button class="${a.modo === 'agendar' ? 'sel' : ''}" onclick="leerComunes(); accion.modo='agendar'; dibujarAccion()">+ Agendar cliente</button>
-        <button class="${a.modo === 'bloquear' ? 'sel' : ''}" onclick="leerComunes(); accion.modo='bloquear'; dibujarAccion()">🔒 Bloquear horario</button></div>`;
+        <button class="${a.modo === 'bloquear' ? 'sel' : ''}" onclick="leerComunes(); accion.modo='bloquear'; dibujarAccion()">🔒 Bloquear</button></div>`;
       const comunes = `<div class="form-grid">
           <div class="full"><label>Profesional</label><select id="fTid" ${yo.rol !== 'admin' ? 'disabled' : ''}>${opcionesProfesionales(a.tid)}</select></div>
           <div><label>Fecha</label><input type="date" id="fFecha" value="${a.fecha}"></div>
           <div><label>${a.modo === 'agendar' ? 'Hora' : 'Desde'}</label><input type="time" id="fHora" step="300" value="${aHora(a.t)}" oninput="resumenForm()"></div>`;
       let cuerpo;
-      if (a.modo === 'agendar'){
+      if (a.modo === 'llegada'){
+        const ah = new Date();
+        cuerpo = `<div class="form-grid">
+          <div class="full"><label>Profesional</label><select id="fTid" ${yo.rol !== 'admin' ? 'disabled' : ''}>${opcionesProfesionales(a.tid)}</select></div>
+          <div class="full"><label>Nombre del cliente (opcional)</label><input id="fNombreLlegada" placeholder="Ej: Pedro — si no, queda como 'Cliente por orden de llegada'"></div>
+        </div>
+        <div class="info-llegada">⚡ Se registra <b>ahora, a las ${aHora(ah.getHours()*60 + ah.getMinutes())}</b>, y queda <b>en atención</b> en la agenda.
+          Cuando termines, tócalo y marca los servicios, la propina y cómo pagó.</div>
+        <div class="det-acciones"><button class="boton llegada" onclick="guardarLlegada()">⚡ Iniciar atención ahora</button>
+          <button class="boton-linea" style="margin-left:auto;" onclick="cerrarDetalle()">Cerrar</button></div>`;
+      } else if (a.modo === 'agendar'){
         cuerpo = comunes + `
           <div class="full"><label>Servicios</label><div class="serv-checks">${checksServicios([])}</div></div>
           <div class="full"><label>Nombre del cliente *</label><input id="fNombre" placeholder="Ej: Pedro Soto"></div>
@@ -1043,7 +1083,19 @@
       btn.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('sel', x === btn));
       if (m === 'Vacaciones' || m === 'Día libre'){ $('fDiaCompleto').checked = true; $('fHora').disabled = $('fHasta').disabled = true; }
     }
-    function leerComunes(){ if ($('fTid')){ accion.tid = Number($('fTid').value); accion.fecha = $('fFecha').value; accion.t = aMin($('fHora').value || '10:00'); } }
+    function leerComunes(){
+      if ($('fTid')) accion.tid = Number($('fTid').value);
+      if ($('fFecha')) accion.fecha = $('fFecha').value;
+      if ($('fHora')) accion.t = aMin($('fHora').value || '10:00');
+    }
+    async function guardarLlegada(){
+      const tid = Number($('fTid').value), nombre = $('fNombreLlegada').value.trim();
+      estado('estadoAccion', 'Registrando…');
+      const { data, error } = await db.rpc('iniciar_llegada', { p_trabajador_id: tid, p_nombre: nombre || null });
+      if (error) return estado('estadoAccion', mensajeError(error), 'error');
+      await recargarTodo(); cerrarDetalle();
+      mostrarToast({ id: 0, tipo: 'llegada', titulo: 'Orden de llegada registrada', detalle: `${nombre || 'Cliente'} con ${data.trabajador} · en atención desde las ${data.desde}` });
+    }
     function servSeleccionados(){ return [...document.querySelectorAll('.f-serv:checked')].map(x => Number(x.value)); }
     function resumenForm(){
       const e = $('resumenForm'); if (!e) return;
@@ -1160,10 +1212,13 @@
       const a = new Date(cajaRef.getFullYear(), cajaRef.getMonth(), 1), b = new Date(cajaRef.getFullYear(), cajaRef.getMonth() + 1, 0);
       return [fechaTexto(a), fechaTexto(b), a.toLocaleDateString('es-CL', { month:'long', year:'numeric' })];
     }
+    // Por método de pago se suma lo RECIBIDO (servicio + propina); "total" = solo servicios
     function resumenPagos(lista){
-      const hechas = lista.filter(r => r.estado === 'completada'), m = k => hechas.filter(r => r.metodo_pago === k).reduce((a, r) => a + (r.total || 0), 0);
+      const hechas = lista.filter(r => r.estado === 'completada'), rec = r => (r.total || 0) + (r.propina || 0);
+      const m = k => hechas.filter(r => r.metodo_pago === k).reduce((a, r) => a + rec(r), 0);
       return { n: hechas.length, efectivo: m('efectivo'), debito: m('debito'), transferencia: m('transferencia'),
-               sin: hechas.filter(r => !r.metodo_pago).reduce((a, r) => a + (r.total || 0), 0), total: cobrado(hechas) };
+               sin: hechas.filter(r => !r.metodo_pago).reduce((a, r) => a + rec(r), 0), total: cobrado(hechas),
+               propinas: hechas.reduce((a, r) => a + (r.propina || 0), 0) };
     }
     function dibujarCaja(){
       const admin = yo.rol === 'admin', sel = $('cajaTrab');
@@ -1176,7 +1231,7 @@
       const llegadas = lista.filter(r => r.origen === 'llegada' && r.estado !== 'cancelada').length;
       // Parte del profesional: el admin la calcula con la comisión; el profesional la recibe ya calculada
       const pct = r => (trabajadores.find(t => t.id === r.trabajador_id) || {}).comision ?? 50;
-      const parteDe = r => admin ? Math.round((r.total || 0) * pct(r) / 100) : (r.ganancia || 0);
+      const parteDe = r => admin ? Math.round((r.total || 0) * pct(r) / 100) + (r.propina || 0) : (r.ganancia || 0);   // comisión + propina
       const sumaParte = l => l.filter(r => r.estado === 'completada').reduce((a, r) => a + parteDe(r), 0);
       const tarjetas = document.querySelectorAll('#tab-caja .grid-caja > .tarjeta');
 
@@ -1185,6 +1240,7 @@
         tarjetas[0].classList.add('oculto');
         $('kpisCaja').innerHTML =
           `<div class="kpi destacado"><b>${clp(sumaParte(hechas))}</b><span>tu ganancia</span></div>` +
+          `<div class="kpi"><b>${clp(hechas.reduce((a, r) => a + (r.propina || 0), 0))}</b><span>en propinas</span></div>` +
           `<div class="kpi"><b>${hechas.length}</b><span>atendidos</span></div>` +
           `<div class="kpi"><b>${llegadas}</b><span>por orden de llegada</span></div>` +
           `<div class="kpi"><b>${lista.filter(r => r.estado === 'no_asistio').length}</b><span>no asistieron</span></div>`;
@@ -1194,10 +1250,10 @@
           ${dias.map(d => { const x = hechas.filter(r => r.fecha === d); return `<tr><td>${deTexto(d).toLocaleDateString('es-CL', { weekday:'short', day:'numeric', month:'short' })}</td><td class="num">${x.length}</td><td class="num">${clp(sumaParte(x))}</td></tr>`; }).join('')}
           <tr class="total"><td>Total</td><td class="num">${hechas.length}</td><td class="num">${clp(sumaParte(hechas))}</td></tr></table>`;
         $('cajaLista').innerHTML = hechas.length ? `<div style="overflow-x:auto;"><table class="tabla-caja">
-          <tr><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Servicios</th><th>Pago</th><th class="num">Tu parte</th></tr>
+          <tr><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Servicios</th><th>Pago</th><th class="num">Propina</th><th class="num">Tu parte</th></tr>
           ${hechas.map(r => `<tr style="cursor:pointer;" onclick="abrirDetalle(${r.id})"><td>${deTexto(r.fecha).toLocaleDateString('es-CL', { day:'numeric', month:'short' })}</td>
             <td>${aHora(rangoDe(r)[0])}</td><td>${esc(r.nombre)}${r.origen === 'llegada' ? ' ⚡' : ''}</td><td>${esc(r.servicios || '')}</td>
-            <td>${r.metodo_pago ? PAGOS[r.metodo_pago] : '—'}</td><td class="num">${clp(parteDe(r))}</td></tr>`).join('')}
+            <td>${r.metodo_pago ? PAGOS[r.metodo_pago] : '—'}</td><td class="num">${r.propina ? clp(r.propina) : '—'}</td><td class="num">${clp(parteDe(r))}</td></tr>`).join('')}
           </table></div>` : '<p class="vacio">Aún no hay atenciones en este período.</p>';
         return;
       }
@@ -1207,9 +1263,11 @@
       const R = resumenPagos(lista), pend = lista.filter(r => r.estado === 'confirmada' || r.estado === 'en_atencion');
       const pagoProf = sumaParte(hechas);
       $('kpisCaja').innerHTML =
-        `<div class="kpi destacado"><b>${clp(R.total)}</b><span>cobrado</span></div>` +
+        `<div class="kpi destacado"><b>${clp(R.total + R.propinas)}</b><span>recibido total</span></div>` +
+        `<div class="kpi"><b>${clp(R.total)}</b><span>servicios</span></div>` +
+        `<div class="kpi"><b>${clp(R.propinas)}</b><span>propinas</span></div>` +
         `<div class="kpi"><b>${clp(pagoProf)}</b><span>pago a profesionales</span></div>` +
-        `<div class="kpi"><b>${clp(R.total - pagoProf)}</b><span>para BarberTop</span></div>` +
+        `<div class="kpi destacado"><b>${clp(R.total + R.propinas - pagoProf)}</b><span>para BarberTop</span></div>` +
         `<div class="kpi"><b>${R.n}</b><span>atenciones (${llegadas} por llegada)</span></div>` +
         `<div class="kpi"><b>${R.n ? clp(Math.round(R.total / R.n)) : '—'}</b><span>ticket promedio</span></div>` +
         `<div class="kpi"><b>${clp(sumaTotal(pend))}</b><span>por atender (${pend.length})</span></div>` +
@@ -1218,12 +1276,12 @@
       const filas = [['efectivo', 'Efectivo'], ['debito', 'Débito'], ['transferencia', 'Transferencia'], ['sin', 'Sin registrar']];
       $('cajaMetodos').innerHTML = filas.map(([k, v]) => `<div class="barra-metodo">
           <div class="fila"><span>${v}</span><span>${clp(R[k])}</span></div>
-          <div class="pista"><div class="relleno" style="width:${R.total ? Math.round(R[k] / R.total * 100) : 0}%;background:${COLOR_PAGO[k]}"></div></div></div>`).join('') +
-        (R.sin ? `<p class="nota">Hay atenciones sin método de pago: regístralo en la lista de abajo.</p>` : '');
+          <div class="pista"><div class="relleno" style="width:${R.total + R.propinas ? Math.round(R[k] / (R.total + R.propinas) * 100) : 0}%;background:${COLOR_PAGO[k]}"></div></div></div>`).join('') +
+        `<p class="nota">Incluye propinas.</p>` + (R.sin ? `<p class="nota">Hay atenciones sin método de pago: regístralo en la lista de abajo.</p>` : '');
 
-      const cab = `<tr><th></th><th class="num">Atenc.</th><th class="num">Efectivo</th><th class="num">Débito</th><th class="num">Transf.</th><th class="num">Total</th><th class="num">Profesional</th><th class="num">BarberTop</th></tr>`;
+      const cab = `<tr><th></th><th class="num">Atenc.</th><th class="num">Efectivo</th><th class="num">Débito</th><th class="num">Transf.</th><th class="num">Servicios</th><th class="num">Propinas</th><th class="num">Profesional</th><th class="num">BarberTop</th></tr>`;
       const fila = (nombre, l, total) => { const x = resumenPagos(l), p = sumaParte(l.filter(r => r.estado === 'completada'));
-        return `<tr class="${total ? 'total' : ''}"><td>${nombre}</td><td class="num">${x.n}</td><td class="num">${clp(x.efectivo)}</td><td class="num">${clp(x.debito)}</td><td class="num">${clp(x.transferencia)}</td><td class="num">${clp(x.total)}</td><td class="num">${clp(p)}</td><td class="num">${clp(x.total - p)}</td></tr>`; };
+        return `<tr class="${total ? 'total' : ''}"><td>${nombre}</td><td class="num">${x.n}</td><td class="num">${clp(x.efectivo)}</td><td class="num">${clp(x.debito)}</td><td class="num">${clp(x.transferencia)}</td><td class="num">${clp(x.total)}</td><td class="num">${clp(x.propinas)}</td><td class="num">${clp(p)}</td><td class="num">${clp(x.total + x.propinas - p)}</td></tr>`; };
       let cuerpo;
       if (!tid){
         $('cajaTituloDetalle').textContent = 'Por profesional';
@@ -1238,10 +1296,10 @@
       $('cajaDetalle').innerHTML = `<div style="overflow-x:auto;"><table class="tabla-caja">${cab}${cuerpo}</table></div>`;
 
       $('cajaLista').innerHTML = hechas.length ? `<div style="overflow-x:auto;"><table class="tabla-caja">
-        <tr><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Servicios</th><th>Profesional</th><th>Pago</th><th class="num">Total</th><th class="num">Profesional</th></tr>
+        <tr><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Servicios</th><th>Profesional</th><th>Pago</th><th class="num">Servicio</th><th class="num">Propina</th><th class="num">Profesional</th></tr>
         ${hechas.map(r => `<tr style="cursor:pointer;" onclick="abrirDetalle(${r.id})"><td>${deTexto(r.fecha).toLocaleDateString('es-CL', { day:'numeric', month:'short' })}</td><td>${aHora(rangoDe(r)[0])}</td>
           <td>${esc(r.nombre)}${r.origen === 'llegada' ? ' ⚡' : ''}</td><td>${esc(r.servicios || '')}</td><td>${esc(r.trabajador)}</td>
-          <td>${r.metodo_pago ? PAGOS[r.metodo_pago] : '<span class="error">Registrar</span>'}</td><td class="num">${clp(r.total)}</td><td class="num">${clp(parteDe(r))}</td></tr>`).join('')}
+          <td>${r.metodo_pago ? PAGOS[r.metodo_pago] : '<span class="error">Registrar</span>'}</td><td class="num">${clp(r.total)}</td><td class="num">${r.propina ? clp(r.propina) : '—'}</td><td class="num">${clp(parteDe(r))}</td></tr>`).join('')}
         </table></div>` : '<p class="vacio">No hay atenciones completadas en este período.</p>';
     }
 
