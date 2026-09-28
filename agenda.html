@@ -575,16 +575,16 @@
                   : `<span class="ic">📷</span><span style="flex:1;">Agregar foto de referencia<br><span class="nota">Así tu barbero sabe qué corte quieres</span></span>`;
     }
     function quitarFoto(){ foto = null; $('subir').innerHTML = cajaFoto() + '<input type="file" accept="image/*" class="oculto" onchange="cargarFoto(this.files[0])">'; }
-    // La foto se achica en el teléfono (máx. 900 px) para que suba rápido
+    // La foto se achica en el teléfono (máx. 800 px, ~200 KB) para que suba rápido y no llene la base de datos
     function cargarFoto(archivo){
       if (!archivo) return;
       const img = new Image(), url = URL.createObjectURL(archivo);
       img.onload = () => {
-        const k = Math.min(1, 900 / Math.max(img.width, img.height));
+        const k = Math.min(1, 800 / Math.max(img.width, img.height));
         const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
         c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
         let q = 0.78, out = c.toDataURL('image/jpeg', q);
-        while (out.length > 600000 && q > 0.3){ q -= 0.12; out = c.toDataURL('image/jpeg', q); }
+        while (out.length > 250000 && q > 0.3){ q -= 0.1; out = c.toDataURL('image/jpeg', q); }
         foto = out; URL.revokeObjectURL(url);
         $('subir').innerHTML = cajaFoto() + '<input type="file" accept="image/*" class="oculto" onchange="cargarFoto(this.files[0])">';
       };
@@ -661,6 +661,8 @@
       if (error){
         est.textContent = error.message.includes('HORA_OCUPADA') || error.message.includes('bloqueado') || error.message.includes('ocupad')
           ? "Alguien acaba de tomar esa hora. Vuelve y elige otra, por favor."
+          : error.message.includes('Failed to fetch') || error.message.includes('NetworkError')
+          ? "Se cortó la conexión. Revisa tu internet y vuelve a tocar Confirmar (no se duplica)."
           : "No se pudo reservar: " + error.message;
         return;
       }
