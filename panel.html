@@ -70,6 +70,14 @@
     .ag-res.completada { background:rgba(96,165,250,0.2); border-left-color:var(--azul); }
     .ag-res.cancelada, .ag-res.no_asistio { background:rgba(248,113,113,0.12); border-left-color:var(--rojo); opacity:.6; }
     .ag-ahora { position:absolute; left:0; right:0; border-top:2px solid var(--verde); z-index:3; }
+    /* Hora real de término de un agendado: la hora agendada no cambia, esto solo marca cuándo terminó */
+    .ag-real { position:absolute; left:4px; right:4px; border-top:2px dashed var(--verde); z-index:2; pointer-events:none; }
+    .ag-real span { position:absolute; right:4px; top:-9px; font-size:10px; font-weight:700; background:var(--verde); color:#111; padding:0 6px; border-radius:8px; white-space:nowrap; }
+    .ag-sobra { position:absolute; left:4px; right:4px; z-index:1; pointer-events:none; border-radius:0 0 7px 7px;
+                background:repeating-linear-gradient(135deg, rgba(74,222,128,0.10) 0 6px, transparent 6px 12px); }
+    .ag-extra { position:absolute; left:4px; right:4px; z-index:1; pointer-events:none; border-radius:0 0 7px 7px; border:1px dashed rgba(251,191,36,0.7); border-top:none;
+                background:repeating-linear-gradient(135deg, rgba(251,191,36,0.20) 0 6px, transparent 6px 12px); }
+    .ag-extra.real span { background:#fbbf24; }
     .ag-libre { position:absolute; top:50%; left:0; right:0; text-align:center; color:var(--gris); font-size:12px; }
 
     /* Mi día (profesional) */
@@ -701,6 +709,15 @@
           x += `<div class="ag-res ${est} ${enHora ? 'ahora' : ''}" style="top:${y(ri)+1}px;height:${Math.max((rf-ri)*PX_MIN-2, 18)}px" onclick="event.stopPropagation(); abrirDetalle(${r.id})" title="${esc(r.nombre)}">
             <b>${aHora(ri)} ${esc(r.nombre)}</b>${(rf-ri) >= 30 ? `<br>${esc(r.servicios || r.descripcion || '')}` : ''}</div>`;
         });
+        // Agendados terminados: se marca la hora real de término (antes = franja verde libre; después = franja amarilla)
+        c.reservas.forEach(r => {
+          if (r.origen === 'llegada' || r.estado !== 'completada' || !r.termino_real || r.termino_real.slice(0, 10) !== r.fecha) return;
+          const [ri, rf] = rangoDe(r), tr = Math.max(ri, aMin(r.termino_real.slice(11, 16))), dif = tr - rf;
+          if (Math.abs(dif) < 1) return;
+          if (dif < 0) x += `<div class="ag-sobra" style="top:${y(tr)}px;height:${(rf - tr) * PX_MIN}px"></div>`;
+          else x += `<div class="ag-extra" style="top:${y(rf)}px;height:${dif * PX_MIN}px"></div>`;
+          x += `<div class="ag-real ${dif > 0 ? 'ag-extra real' : ''}" style="top:${y(tr)}px;${dif > 0 ? 'border:none;border-top:2px dashed #fbbf24;background:none;height:0;' : ''}"><span>✓ ${aHora(tr)} · ${Math.abs(dif)} min ${dif < 0 ? 'antes' : 'después'}</span></div>`;
+        });
         if (c.esHoy && ahoraMin > desde && ahoraMin < hasta) x += `<div class="ag-ahora" style="top:${y(ahoraMin)}px"></div>`;
         const clic = c.tid ? `onclick="clicGrilla(event, ${c.tid}, '${c.fecha}', ${desde})"` : '';
         return `<div class="ag-col ${c.tid ? 'clicable' : ''}" style="height:${alto}px" ${clic}>${x}</div>`;
@@ -987,6 +1004,7 @@
         ${locales.length > 1 ? `<div class="det-fila"><span>Local</span><span>📍 ${esc(nombreLocal(r.local_id ?? localDe(r.trabajador_id)))}</span></div>` : ''}
         ${r.creado_por ? `<div class="det-fila"><span>Agendada por</span><span>${esc(r.creado_por)}${r.origen === 'panel' ? ' (panel)' : ''}</span></div>` : ''}
         <div class="det-fila"><span>Servicios</span><span>${esc(r.servicios || '—')}</span></div>
+        ${atencionReal(r)}
         <div class="det-fila"><span>${admin ? 'Total' : 'Valor del servicio'}</span><span>${r.total ? clp(r.total) : '—'}</span></div>
         ${est === 'completada' && r.propina ? `<div class="det-fila"><span>Propina</span><span>${clp(r.propina)}</span></div>` : ''}
         ${!admin && est === 'completada' ? `<div class="det-fila"><span>Tu parte</span><span><b>${clp(r.ganancia || 0)}</b></span></div>` : ''}
@@ -1021,6 +1039,14 @@
       const c = $('fotoRef'); if (!c || !data) return;
       c.innerHTML = `<div class="det-fila"><span>📷 Foto del corte</span><span><a href="#" class="link" onclick="event.preventDefault(); $('imgRef').classList.toggle('oculto')">Ver / ocultar</a></span></div>
         <img id="imgRef" class="foto-mini" src="${data}" alt="Foto de referencia del cliente">`;
+    }
+    // "Atención real": cuándo se atendió de verdad, comparado con la hora agendada
+    function atencionReal(r){
+      if (!r.inicio_real && !r.termino_real) return '';
+      const [ri, rf] = rangoDe(r), ir = r.inicio_real ? aMin(r.inicio_real.slice(11, 16)) : null, tr = r.termino_real ? aMin(r.termino_real.slice(11, 16)) : null;
+      let txt = `${ir != null ? aHora(ir) : '—'} – ${tr != null ? aHora(tr) : 'en curso'}`;
+      if (tr != null && r.origen !== 'llegada'){ const d = tr - rf; txt += d === 0 ? ' · a la hora' : ` · terminó ${Math.abs(d)} min ${d < 0 ? 'antes' : 'después'}`; }
+      return `<div class="det-fila"><span>Atención real</span><span>${txt}</span></div>`;
     }
     function cerrarDetalle(){ $('fondoDetalle').classList.add('oculto'); }
     function refrescarVista(){
