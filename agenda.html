@@ -180,13 +180,21 @@
     .item-res b { color:var(--voltaje); }
     .acciones { display:grid; gap:10px; margin-top:16px; }
     .acciones a { text-decoration:none; text-align:center; display:block; }
-    .promo { display:flex; align-items:center; gap:14px; background:linear-gradient(120deg, rgba(255,122,47,0.18), rgba(255,122,47,0.04)); border:1px solid rgba(255,122,47,0.4);
+    .promo { display:flex; align-items:center; gap:14px; background:linear-gradient(120deg, var(--voltaje-suave), rgba(255,255,255,0.02)); border:1px solid var(--voltaje);
              border-radius:16px; padding:14px 16px; margin-bottom:18px; cursor:pointer; color:var(--hueso); text-align:left; width:100%; }
     .promo .pct { font-size:26px; font-weight:900; color:var(--voltaje); line-height:1; flex-shrink:0; }
     .promo b { display:block; font-size:15px; }
     .promo span.s { color:var(--gris); font-size:12.5px; }
     .promo.ok { background:rgba(74,222,128,0.08); border-color:rgba(74,222,128,0.35); cursor:default; }
     .promo.ok .pct { color:var(--verde); }
+    .hero { position:relative; border-radius:18px; overflow:hidden; margin:4px 0 16px; background:var(--panel); border:1px solid var(--borde); }
+    .hero img { display:block; width:100%; height:190px; object-fit:cover; }
+    .hero .hero-txt { position:absolute; left:0; right:0; bottom:0; padding:40px 16px 14px; background:linear-gradient(transparent, rgba(0,0,0,0.78)); }
+    .hero.sin-foto .hero-txt { position:static; background:none; padding:14px 16px; }
+    .hero h1 { font-size:22px; font-weight:800; line-height:1.15; }
+    .hero p { color:#e6e2da; font-size:14px; margin-top:4px; }
+    .hero a { color:var(--voltaje); font-size:13px; text-decoration:none; font-weight:600; }
+    @media (min-width:700px) { .hero img { height:240px; } }
     .descuento { color:var(--verde); font-weight:700; }
     footer { text-align:center; color:var(--gris); font-size:12px; margin-top:36px; }
     footer a { color:var(--gris); }
@@ -212,6 +220,7 @@
 
   <main class="caja">
     <div id="asistente">
+      <div id="inicio"></div>
       <nav class="stepper" id="stepper"></nav>
       <div class="contexto" id="contexto"></div>
       <div id="vista"><p class="nota" style="padding:30px 0;">Cargando agenda…</p></div>
@@ -338,7 +347,7 @@
       else if (CFG.locales.length === 1) { LOCAL = CFG.locales[0].id; paso = 2; }
       history.replaceState({ paso, i: 0 }, '');
       dibujar();
-      if (new URLSearchParams(location.search).has('inscribete')) verInscripcion();   // link directo: agenda.html?inscribete
+      if (promoActiva() && new URLSearchParams(location.search).has('inscribete')) verInscripcion();   // link directo: agenda.html?inscribete
     }
 
     // Llamada a la base con respaldo: si la base aún no tiene la Fase 10, se vuelve a intentar sin el negocio
@@ -355,7 +364,12 @@
       const nombre = n.nombre || 'ClipperLab';
       document.title = 'Reserva tu hora — ' + nombre;
       const m = $('marca');
-      if (n.logo_url) m.innerHTML = `<img src="${esc(n.logo_url)}" alt="${esc(nombre)}" style="height:34px;vertical-align:middle;">`;
+      if (n.logo_url) {
+        m.innerHTML = `<img src="${esc(n.logo_url)}" alt="" style="height:36px;width:36px;object-fit:contain;border-radius:9px;vertical-align:middle;margin-right:8px;">${esc(nombre)}`;
+        let fav = document.querySelector('link[rel="icon"]');
+        if (!fav) { fav = document.createElement('link'); fav.rel = 'icon'; document.head.appendChild(fav); }
+        fav.href = n.logo_url;
+      }
       else if (nombre === 'ClipperLab') m.innerHTML = 'Clipper<span>Lab</span>';
       else m.textContent = nombre;
       if ((n.slug || PRINCIPAL) !== PRINCIPAL){ m.removeAttribute('href'); m.removeAttribute('title'); m.style.cursor = 'default'; }
@@ -368,6 +382,19 @@
       $('creditos').innerHTML = (n.slug || PRINCIPAL) !== PRINCIPAL ? '· con <a href="index.html" style="color:inherit;">ClipperLab</a>' : '';
     }
     const nombreNegocio = () => CFG.negocio?.nombre || 'ClipperLab';
+    // ¿Esta barbería tiene activo el 10% en la primera visita? (lo activa ClipperLab desde el panel)
+    const promoActiva = () => CFG.negocio && 'promo_10' in CFG.negocio ? !!CFG.negocio.promo_10 : (!SLUG || SLUG === PRINCIPAL);
+    const pasoInicial = () => CFG.locales.length === 1 ? 2 : 1;
+    // Portada, frase de bienvenida y banner del 10% (solo en el primer paso)
+    function pintarInicio(){
+      const n = CFG.negocio || {}, el = $('inicio');
+      if (paso !== pasoInicial()) { el.innerHTML = ''; return; }
+      const insta = (n.instagram || '').replace(/^@/, '');
+      const txt = (n.bienvenida || insta) ? `<div class="hero-txt"><h1>${esc(nombreNegocio())}</h1>${n.bienvenida ? `<p>${esc(n.bienvenida)}</p>` : ''}${insta ? `<a href="https://www.instagram.com/${encodeURIComponent(insta)}/" target="_blank" rel="noopener">📷 @${esc(insta)}</a>` : ''}</div>` : '';
+      const hero = n.portada_url ? `<div class="hero"><img src="${esc(n.portada_url)}" alt="${esc(nombreNegocio())}">${txt}</div>`
+                 : txt ? `<div class="hero sin-foto">${txt}</div>` : '';
+      el.innerHTML = hero + bannerPromo();
+    }
 
     // ---------- NAVEGACIÓN ENTRE CAPAS ----------
     // Cada capa queda en el historial: el botón "atrás" del teléfono vuelve una capa (no se sale de la página)
@@ -417,6 +444,7 @@
       if (paso > 3 && draft.eleccion !== null) partes.push(draft.eleccion === AUTO ? 'Cualquiera disponible' : 'con ' + nombreTrab(draft.eleccion));
       if (partes.length) ctx += `<span class="subtitulo">${esc(partes.join(' · '))}</span>`;
       $('contexto').innerHTML = ctx;
+      pintarInicio();
 
       const v = $('vista');
       v.className = 'capa' + (haciaAtras ? ' atras' : '');
@@ -442,6 +470,7 @@
 
     // ---------- INSCRIPCIÓN: 10% en la primera visita ----------
     function bannerPromo(){
+      if (!promoActiva()) return '';
       if (leerLocal(K_INSCRITO)) return `<div class="promo ok"><span class="pct">✓</span><span><b>Estás inscrito</b><span class="s">Tu 10% de primera visita se aplica solo al reservar con tu WhatsApp.</span></span></div>`;
       return `<button class="promo" onclick="verInscripcion()"><span class="pct">10%</span><span><b>¿Primera vez? Inscríbete y obtén 10% en tu primera visita</b><span class="s">Toma 20 segundos · Toca aquí</span></span></button>`;
     }
@@ -475,7 +504,7 @@
 
     // ---------- 1) SUCURSAL ----------
     function capaSucursal(){
-      $('vista').innerHTML = bannerPromo() + `<h2>¿Dónde te quieres atender?</h2><p class="ayuda">Elige la barbería. Cada local tiene su propio equipo y precios.</p>
+      $('vista').innerHTML = `<h2>¿Dónde te quieres atender?</h2><p class="ayuda">Elige la barbería. Cada local tiene su propio equipo y precios.</p>
         <div class="locales">${CFG.locales.map(l => {
           const nb = CFG.trabajadores.filter(t => t.local_id === l.id).length;
           const mapa = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(l.direccion || l.nombre);
@@ -674,7 +703,7 @@
               <input id="fTel" type="tel" inputmode="tel" autocomplete="tel-national" value="${esc(d.tel ?? (cod === '+56' ? '9 ' : ''))}" placeholder="${cod === '+56' ? '9 1234 5678' : 'Número'}" oninput="formatoTel()"></div></div>
           <label class="check"><input type="checkbox" id="fWsp" ${d.wsp === false ? '' : 'checked'}><span>Quiero recibir la confirmación y recordatorios por <b>WhatsApp</b></span></label>
           <label class="check"><input type="checkbox" id="fPromos" ${d.promos ? 'checked' : ''}><span>Quiero recibir promociones y descuentos</span></label>
-          ${leerLocal(K_INSCRITO) ? '<p class="nota" style="margin:-6px 0 12px;">🎁 Si es tu primera visita, tu 10% se aplica al confirmar.</p>' : ''}
+          ${promoActiva() && leerLocal(K_INSCRITO) ? '<p class="nota" style="margin:-6px 0 12px;">🎁 Si es tu primera visita, tu 10% se aplica al confirmar.</p>' : ''}
           <div class="campo"><label class="lbl" for="fObs">Observaciones (opcional)</label><textarea id="fObs" placeholder="Ej: degradado bajo, dejar largo arriba…">${esc(d.obs || '')}</textarea></div>
           <label class="lbl">Foto del corte que quieres (opcional)</label>
           <label class="subir" id="subir">${cajaFoto()}<input type="file" accept="image/*" class="oculto" onchange="cargarFoto(this.files[0])"></label>
