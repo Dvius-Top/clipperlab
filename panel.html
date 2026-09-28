@@ -349,6 +349,7 @@
         <button class="tab" data-tab="caja" onclick="verTab('caja')">Caja</button>
         <button class="tab solo-admin" data-tab="equipo" onclick="verTab('equipo')">Equipo y horarios</button>
         <button class="tab solo-admin" data-tab="servicios" onclick="verTab('servicios')">Servicios</button>
+        <button class="tab solo-admin" data-tab="clientes" onclick="verTab('clientes')">Clientes</button>
         <button class="tab solo-trab" data-tab="mihorario" onclick="verTab('mihorario')">Mi horario</button>
         <select id="filtroLocal" class="solo-admin selector-local" onchange="cambiarLocalPanel(this.value)" title="Ver solo un local"></select>
       </div>
@@ -471,6 +472,30 @@
           <div class="tarjeta" style="margin-top:0;"><h3 id="cajaTituloDetalle">Detalle</h3><div id="cajaDetalle"></div></div>
         </div>
         <div class="tarjeta"><h3>Atenciones del período</h3><div id="cajaLista"></div></div>
+      </div>
+
+      <!-- Clientes (admin) -->
+      <div id="tab-clientes" class="oculto">
+        <div class="kpis" id="kpisCli"></div>
+        <div class="filtros" id="filtrosCli">
+          <button class="chip sel" data-fc="todos" onclick="filtroCli('todos')">Todos</button>
+          <button class="chip" data-fc="nuevos" onclick="filtroCli('nuevos')">Nuevos del mes</button>
+          <button class="chip" data-fc="beneficio" onclick="filtroCli('beneficio')">🎁 10% sin usar</button>
+          <button class="chip" data-fc="promos" onclick="filtroCli('promos')">Aceptan promociones</button>
+          <button class="chip" data-fc="perdidos" onclick="filtroCli('perdidos')">No vuelven hace +45 días</button>
+          <input id="buscarCli" placeholder="Buscar nombre, correo o WhatsApp" style="max-width:260px;" oninput="dibujarClientes()">
+        </div>
+        <div class="barra" style="margin-top:4px;">
+          <span class="nota" id="resumenCli"></span>
+          <span class="barra-der" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="boton-linea" onclick="descargarClientes()">⬇ Descargar Excel</button>
+            <button class="boton-linea" onclick="abrirEnvio('whatsapp')">💬 WhatsApp</button>
+            <button class="boton" onclick="abrirEnvio('correo')">✉ Correo</button>
+          </span>
+        </div>
+        <div class="tarjeta" style="margin-top:8px;"><div style="overflow-x:auto;" id="tablaCli"></div></div>
+        <p class="nota">Cada cliente se identifica por su WhatsApp (y si no tiene, por su correo): así dos "Juan Pérez" distintos no se mezclan.
+          Se crea solo cuando reserva online o se inscribe en la página de inicio. Los profesionales no ven esta lista.</p>
       </div>
 
       <!-- Mi horario (trabajador) -->
@@ -655,7 +680,7 @@
 
     function verTab(t){
       document.querySelectorAll('.tab').forEach(b => b.classList.toggle('sel', b.dataset.tab === t));
-      ['midia','dia','semana','lista','caja','equipo','servicios','mihorario'].forEach(x => $('tab-'+x).classList.toggle('oculto', x !== t));
+      ['midia','dia','semana','lista','caja','equipo','servicios','clientes','mihorario'].forEach(x => $('tab-'+x).classList.toggle('oculto', x !== t));
       if (t === 'caja') dibujarCaja();
       if (t === 'midia') dibujarMiDia();
       if (t === 'dia') dibujarDia();
@@ -663,6 +688,7 @@
       if (t === 'lista') dibujarLista();
       if (t === 'equipo') cargarEquipo();
       if (t === 'servicios') cargarServicios();
+      if (t === 'clientes') cargarClientes();
       if (t === 'mihorario') dibujarMiHorario();
     }
 
@@ -908,15 +934,16 @@
     }
 
     // ----- Terminar atención: servicios realizados + cómo pagó -----
-    let pagoElegido = null;
+    let pagoElegido = null, cobroDesc = 0;
     function abrirTerminar(id){
       const r = reservasTodas.find(x => x.id === id); if (!r) return;
-      pagoElegido = r.metodo_pago || null;
+      pagoElegido = r.metodo_pago || null; cobroDesc = r.descuento_pct || 0;
       const marcados = marcadosPorNombre(r.servicios, r.trabajador_id);
       $('ventanaDetalle').innerHTML = `<h3 style="font-size:18px;">✓ Terminar atención</h3>
         <div class="det-fila"><span>Cliente</span><span>${esc(r.nombre)}</span></div>
         <div class="det-fila"><span>Inicio</span><span>${aHora(rangoDe(r)[0])}${r.origen === 'llegada' ? ' · orden de llegada' : ''}</span></div>
         ${r.origen === 'llegada' ? `<label for="fNombreLlegada">Nombre del cliente (opcional)</label><input id="fNombreLlegada" placeholder="Ej: Pedro">` : ''}
+        ${cobroDesc ? `<div class="info-llegada">🎁 Cliente inscrito: <b>${cobroDesc}% de descuento en su primera visita</b>. El total ya lo incluye.</div>` : ''}
         <label>Servicios realizados</label><div class="serv-checks">${checksServicios(marcados, r.trabajador_id)}</div>
         <label for="fPropina">Propina (opcional, es 100% tuya)</label>
         <div class="propinas">
@@ -934,7 +961,8 @@
       $('fondoDetalle').classList.remove('oculto');
     }
     function totalACobrar(){
-      const ids = servSeleccionados(), serv = serviciosActivos.filter(s => ids.includes(s.id)).reduce((a, s) => a + s.precio, 0);
+      const ids = servSeleccionados(), bruto = serviciosActivos.filter(s => ids.includes(s.id)).reduce((a, s) => a + s.precio, 0);
+      const serv = Math.round(bruto * (100 - (cobroDesc || 0)) / 100);
       const prop = Math.max(0, parseInt($('fPropina').value) || 0);
       $('totalServicios').textContent = clp(serv); $('totalPropina').textContent = clp(prop); $('totalCobrar').textContent = clp(serv + prop);
     }
@@ -1005,6 +1033,7 @@
         ${r.creado_por ? `<div class="det-fila"><span>Agendada por</span><span>${esc(r.creado_por)}${r.origen === 'panel' ? ' (panel)' : ''}</span></div>` : ''}
         <div class="det-fila"><span>Servicios</span><span>${esc(r.servicios || '—')}</span></div>
         ${atencionReal(r)}
+        ${r.descuento_pct ? `<div class="det-fila"><span>Descuento</span><span>🎁 ${r.descuento_pct}% primera visita (inscrito)</span></div>` : ''}
         <div class="det-fila"><span>${admin ? 'Total' : 'Valor del servicio'}</span><span>${r.total ? clp(r.total) : '—'}</span></div>
         ${est === 'completada' && r.propina ? `<div class="det-fila"><span>Propina</span><span>${clp(r.propina)}</span></div>` : ''}
         ${!admin && est === 'completada' ? `<div class="det-fila"><span>Tu parte</span><span><b>${clp(r.ganancia || 0)}</b></span></div>` : ''}
@@ -1147,8 +1176,9 @@
         cuerpo = comunes + `
           <div class="full"><label>Servicios</label><div class="serv-checks" id="servChecks">${checksServicios([], a.tid)}</div></div>
           <div class="full"><label>Nombre del cliente *</label><input id="fNombre" placeholder="Ej: Pedro Soto"></div>
-          <div><label>WhatsApp</label><input id="fTel" type="tel" placeholder="+56 9 …"></div>
-          <div><label>Correo</label><input id="fCorreo" type="email" placeholder="opcional"></div>
+          ${yo.rol === 'admin' ? `<div><label>WhatsApp</label><input id="fTel" type="tel" placeholder="+56 9 …"></div>
+          <div><label>Correo</label><input id="fCorreo" type="email" placeholder="opcional"></div>`
+          : `<div class="full"><p class="nota">🔒 Los datos de contacto (WhatsApp y correo) los ingresa el cliente cuando reserva online. Desde aquí solo se anota su nombre.</p></div>`}
           <div class="full"><label>Nota</label><input id="fMsg" placeholder="opcional"></div>
           <div class="full"><label class="check-linea"><input type="checkbox" id="fForzar"> Permitir fuera de horario o en colación</label></div>
         </div>
@@ -1198,7 +1228,7 @@
 
     async function guardarAgendar(){
       const p = { trabajador_id: Number($('fTid').value), fecha: $('fFecha').value, hora: $('fHora').value, servicios: servSeleccionados(),
-                  nombre: $('fNombre').value.trim(), telefono: $('fTel').value.trim(), correo: $('fCorreo').value.trim(),
+                  nombre: $('fNombre').value.trim(), telefono: $('fTel') ? $('fTel').value.trim() : '', correo: $('fCorreo') ? $('fCorreo').value.trim() : '',
                   mensaje: $('fMsg').value.trim(), forzar: $('fForzar').checked };
       if (!p.servicios.length) return estado('estadoAccion', 'Elige al menos un servicio.', 'error');
       if (!p.nombre) return estado('estadoAccion', 'Escribe el nombre del cliente.', 'error');
@@ -1764,6 +1794,151 @@
       if (error) return estado('estadoServ', 'Error: ' + error.message, 'error');
       estado('estadoServ', `✓ "${fila.nombre}" guardado${locales.length > 1 ? ' en ' + nombreLocal(fila.local_id) : ''}. La agenda pública ya muestra el cambio.`, 'ok');
       await cargarServicios(); await cargarBase();
+    }
+
+    // ================= CLIENTES (admin) =================
+    let clientes = [], filtroC = 'todos', selCli = new Set();
+    async function cargarClientes(){
+      $('tablaCli').innerHTML = '<p class="nota">Cargando…</p>';
+      const { data, error } = await db.rpc('clientes_admin');
+      if (error){ $('tablaCli').innerHTML = `<p class="error">Error: ${esc(error.message)}${(error.message || '').includes('clientes_admin') ? ' — falta instalar la Fase 9.' : ''}</p>`; return; }
+      clientes = data || [];
+      const mes = hoyTxt().slice(0, 7);
+      $('kpisCli').innerHTML =
+        `<div class="kpi destacado"><b>${clientes.length}</b><span>clientes</span></div>` +
+        `<div class="kpi"><b>${clientes.filter(c => (c.creado || '').slice(0, 7) === mes).length}</b><span>nuevos este mes</span></div>` +
+        `<div class="kpi"><b>${clientes.filter(c => c.origen === 'inscripcion').length}</b><span>inscritos en la web</span></div>` +
+        `<div class="kpi"><b>${clientes.filter(c => c.beneficio === 'disponible' || c.beneficio === 'reservado').length}</b><span>con 10% sin usar</span></div>` +
+        `<div class="kpi"><b>${clientes.filter(c => c.acepta_promos).length}</b><span>aceptan promociones</span></div>`;
+      dibujarClientes();
+    }
+    function filtroCli(f){ filtroC = f; document.querySelectorAll('#filtrosCli .chip').forEach(c => c.classList.toggle('sel', c.dataset.fc === f)); dibujarClientes(); }
+    function clientesFiltrados(){
+      const q = ($('buscarCli').value || '').trim().toLowerCase(), qd = q.replace(/\D/g, ''), mes = hoyTxt().slice(0, 7);
+      const hace45 = (() => { const d = new Date(); d.setDate(d.getDate() - 45); return fechaTexto(d); })();
+      return clientes.filter(c => {
+        if (LOCAL_PANEL && c.local && c.local !== nombreLocal(LOCAL_PANEL)) return false;
+        if (filtroC === 'nuevos' && (c.creado || '').slice(0, 7) !== mes) return false;
+        if (filtroC === 'beneficio' && !(c.beneficio === 'disponible' || c.beneficio === 'reservado')) return false;
+        if (filtroC === 'promos' && !c.acepta_promos) return false;
+        if (filtroC === 'perdidos' && !(c.ultima_visita && c.ultima_visita < hace45 && !c.proxima)) return false;
+        if (q && !(`${c.nombre} ${c.apellido || ''} ${c.correo || ''}`.toLowerCase().includes(q) || (qd.length >= 3 && (c.telefono || '').replace(/\D/g, '').includes(qd)))) return false;
+        return true;
+      });
+    }
+    function dibujarClientes(){
+      const lista = clientesFiltrados();
+      const nSel = lista.filter(c => selCli.has(c.id)).length;
+      $('resumenCli').textContent = `${lista.length} cliente${lista.length === 1 ? '' : 's'}` + (nSel ? ` · ${nSel} seleccionado${nSel === 1 ? '' : 's'} (los botones usan solo los seleccionados)` : ' · los botones usan esta lista');
+      if (!lista.length){ $('tablaCli').innerHTML = '<p class="vacio">No hay clientes con ese filtro.</p>'; return; }
+      const benef = { disponible:'<span class="badge confirmada">🎁 10% disponible</span>', reservado:'<span class="badge en_atencion">🎁 10% en su reserva</span>', usado:'<span class="badge grupo">10% usado</span>' };
+      $('tablaCli').innerHTML = `<table class="tabla-caja">
+        <tr><th><input type="checkbox" ${nSel && nSel === lista.length ? 'checked' : ''} onchange="selTodos(this.checked)" aria-label="Seleccionar todos"></th>
+          <th>Cliente</th><th>WhatsApp</th><th>Correo</th><th class="num">Visitas</th><th>Última visita</th><th>Próxima</th><th class="num">Gastado</th><th>Local</th><th></th></tr>
+        ${lista.map(c => `<tr>
+          <td><input type="checkbox" ${selCli.has(c.id) ? 'checked' : ''} onchange="selUno(${c.id}, this.checked)"></td>
+          <td><a href="#" class="link" style="margin:0;" onclick="event.preventDefault(); fichaCliente(${c.id})"><b>${esc(c.nombre)} ${esc(c.apellido || '')}</b></a>
+            ${c.origen === 'inscripcion' ? ' <span class="badge grupo">inscrito</span>' : ''}${c.acepta_promos ? '' : ' <span class="nota" title="No aceptó promociones">· sin promos</span>'}</td>
+          <td>${esc(c.telefono || '—')}</td><td>${esc(c.correo || '—')}</td>
+          <td class="num">${c.atendidas}${c.no_asistio ? ` <span class="error" title="No asistió">· ${c.no_asistio} ✕</span>` : ''}</td>
+          <td>${c.ultima_visita ? fechaCorta(c.ultima_visita) : '—'}</td><td>${c.proxima ? fechaCorta(c.proxima) : '—'}</td>
+          <td class="num">${c.gastado ? clp(c.gastado) : '—'}</td><td>${esc(c.local || '—')}</td><td>${benef[c.beneficio] || ''}</td></tr>`).join('')}
+      </table>`;
+    }
+    const fechaCorta = t => deTexto(t).toLocaleDateString('es-CL', { day:'numeric', month:'short', year:'2-digit' });
+    function selUno(id, v){ v ? selCli.add(id) : selCli.delete(id); dibujarClientes(); }
+    function selTodos(v){ clientesFiltrados().forEach(c => v ? selCli.add(c.id) : selCli.delete(c.id)); dibujarClientes(); }
+    // Si hay seleccionados se usan esos; si no, toda la lista filtrada
+    function destinatarios(){ const l = clientesFiltrados(), s = l.filter(c => selCli.has(c.id)); return s.length ? s : l; }
+
+    // Excel: CSV con ; y BOM (Excel en español lo abre directo con tildes)
+    function descargarClientes(){
+      const l = destinatarios();
+      const cols = [['Nombre','nombre'],['Apellido','apellido'],['WhatsApp','telefono'],['Correo','correo'],['Acepta promociones', c => c.acepta_promos ? 'sí' : 'no'],
+        ['Avisos WhatsApp', c => c.whatsapp ? 'sí' : 'no'],['Origen','origen'],['Beneficio 10%','beneficio'],['Registrado', c => (c.creado || '').slice(0, 10)],
+        ['Reservas','reservas'],['Atendidas','atendidas'],['No asistió','no_asistio'],['Canceladas','canceladas'],['Gastado','gastado'],
+        ['Primera visita','primera_visita'],['Última visita','ultima_visita'],['Próxima reserva','proxima'],['Local','local'],['Profesional habitual','profesional']];
+      const celda = v => { const t = String(v ?? ''); return /[;"\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+      const csv = '\ufeff' + cols.map(c => c[0]).join(';') + '\n' + l.map(c => cols.map(([_, k]) => celda(typeof k === 'function' ? k(c) : c[k])).join(';')).join('\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      a.download = `clientes-barbertop-${hoyTxt()}.csv`; a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    }
+
+    // Ficha: historial del cliente
+    async function fichaCliente(id){
+      const c = clientes.find(x => x.id === id); if (!c) return;
+      const { data: hist } = await db.from('reservas').select('id,fecha,hora,inicio,fin,servicios,total,propina,estado,trabajador,metodo_pago,local_id,descuento_pct').eq('cliente_id', id).order('fecha', { ascending: false }).limit(60);
+      const tel = (c.telefono || '').replace(/\D/g, '');
+      $('ventanaDetalle').innerHTML = `<h3 style="font-size:18px;">${esc(c.nombre)} ${esc(c.apellido || '')}</h3>
+        <div class="det-fila"><span>WhatsApp</span><span>${esc(c.telefono || '—')}${c.whatsapp ? ' · acepta avisos' : ''}</span></div>
+        <div class="det-fila"><span>Correo</span><span>${esc(c.correo || '—')}</span></div>
+        <div class="det-fila"><span>Registrado</span><span>${(c.creado || '').slice(0, 10)} · ${c.origen === 'inscripcion' ? 'se inscribió en la web' : c.origen === 'panel' ? 'desde el panel' : 'al reservar online'}</span></div>
+        <div class="det-fila"><span>Visitas</span><span>${c.atendidas} atendidas · ${c.no_asistio} no asistió · ${c.canceladas} canceladas · ${clp(c.gastado)}</span></div>
+        <label class="check-linea" style="margin-top:10px;"><input type="checkbox" id="fPromos" ${c.acepta_promos ? 'checked' : ''}> Acepta recibir promociones</label>
+        <h3 style="margin-top:14px;">Historial</h3>
+        <div style="max-height:260px;overflow:auto;">${(hist || []).map(r => `<div class="det-fila" style="cursor:pointer;" onclick="abrirDetalle(${r.id})"><span>${fechaCorta(r.fecha)} ${aHora(rangoDe(r)[0])} · ${esc(r.servicios || '')} · ${esc(r.trabajador || '')}${r.descuento_pct ? ' · 🎁' + r.descuento_pct + '%' : ''}</span><span>${ESTADOS[r.estado] || r.estado}${r.total ? ' · ' + clp(r.total) : ''}</span></div>`).join('') || '<p class="nota">Sin reservas aún.</p>'}</div>
+        <div class="det-acciones">${tel ? `<a class="boton-linea" href="https://wa.me/${tel}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}
+          ${c.correo ? `<a class="boton-linea" href="mailto:${esc(c.correo)}">✉ Correo</a>` : ''}
+          <button class="boton" onclick="guardarFichaCliente(${c.id})">Guardar</button>
+          <button class="boton-linea" style="margin-left:auto;" onclick="cerrarDetalle()">Cerrar</button></div>
+        <p class="estado" id="estadoAccion"></p>`;
+      $('fondoDetalle').classList.remove('oculto');
+    }
+    async function guardarFichaCliente(id){
+      const { error } = await db.from('clientes').update({ acepta_promos: $('fPromos').checked, actualizado: new Date().toISOString() }).eq('id', id);
+      if (error) return estado('estadoAccion', 'Error: ' + error.message, 'error');
+      estado('estadoAccion', '✓ Guardado', 'ok'); cargarClientes();
+    }
+
+    // Mensajes a varios clientes. WhatsApp: uno por uno (WhatsApp no permite envíos masivos sin su API de pago).
+    // Correo: se abre Gmail con los destinatarios en copia oculta (CCO), en grupos de 40.
+    let envio = { tipo:'', lista:[], hechos:new Set() };
+    function abrirEnvio(tipo){
+      let l = destinatarios().filter(c => tipo === 'whatsapp' ? (c.telefono || '').replace(/\D/g, '').length >= 8 : !!c.correo);
+      envio = { tipo, lista: l, hechos: new Set(), soloPromos: true };
+      dibujarEnvio();
+      $('fondoDetalle').classList.remove('oculto');
+    }
+    function listaEnvio(){ return envio.lista.filter(c => !envio.soloPromos || c.acepta_promos); }
+    function dibujarEnvio(){
+      const wsp = envio.tipo === 'whatsapp', l = listaEnvio(), prev = { asunto: $('envAsunto')?.value, msg: $('envMsg')?.value };
+      const msg = prev.msg ?? (wsp ? 'Hola {nombre} 👋 Te escribimos de BarberTop: ' : 'Hola {nombre},\n\n');
+      $('ventanaDetalle').innerHTML = `<h3 style="font-size:18px;">${wsp ? '💬 Mensaje por WhatsApp' : '✉ Correo'} a ${l.length} cliente${l.length === 1 ? '' : 's'}</h3>
+        <label class="check-linea"><input type="checkbox" ${envio.soloPromos ? 'checked' : ''} onchange="envio.soloPromos = this.checked; dibujarEnvio()"> Solo a quienes aceptaron promociones
+          <span class="nota">(desmárcalo solo para avisos importantes, ej: cambio de horario)</span></label>
+        ${wsp ? '' : `<label for="envAsunto">Asunto</label><input id="envAsunto" value="${esc(prev.asunto ?? 'Novedades BarberTop')}">`}
+        <label for="envMsg">Mensaje ${wsp ? '— {nombre} se reemplaza por el nombre de cada cliente' : ''}</label>
+        <textarea id="envMsg" style="min-height:110px;">${esc(msg)}</textarea>
+        ${wsp ? `<p class="nota" style="margin:8px 0;">WhatsApp no permite mandar a muchos de una vez sin su servicio pagado: toca "Enviar" en cada uno (se abre WhatsApp con el mensaje listo) o usa "Abrir siguiente".</p>
+          <div class="det-acciones" style="margin-top:0;"><button class="boton" onclick="siguienteWsp()">▶ Abrir siguiente (${l.filter(c => !envio.hechos.has(c.id)).length} pendientes)</button></div>
+          <div style="max-height:240px;overflow:auto;">${l.map(c => `<div class="det-fila"><span>${envio.hechos.has(c.id) ? '✓ ' : ''}${esc(c.nombre)} ${esc(c.apellido || '')} · ${esc(c.telefono)}</span>
+            <span><a class="link" href="#" onclick="event.preventDefault(); enviarWsp(${c.id})">Enviar</a></span></div>`).join('')}</div>`
+        : `<p class="nota" style="margin:8px 0;">Se abre Gmail con los correos en copia oculta (nadie ve los correos de los demás). En correos grupales no se puede poner el nombre de cada uno.</p>
+          <div class="det-acciones" style="margin-top:0;flex-wrap:wrap;">${[...Array(Math.ceil(l.length / 40))].map((_, i) =>
+            `<button class="boton${envio.hechos.has(i) ? '-linea' : ''}" onclick="enviarCorreo(${i})">${envio.hechos.has(i) ? '✓ ' : ''}Abrir Gmail · grupo ${i + 1} (${Math.min(40, l.length - i * 40)})</button>`).join('')}
+            <button class="boton-linea" onclick="copiarCorreos()">Copiar correos</button></div>`}
+        <div class="det-acciones"><button class="boton-linea" style="margin-left:auto;" onclick="cerrarDetalle()">Cerrar</button></div>
+        <p class="estado" id="estadoAccion"></p>`;
+    }
+    function textoPara(c){ return ($('envMsg').value || '').replace(/\{nombre\}/g, c.nombre); }
+    function enviarWsp(id){
+      const c = envio.lista.find(x => x.id === id); if (!c) return;
+      let d = c.telefono.replace(/\D/g, ''); if (d.length === 9 && d[0] === '9') d = '56' + d;
+      window.open(`https://wa.me/${d}?text=${encodeURIComponent(textoPara(c))}`, '_blank', 'noopener');
+      envio.hechos.add(id); dibujarEnvio();
+    }
+    function siguienteWsp(){ const c = listaEnvio().find(x => !envio.hechos.has(x.id)); if (c) enviarWsp(c.id); else estado('estadoAccion', '✓ Ya abriste todos.', 'ok'); }
+    function enviarCorreo(i){
+      const l = listaEnvio().slice(i * 40, i * 40 + 40), cuerpo = ($('envMsg').value || '').replace(/\{nombre\}/g, '').replace(/Hola ,/g, 'Hola,');
+      const url = 'https://mail.google.com/mail/?view=cm&fs=1&bcc=' + encodeURIComponent(l.map(c => c.correo).join(',')) +
+                  '&su=' + encodeURIComponent($('envAsunto').value) + '&body=' + encodeURIComponent(cuerpo + '\n\n—\nBarberTop · Si no quieres recibir más correos, respóndenos "BAJA".');
+      window.open(url, '_blank', 'noopener'); envio.hechos.add(i); dibujarEnvio();
+    }
+    async function copiarCorreos(){
+      try { await navigator.clipboard.writeText(listaEnvio().map(c => c.correo).join(', ')); estado('estadoAccion', '✓ Correos copiados', 'ok'); }
+      catch(e) { estado('estadoAccion', 'No se pudo copiar', 'error'); }
     }
 
     // ================= MI HORARIO (trabajador) =================
