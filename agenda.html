@@ -180,6 +180,14 @@
     .item-res b { color:var(--voltaje); }
     .acciones { display:grid; gap:10px; margin-top:16px; }
     .acciones a { text-decoration:none; text-align:center; display:block; }
+    .promo { display:flex; align-items:center; gap:14px; background:linear-gradient(120deg, rgba(255,122,47,0.18), rgba(255,122,47,0.04)); border:1px solid rgba(255,122,47,0.4);
+             border-radius:16px; padding:14px 16px; margin-bottom:18px; cursor:pointer; color:var(--hueso); text-align:left; width:100%; }
+    .promo .pct { font-size:26px; font-weight:900; color:var(--voltaje); line-height:1; flex-shrink:0; }
+    .promo b { display:block; font-size:15px; }
+    .promo span.s { color:var(--gris); font-size:12.5px; }
+    .promo.ok { background:rgba(74,222,128,0.08); border-color:rgba(74,222,128,0.35); cursor:default; }
+    .promo.ok .pct { color:var(--verde); }
+    .descuento { color:var(--verde); font-weight:700; }
     footer { text-align:center; color:var(--gris); font-size:12px; margin-top:36px; }
     footer a { color:var(--gris); }
 
@@ -221,6 +229,24 @@
         <button class="boton" onclick="buscarMisReservas()">Ver mis reservas</button>
       </div>
       <div id="misLista"></div>
+    </div>
+
+    <div id="vistaInsc" class="oculto">
+      <button class="volver" onclick="volverDeMis()">← Volver</button>
+      <h2>Inscríbete y recibe 10% en tu primera visita</h2>
+      <p class="ayuda">Déjanos tus datos: el descuento se aplica solo cuando reserves con este mismo WhatsApp.</p>
+      <div class="tarjeta">
+        <div class="fila2">
+          <div class="campo"><label class="lbl" for="iNombre">Nombre</label><input id="iNombre" autocomplete="given-name" placeholder="Tu nombre"></div>
+          <div class="campo"><label class="lbl" for="iApellido">Apellido</label><input id="iApellido" autocomplete="family-name" placeholder="Tu apellido"></div>
+        </div>
+        <div class="campo"><label class="lbl" for="iCorreo">Correo</label><input id="iCorreo" type="email" autocomplete="email" autocapitalize="off" placeholder="tu@gmail.com"></div>
+        <div class="campo"><label class="lbl" for="iTel">WhatsApp</label>
+          <div class="junto"><select id="iCod" onchange="if (this.value !== '+56' && $('iTel').value.trim() === '9') $('iTel').value = ''"></select><input id="iTel" type="tel" inputmode="tel" value="9 " placeholder="9 1234 5678"></div></div>
+        <label class="check"><input type="checkbox" id="iPromos" checked><span>Quiero recibir promociones y descuentos de BarberTop</span></label>
+        <button class="boton" id="btnInsc" onclick="inscribirme()">Inscribirme</button>
+        <p class="estado" id="estadoInsc"></p>
+      </div>
     </div>
 
     <footer>Agenda online · <a href="panel.html">Acceso equipo</a></footer>
@@ -294,6 +320,7 @@
       else if (CFG.locales.length === 1) { LOCAL = CFG.locales[0].id; paso = 2; }
       history.replaceState({ paso, i: 0 }, '');
       dibujar();
+      if (new URLSearchParams(location.search).has('inscribete')) verInscripcion();   // link directo: agenda.html?inscribete
     }
 
     // ---------- NAVEGACIÓN ENTRE CAPAS ----------
@@ -365,9 +392,41 @@
       b.classList.add('ver');
     }
 
+    // ---------- INSCRIPCIÓN: 10% en la primera visita ----------
+    function bannerPromo(){
+      if (leerLocal('clipperlab-inscrito')) return `<div class="promo ok"><span class="pct">✓</span><span><b>Estás inscrito</b><span class="s">Tu 10% de primera visita se aplica solo al reservar con tu WhatsApp.</span></span></div>`;
+      return `<button class="promo" onclick="verInscripcion()"><span class="pct">10%</span><span><b>¿Primera vez? Inscríbete y obtén 10% en tu primera visita</b><span class="s">Toma 20 segundos · Toca aquí</span></span></button>`;
+    }
+    function verInscripcion(){
+      $('asistente').classList.add('oculto'); $('vistaListo').classList.add('oculto'); $('vistaMis').classList.add('oculto'); $('vistaInsc').classList.remove('oculto'); barra(null);
+      if (!$('iCod').options.length) $('iCod').innerHTML = PAISES.map(([v, t]) => `<option value="${v}">${t}</option>`).join('');
+      if (!misAbierto){ misAbierto = true; empujar({ insc:true }); }
+      window.scrollTo({ top:0 });
+    }
+    async function inscribirme(){
+      const est = $('estadoInsc'), cod = $('iCod').value, dig = $('iTel').value.replace(/\D/g, '');
+      const p = { nombre: $('iNombre').value.trim(), apellido: $('iApellido').value.trim(), correo: $('iCorreo').value.trim(),
+                  telefono: cod === '+56' ? `+56 ${dig.slice(0,1)} ${dig.slice(1,5)} ${dig.slice(5)}` : `${cod} ${dig}`, promos: $('iPromos').checked };
+      if (!p.nombre || !p.apellido){ est.textContent = 'Escribe tu nombre y apellido.'; return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(p.correo)){ est.textContent = 'Revisa tu correo.'; return; }
+      if (cod === '+56' ? !/^9\d{8}$/.test(dig) : dig.length < 6){ est.textContent = 'Revisa tu WhatsApp (9 dígitos, parte con 9).'; return; }
+      $('btnInsc').disabled = true; est.style.color = 'var(--gris)'; est.textContent = 'Inscribiendo…';
+      const { data, error } = await db.rpc('inscribir_cliente', { p });
+      $('btnInsc').disabled = false; est.style.color = '';
+      if (error){ est.textContent = error.message; return; }
+      guardarLocal('clipperlab-inscrito', true);
+      const [us, dom] = p.correo.split('@');
+      guardarLocal('clipperlab-cliente', { ...(leerLocal('clipperlab-cliente') || {}), nombre: p.nombre, apellido: p.apellido,
+        email: DOMINIOS.includes('@' + dom) ? us : p.correo, dominio: DOMINIOS.includes('@' + dom) ? '@' + dom : 'otro', cod, tel: $('iTel').value, promos: p.promos });
+      datosCliente = leerLocal('clipperlab-cliente') || {};
+      $('vistaInsc').querySelector('.tarjeta').innerHTML = `<div class="listo"><div class="ok">✓</div><h2>${data.beneficio ? '¡Listo! Tienes 10% en tu primera visita' : '¡Datos actualizados!'}</h2>
+        <p class="ayuda">${data.beneficio ? 'Se aplica automáticamente cuando reserves con este WhatsApp.' : 'Como ya te has atendido con nosotros, el 10% de primera visita no aplica, pero te llegarán nuestras promociones.'}</p>
+        <button class="boton" onclick="volverDeMis()">Reservar ahora</button></div>`;
+    }
+
     // ---------- 1) SUCURSAL ----------
     function capaSucursal(){
-      $('vista').innerHTML = `<h2>¿Dónde te quieres atender?</h2><p class="ayuda">Elige la barbería. Cada local tiene su propio equipo y precios.</p>
+      $('vista').innerHTML = bannerPromo() + `<h2>¿Dónde te quieres atender?</h2><p class="ayuda">Elige la barbería. Cada local tiene su propio equipo y precios.</p>
         <div class="locales">${CFG.locales.map(l => {
           const nb = CFG.trabajadores.filter(t => t.local_id === l.id).length;
           const mapa = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('BarberTop ' + (l.direccion || l.nombre));
@@ -559,6 +618,8 @@
             <div class="junto"><select id="fCod" onchange="cambiarPais()">${PAISES.map(([v, t]) => `<option value="${v}" ${v === cod ? 'selected' : ''}>${t}</option>`).join('')}</select>
               <input id="fTel" type="tel" inputmode="tel" autocomplete="tel-national" value="${esc(d.tel ?? (cod === '+56' ? '9 ' : ''))}" placeholder="${cod === '+56' ? '9 1234 5678' : 'Número'}" oninput="formatoTel()"></div></div>
           <label class="check"><input type="checkbox" id="fWsp" ${d.wsp === false ? '' : 'checked'}><span>Quiero recibir la confirmación y recordatorios por <b>WhatsApp</b></span></label>
+          <label class="check"><input type="checkbox" id="fPromos" ${d.promos ? 'checked' : ''}><span>Quiero recibir promociones y descuentos</span></label>
+          ${leerLocal('clipperlab-inscrito') ? '<p class="nota" style="margin:-6px 0 12px;">🎁 Si es tu primera visita, tu 10% se aplica al confirmar.</p>' : ''}
           <div class="campo"><label class="lbl" for="fObs">Observaciones (opcional)</label><textarea id="fObs" placeholder="Ej: degradado bajo, dejar largo arriba…">${esc(d.obs || '')}</textarea></div>
           <label class="lbl">Foto del corte que quieres (opcional)</label>
           <label class="subir" id="subir">${cajaFoto()}<input type="file" accept="image/*" class="oculto" onchange="cargarFoto(this.files[0])"></label>
@@ -631,7 +692,7 @@
     }
     function leerFormulario(){
       datosCliente = { nombre: $('fNombre').value.trim(), apellido: $('fApellido').value.trim(), email: $('fEmail').value.trim(),
-        dominio: $('fDominio').value, cod: $('fCod').value, tel: $('fTel').value, wsp: $('fWsp').checked, obs: $('fObs').value.trim(),
+        dominio: $('fDominio').value, cod: $('fCod').value, tel: $('fTel').value, wsp: $('fWsp').checked, promos: $('fPromos').checked, obs: $('fObs').value.trim(),
         acomp: [...document.querySelectorAll('.acomp')].map(x => x.value.trim()) };
       return datosCliente;
     }
@@ -654,7 +715,7 @@
 
       $('btnReservar').disabled = true; est.style.color = 'var(--gris)'; est.textContent = "Reservando…";
       const nombre = `${d.nombre} ${d.apellido}`;
-      const payload = { nombre, correo, telefono: tel.texto, mensaje: d.obs, whatsapp: d.wsp, foto,
+      const payload = { nombre, nombre_pila: d.nombre, apellido: d.apellido, correo, telefono: tel.texto, mensaje: d.obs, whatsapp: d.wsp, promos: d.promos, foto,
         personas: citas.map((c, i) => ({ nombre: i === 0 ? nombre : d.acomp[i-1], servicios: c.servicios, trabajador_id: c.tid, fecha: c.fecha, hora: aHora(c.t) })) };
       const { data, error } = await db.rpc('reservar_grupo', { p: payload });
       $('btnReservar').disabled = false; est.style.color = '';
@@ -689,7 +750,7 @@
       $('vistaListo').classList.remove('oculto');
       $('vistaListo').innerHTML = `<div class="listo"><div class="ok">✓</div><h2>¡Reserva confirmada!</h2>
         <p class="ayuda" style="margin-bottom:6px;">Te esperamos en <b style="color:var(--hueso)">${esc(l.nombre)}</b> · ${esc(l.direccion || '')}${l.referencia ? ' · ' + esc(l.referencia) : ''}</p></div>
-        ${data.map(r => `<div class="item-res"><b>${fechaLinda(r.fecha)} · ${esc(r.desde)} – ${esc(r.hasta)}</b> · ${esc(r.nombre)}<br>${esc(r.servicios)} con ${esc(r.trabajador)} · ${clp(r.total)}</div>`).join('')}
+        ${data.map(r => `<div class="item-res"><b>${fechaLinda(r.fecha)} · ${esc(r.desde)} – ${esc(r.hasta)}</b> · ${esc(r.nombre)}<br>${esc(r.servicios)} con ${esc(r.trabajador)} · ${clp(r.total)}${r.descuento ? ` <span class="descuento">🎁 ${r.descuento}% primera visita aplicado</span>` : ''}</div>`).join('')}
         <div class="total" style="margin-top:14px;"><div><small>Total</small><strong>${clp(data.reduce((a,r)=>a+r.total,0))}</strong></div><div style="text-align:right;"><small>Se paga en el local</small></div></div>
         <div class="acciones">
           <a class="boton sec" href="${cal}" target="_blank" rel="noopener">📅 Agregar a mi calendario</a>
@@ -702,7 +763,7 @@
 
     // ---------- MIS RESERVAS ----------
     function verMisReservas(){
-      $('asistente').classList.add('oculto'); $('vistaListo').classList.add('oculto'); $('vistaMis').classList.remove('oculto'); barra(null);
+      $('asistente').classList.add('oculto'); $('vistaListo').classList.add('oculto'); $('vistaInsc').classList.add('oculto'); $('vistaMis').classList.remove('oculto'); barra(null);
       const d = leerLocal('clipperlab-cliente');
       if (d && !$('misCorreo').value){
         $('misCorreo').value = d.email ? (d.email.includes('@') || d.dominio === 'otro' ? d.email : d.email + d.dominio) : '';
@@ -713,7 +774,7 @@
     function volverDeMis(){ if (empujados > 0) history.back(); else cerrarMisReservas(); }
     function cerrarMisReservas(){
       misAbierto = false;
-      $('vistaMis').classList.add('oculto');
+      $('vistaMis').classList.add('oculto'); $('vistaInsc').classList.add('oculto');
       if (reservado) $('vistaListo').classList.remove('oculto');
       else { $('asistente').classList.remove('oculto'); dibujar(true); }
     }
