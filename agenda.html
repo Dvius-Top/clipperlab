@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="google" content="notranslate">
-  <title>Reserva tu hora — BarberTop</title>
+  <title>Reserva tu hora — ClipperLab</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root { --fondo:#111318; --panel:#1b1e25; --panel2:#232730; --borde:rgba(255,255,255,0.09); --hueso:#f1eee8; --voltaje:#ff7a2f;
@@ -205,7 +205,7 @@
 <body>
   <header>
     <div class="caja cab">
-      <div class="marca">Barber<span>Top</span></div>
+      <a class="marca" id="marca" href="index.html" style="color:inherit;text-decoration:none;" title="Volver al inicio">Clipper<span>Lab</span></a>
       <button class="cab-link" onclick="verMisReservas()">Mis reservas</button>
     </div>
   </header>
@@ -243,13 +243,13 @@
         <div class="campo"><label class="lbl" for="iCorreo">Correo</label><input id="iCorreo" type="email" autocomplete="email" autocapitalize="off" placeholder="tu@gmail.com"></div>
         <div class="campo"><label class="lbl" for="iTel">WhatsApp</label>
           <div class="junto"><select id="iCod" onchange="if (this.value !== '+56' && $('iTel').value.trim() === '9') $('iTel').value = ''"></select><input id="iTel" type="tel" inputmode="tel" value="9 " placeholder="9 1234 5678"></div></div>
-        <label class="check"><input type="checkbox" id="iPromos" checked><span>Quiero recibir promociones y descuentos de BarberTop</span></label>
+        <label class="check"><input type="checkbox" id="iPromos" checked><span>Quiero recibir promociones y descuentos de <span class="nombreNeg">ClipperLab</span></span></label>
         <button class="boton" id="btnInsc" onclick="inscribirme()">Inscribirme</button>
         <p class="estado" id="estadoInsc"></p>
       </div>
     </div>
 
-    <footer>Agenda online · <a href="panel.html">Acceso equipo</a></footer>
+    <footer>Agenda online <span id="creditos"></span> · <a href="panel.html">Acceso equipo</a></footer>
   </main>
 
   <div class="barra" id="barra"><div class="caja"><div class="barra-txt" id="barraTxt"></div><button class="boton" id="barraBtn">Continuar</button></div></div>
@@ -257,6 +257,11 @@
   <script>
     const SUPABASE_URL = "https://ugchyfulwkzmxwqjwkwp.supabase.co";
     const SUPABASE_KEY = "sb_publishable__WRIUNVBq6-nxTAwPD360g_5UICkBn_";
+    // ¿De qué barbería es esta agenda?  agenda.html?b=link-del-negocio  (sin link = negocio principal)
+    const QS = new URLSearchParams(location.search);
+    const SLUG = (QS.get('b') || QS.get('negocio') || '').trim().toLowerCase();
+    const PRINCIPAL = 'clipperlab';                 // el aviso por Formspree y el link a la página de inicio son solo del principal
+    const K_INSCRITO = 'clipperlab-inscrito' + (SLUG && SLUG !== PRINCIPAL ? '-' + SLUG : '');
 
     const PASO_MIN = 15;          // las horas se ofrecen cada 15 minutos
     const MAX_PERSONAS = 3;
@@ -307,9 +312,22 @@
 
     // ---------- CARGA ----------
     async function iniciar(){
-      const { data, error } = await db.rpc('agenda_config');
-      if (error){ $('vista').innerHTML = `<p class="aviso">No pudimos cargar la agenda: ${esc(error.message)}</p>`; return; }
+      const { data, error } = await db.rpc('agenda_config', { p_negocio: SLUG || null });
+      if (error){
+        $('vista').innerHTML = (error.message || '').includes('NEGOCIO_NO_EXISTE')
+          ? '<div class="vacio" style="margin-top:20px;">Esta agenda no existe. Revisa el link que te enviaron.</div>'
+          : `<p class="aviso">No pudimos cargar la agenda: ${esc(error.message)}</p>`;
+        $('stepper').innerHTML = ''; return;
+      }
+      if (data.suspendido){
+        pintarMarca(data.negocio || {});
+        $('stepper').innerHTML = '';
+        $('vista').innerHTML = `<div class="vacio" style="margin-top:20px;">La agenda online de <b>${esc(data.negocio?.nombre || '')}</b> no está disponible por ahora.
+          ${data.negocio?.whatsapp ? `<br><br><a class="boton" style="display:inline-block;width:auto;text-decoration:none;" href="https://wa.me/${esc(data.negocio.whatsapp.replace(/\D/g, ''))}">Escríbenos por WhatsApp</a>` : ''}</div>`;
+        return;
+      }
       CFG = data;
+      pintarMarca(CFG.negocio || {});
       CFG.locales = CFG.locales || [];
       CFG.trabajadores.forEach(t => t.servicios = t.servicios || []);
       datosCliente = leerLocal('clipperlab-cliente') || {};
@@ -322,6 +340,25 @@
       dibujar();
       if (new URLSearchParams(location.search).has('inscribete')) verInscripcion();   // link directo: agenda.html?inscribete
     }
+
+    // Nombre, logo y color de la barbería dueña de esta agenda
+    function pintarMarca(n){
+      const nombre = n.nombre || 'ClipperLab';
+      document.title = 'Reserva tu hora — ' + nombre;
+      const m = $('marca');
+      if (n.logo_url) m.innerHTML = `<img src="${esc(n.logo_url)}" alt="${esc(nombre)}" style="height:34px;vertical-align:middle;">`;
+      else if (nombre === 'ClipperLab') m.innerHTML = 'Clipper<span>Lab</span>';
+      else m.textContent = nombre;
+      if ((n.slug || PRINCIPAL) !== PRINCIPAL){ m.removeAttribute('href'); m.removeAttribute('title'); m.style.cursor = 'default'; }
+      document.querySelectorAll('.nombreNeg').forEach(e => e.textContent = nombre);
+      if (/^#[0-9a-f]{6}$/i.test(n.color || '')){
+        const c = n.color, r = parseInt(c.slice(1,3),16), g = parseInt(c.slice(3,5),16), b = parseInt(c.slice(5,7),16);
+        document.documentElement.style.setProperty('--voltaje', c);
+        document.documentElement.style.setProperty('--voltaje-suave', `rgba(${r},${g},${b},0.13)`);
+      }
+      $('creditos').innerHTML = (n.slug || PRINCIPAL) !== PRINCIPAL ? '· con <a href="index.html" style="color:inherit;">ClipperLab</a>' : '';
+    }
+    const nombreNegocio = () => CFG.negocio?.nombre || 'ClipperLab';
 
     // ---------- NAVEGACIÓN ENTRE CAPAS ----------
     // Cada capa queda en el historial: el botón "atrás" del teléfono vuelve una capa (no se sale de la página)
@@ -343,6 +380,8 @@
         draft = citas.pop(); paso = 4;
       } else if (paso === 5){
         draft = citas.pop(); paso = 4;
+      } else if (paso === 4 && aptos(draft.servicios).length === 1){
+        paso = 2;
       } else if (paso > 1){
         paso--;
       }
@@ -394,7 +433,7 @@
 
     // ---------- INSCRIPCIÓN: 10% en la primera visita ----------
     function bannerPromo(){
-      if (leerLocal('clipperlab-inscrito')) return `<div class="promo ok"><span class="pct">✓</span><span><b>Estás inscrito</b><span class="s">Tu 10% de primera visita se aplica solo al reservar con tu WhatsApp.</span></span></div>`;
+      if (leerLocal(K_INSCRITO)) return `<div class="promo ok"><span class="pct">✓</span><span><b>Estás inscrito</b><span class="s">Tu 10% de primera visita se aplica solo al reservar con tu WhatsApp.</span></span></div>`;
       return `<button class="promo" onclick="verInscripcion()"><span class="pct">10%</span><span><b>¿Primera vez? Inscríbete y obtén 10% en tu primera visita</b><span class="s">Toma 20 segundos · Toca aquí</span></span></button>`;
     }
     function verInscripcion(){
@@ -411,10 +450,11 @@
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(p.correo)){ est.textContent = 'Revisa tu correo.'; return; }
       if (cod === '+56' ? !/^9\d{8}$/.test(dig) : dig.length < 6){ est.textContent = 'Revisa tu WhatsApp (9 dígitos, parte con 9).'; return; }
       $('btnInsc').disabled = true; est.style.color = 'var(--gris)'; est.textContent = 'Inscribiendo…';
+      p.negocio = SLUG || null;
       const { data, error } = await db.rpc('inscribir_cliente', { p });
       $('btnInsc').disabled = false; est.style.color = '';
       if (error){ est.textContent = error.message; return; }
-      guardarLocal('clipperlab-inscrito', true);
+      guardarLocal(K_INSCRITO, true);
       const [us, dom] = p.correo.split('@');
       guardarLocal('clipperlab-cliente', { ...(leerLocal('clipperlab-cliente') || {}), nombre: p.nombre, apellido: p.apellido,
         email: DOMINIOS.includes('@' + dom) ? us : p.correo, dominio: DOMINIOS.includes('@' + dom) ? '@' + dom : 'otro', cod, tel: $('iTel').value, promos: p.promos });
@@ -429,7 +469,7 @@
       $('vista').innerHTML = bannerPromo() + `<h2>¿Dónde te quieres atender?</h2><p class="ayuda">Elige la barbería. Cada local tiene su propio equipo y precios.</p>
         <div class="locales">${CFG.locales.map(l => {
           const nb = CFG.trabajadores.filter(t => t.local_id === l.id).length;
-          const mapa = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('BarberTop ' + (l.direccion || l.nombre));
+          const mapa = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(l.direccion || l.nombre);
           return `<button class="local ${l.id === LOCAL ? 'sel' : ''}" onclick="elegirLocal(${l.id})">
             <div class="local-ic">📍</div><b>${esc(l.nombre)}</b>
             <div class="dir">${esc(l.direccion || '')}</div>
@@ -466,7 +506,13 @@
     function barraServicio(){
       const k = draft.servicios.length;
       barra({ html: k ? `<b>${clp(totalDe(draft))}</b>${k} ${k === 1 ? 'servicio' : 'servicios'} · ${durDe(draft)} min` : '<b>Elige un servicio</b>Toca una tarjeta para agregarla',
-              boton: 'Continuar →', deshabilitado: !k, accion: () => avanzar(3) });
+              boton: 'Continuar →', deshabilitado: !k, accion: siguienteDeServicio });
+    }
+    // Si solo un profesional puede atender (ej: barbero independiente), se salta la elección de barbero
+    function siguienteDeServicio(){
+      const a = aptos(draft.servicios);
+      if (a.length === 1){ if (draft.eleccion !== a[0].id){ draft.t = null; draft.tid = null; } draft.eleccion = a[0].id; avanzar(4); }
+      else avanzar(3);
     }
     function elegirPersonas(k){ n = k; dibujar(); }
     function toggleServicio(id){
@@ -516,7 +562,7 @@
       if (draft.fecha && !dias.some(f => fechaTexto(f) === draft.fecha)) dias.push(deTexto(draft.fecha));
       if (!draft.fecha){ const primero = dias.find(f => trabaja(f.getDay())); if (primero) draft.fecha = fechaTexto(primero); }
       const top = (f, i) => i === 0 && fechaTexto(f) === hoyTxt() ? 'Hoy' : i === 1 ? 'Mañana' : f.toLocaleDateString('es-CL', { weekday:'short' }).replace('.', '');
-      $('vista').innerHTML = `<button class="volver" onclick="atras()">← Volver a barberos</button>
+      $('vista').innerHTML = `<button class="volver" onclick="atras()">${aptos(draft.servicios).length === 1 ? "← Volver a servicios" : "← Volver a barberos"}</button>
         <h2>Elige fecha y hora</h2><p class="ayuda">${draft.eleccion === AUTO ? 'Te asignamos al barbero con menos reservas ese día; si está ocupado a esa hora, pasa al siguiente.' : 'Horas libres de ' + esc(nombreTrab(draft.eleccion)) + '.'}</p>
         <div class="dias" id="dias">${dias.map((f, i) => {
           const ft = fechaTexto(f), abre = trabaja(f.getDay());
@@ -539,7 +585,7 @@
     async function cargarHoras(){
       alertaHoras('Buscando horas libres…');
       const fecha = draft.fecha;
-      const { data, error } = await db.rpc('ocupacion', { p_fecha: fecha });
+      const { data, error } = await db.rpc('ocupacion', { p_fecha: fecha, p_negocio: SLUG || null });
       if (fecha !== draft.fecha || paso !== 4) return;           // cambió de día mientras cargaba
       if (error){ $('horas').innerHTML = `<p class="aviso">Error: ${esc(error.message)}</p>`; return; }
       // Ocupado = reservas y bloqueos + las horas que ya elegiste para las otras personas
@@ -619,7 +665,7 @@
               <input id="fTel" type="tel" inputmode="tel" autocomplete="tel-national" value="${esc(d.tel ?? (cod === '+56' ? '9 ' : ''))}" placeholder="${cod === '+56' ? '9 1234 5678' : 'Número'}" oninput="formatoTel()"></div></div>
           <label class="check"><input type="checkbox" id="fWsp" ${d.wsp === false ? '' : 'checked'}><span>Quiero recibir la confirmación y recordatorios por <b>WhatsApp</b></span></label>
           <label class="check"><input type="checkbox" id="fPromos" ${d.promos ? 'checked' : ''}><span>Quiero recibir promociones y descuentos</span></label>
-          ${leerLocal('clipperlab-inscrito') ? '<p class="nota" style="margin:-6px 0 12px;">🎁 Si es tu primera visita, tu 10% se aplica al confirmar.</p>' : ''}
+          ${leerLocal(K_INSCRITO) ? '<p class="nota" style="margin:-6px 0 12px;">🎁 Si es tu primera visita, tu 10% se aplica al confirmar.</p>' : ''}
           <div class="campo"><label class="lbl" for="fObs">Observaciones (opcional)</label><textarea id="fObs" placeholder="Ej: degradado bajo, dejar largo arriba…">${esc(d.obs || '')}</textarea></div>
           <label class="lbl">Foto del corte que quieres (opcional)</label>
           <label class="subir" id="subir">${cajaFoto()}<input type="file" accept="image/*" class="oculto" onchange="cargarFoto(this.files[0])"></label>
@@ -717,6 +763,7 @@
       const nombre = `${d.nombre} ${d.apellido}`;
       const payload = { nombre, nombre_pila: d.nombre, apellido: d.apellido, correo, telefono: tel.texto, mensaje: d.obs, whatsapp: d.wsp, promos: d.promos, foto,
         personas: citas.map((c, i) => ({ nombre: i === 0 ? nombre : d.acomp[i-1], servicios: c.servicios, trabajador_id: c.tid, fecha: c.fecha, hora: aHora(c.t) })) };
+      payload.negocio = SLUG || null;
       const { data, error } = await db.rpc('reservar_grupo', { p: payload });
       $('btnReservar').disabled = false; est.style.color = '';
       if (error){
@@ -730,7 +777,7 @@
       guardarLocal('clipperlab-cliente', { ...d, obs:'', acomp:[] });
       const l = localSel();
       const detalle = data.map(r => `${r.nombre}: ${r.servicios} con ${r.trabajador} ${r.fecha} ${r.desde}-${r.hasta} (${clp(r.total)})`).join('\n');
-      try {
+      if ((CFG.negocio?.slug || PRINCIPAL) === PRINCIPAL) try {
         await fetch("https://formspree.io/f/xzezawgo", { method:"POST", headers:{ "Content-Type":"application/json", "Accept":"application/json" },
           body: JSON.stringify({ _subject:`Nueva reserva ${l.nombre} (${data.length} persona${data.length>1?'s':''})`, local: l.nombre, reservas: detalle,
             total: clp(data.reduce((a,r)=>a+r.total,0)), nombre, correo, telefono: tel.texto, whatsapp: d.wsp ? 'sí' : 'no', observaciones: d.obs, foto: foto ? 'sí (ver en el panel)' : 'no' }) });
@@ -741,10 +788,10 @@
     function mostrarConfirmacion(data){
       const l = localSel(), r0 = data[0];
       const f = (fe, h) => fe.replace(/-/g, '') + 'T' + h.replace(':', '') + '00';
-      const cal = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent('BarberTop ' + l.nombre + ' · ' + r0.servicios) +
+      const cal = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(nombreNegocio() + ' ' + l.nombre + ' · ' + r0.servicios) +
         '&dates=' + f(r0.fecha, r0.desde) + '/' + f(r0.fecha, r0.hasta) + '&ctz=America/Santiago&location=' + encodeURIComponent(l.direccion || l.nombre) +
         '&details=' + encodeURIComponent('Con ' + r0.trabajador + '. Se paga en el local.');
-      const mapa = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('BarberTop ' + (l.direccion || l.nombre));
+      const mapa = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(l.direccion || l.nombre);
       barra(null); reservado = true;
       $('asistente').classList.add('oculto');
       $('vistaListo').classList.remove('oculto');
@@ -783,7 +830,7 @@
       const correo = $('misCorreo').value.trim(), tel = $('misTelefono').value.trim();
       if (!correo || tel.replace(/\D/g,'').length < 8){ cont.innerHTML = '<p class="aviso">Escribe tu correo y teléfono.</p>'; return; }
       cont.innerHTML = '<p class="nota">Buscando…</p>';
-      const { data, error } = await db.rpc('mis_reservas', { p_correo: correo, p_telefono: tel });
+      const { data, error } = await db.rpc('mis_reservas', { p_correo: correo, p_telefono: tel, p_negocio: SLUG || null });
       if (error){ cont.innerHTML = `<p class="aviso">Error: ${esc(error.message)}</p>`; return; }
       if (!data.length){ cont.innerHTML = '<div class="vacio">No encontramos reservas próximas con esos datos.</div>'; return; }
       const est = { confirmada:'Confirmada', en_atencion:'En atención', completada:'Atendida', cancelada:'Cancelada', no_asistio:'No asistió' };
