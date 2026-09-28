@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <!-- Conexión a la base de datos (para la inscripción de clientes) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600&family=Anton&display=swap" rel="stylesheet">
  
   <style>
  
@@ -129,6 +129,48 @@
       color: var(--gris); font-size: 14px;
       border-top: 1px solid rgba(255,255,255,0.08);
     }
+    /* ---- PIE DE PÁGINA (negro con trama de rombos, acento naranja ClipperLab) ---- */
+    .pie-bt {
+      --oro: var(--voltaje); --oro-claro: #ffb07f;
+      background-color: #070707;
+      background-image:
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.035) 0 2px, transparent 2px 26px),
+        repeating-linear-gradient(-45deg, rgba(255,255,255,0.035) 0 2px, transparent 2px 26px);
+      border-top: 1px solid rgba(255,122,47,0.35);
+      padding: 60px 0 0; color: #d8d3c8; text-align: left;
+    }
+    .pie-bt .marca { text-align: center; margin-bottom: 44px; }
+    .pie-bt .marca b { font-family: 'Space Grotesk', sans-serif; font-size: 52px; letter-spacing: 2px; color: #f3efe6; font-weight: 700; }
+    .pie-bt .marca b span { color: var(--voltaje); }
+    .pie-bt .marca small { display: block; font-size: 12px; letter-spacing: 5px; color: #9a948a; margin-top: 4px; }
+    .pie-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+    .pie-cols h4 { font-family: 'Anton', sans-serif; font-weight: 400; font-size: 20px; letter-spacing: 3px; text-transform: uppercase; color: #f3efe6; margin-bottom: 18px; }
+    .pie-cols a, .pie-cols button.pie-link { display: block; color: #bdb6a8; text-decoration: none; font-size: 15px; margin-bottom: 10px;
+      background: none; border: none; padding: 0; cursor: pointer; font-family: 'Inter', sans-serif; text-align: left; }
+    .pie-cols a:hover, .pie-cols button.pie-link:hover { color: var(--oro-claro); }
+    .pie-cols .local { margin-bottom: 18px; }
+    .pie-cols .local b { color: #f3efe6; font-size: 15px; display: block; }
+    .pie-cols .local a { margin: 0; line-height: 1.6; }
+    .pie-cols .etq { font-size: 11px; letter-spacing: 3px; color: #8d877c; text-transform: uppercase; margin: 16px 0 2px; }
+    .pie-cols .fono { color: #f3efe6; font-weight: 600; }
+    .redes { display: flex; gap: 12px; margin-top: 22px; }
+    .redes a { width: 46px; height: 46px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin: 0;
+               border: 1px solid rgba(255,255,255,0.15); transition: transform .2s; }
+    .redes a:hover { transform: translateY(-3px); }
+    .redes svg { width: 22px; height: 22px; fill: #fff; }
+    .redes .ig { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285AEB 90%); border: none; }
+    .redes .tk { background: #000; }
+    .redes .fb { background: #1877f2; border: none; }
+    .pie-final { margin-top: 50px; border-top: 1px solid rgba(255,255,255,0.08); padding: 18px 24px; text-align: center; font-size: 12.5px; color: #8d877c; }
+    .pie-final a { color: #bdb6a8; }
+    @media (max-width: 720px) {
+      .pie-cols { grid-template-columns: 1fr; gap: 28px; text-align: center; }
+      .pie-cols a, .pie-cols button.pie-link { text-align: center; width: 100%; }
+      .redes { justify-content: center; }
+      .pie-cols .redes a { width: 46px; }
+      .pie-bt .marca b { font-size: 36px; letter-spacing: 6px; }
+    }
+
     /* Enlaces del pie de página */
     .footer-links { margin-top: 12px; display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
     .footer-links button {
@@ -359,7 +401,7 @@
         <p>Venta de máquinas, mantención de sillones y equipos, e instalación integral para locales nuevos o remodelaciones.</p>
         <div style="display:flex; gap:12px; flex-wrap:wrap;">
           <button class="boton" onclick="mostrar('contacto')">Solicitar asesoría</button>
-          <a class="boton boton-linea" href="agenda.html">Reserva tu hora en BarberTop</a>
+          <a class="boton boton-linea" href="agenda.html">Reserva tu hora</a>
         </div>
       </div>
     </section>
@@ -374,14 +416,14 @@
     </section>
 
     <!-- ============================================================
-         INSCRIPCIÓN: 10% EN LA PRIMERA VISITA A BARBERTOP
+         INSCRIPCIÓN: 10% EN LA PRIMERA VISITA
          Guarda nombre, apellido, correo y WhatsApp en la base de clientes
          (Supabase → función inscribir_cliente). El 10% se aplica solo
          cuando la persona reserva en agenda.html con ese mismo WhatsApp.
          ============================================================ -->
     <section class="inscripcion" id="inscribete">
       <div class="contenedor">
-        <span class="etiqueta">BARBERTOP · LAMPA Y PROVIDENCIA</span>
+        <span class="etiqueta">CLIPPERLAB · LAMPA Y PROVIDENCIA</span>
         <h2>Inscríbete y recibe <span>10%</span><br>en tu primera visita</h2>
         <p class="subtitulo">Sin spam. Te avisamos solo cuando vale la pena.</p>
         <div id="cajaInsc">
@@ -396,7 +438,7 @@
               </select>
               <input id="insTel" type="tel" inputmode="tel" value="9 " placeholder="WhatsApp: 9 1234 5678" autocomplete="tel-national" required>
             </div>
-            <label class="acepto"><input type="checkbox" id="insPromos" checked> Acepto recibir promociones y descuentos de BarberTop</label>
+            <label class="acepto"><input type="checkbox" id="insPromos" checked> Acepto recibir promociones y descuentos de ClipperLab</label>
             <button type="submit" class="boton" id="insBoton">Quiero mi 10%</button>
             <p class="estado-insc" id="insEstado"></p>
           </form>
@@ -554,7 +596,7 @@
       <p class="subtitulo">Cómo tratamos tus datos personales.</p>
  
       <h3>1. Responsable de los datos</h3>
-      <p>ClipperLab y BarberTop (Santiago, Chile) son responsables del tratamiento de los datos personales que nos entregas a través de este sitio y de la agenda online de BarberTop.</p>
+      <p>ClipperLab (Santiago, Chile) es responsable del tratamiento de los datos personales que nos entregas a través de este sitio y de su agenda online.</p>
 
       <h3>2. Qué datos recopilamos</h3>
       <p>Solo los que ingresas voluntariamente: nombre, apellido, correo electrónico y número de WhatsApp, al inscribirte, reservar una hora o escribirnos por el formulario de contacto.
@@ -577,6 +619,29 @@
     </section>
   </div>
  
+  <!-- PANTALLA: POLÍTICA DE CANCELACIÓN (ajusta los plazos a tu gusto) -->
+  <div class="pantalla" id="cancelacion">
+    <section class="bloque contenedor legal">
+      <h2>Política de Cancelación</h2>
+      <p class="subtitulo">Para que tu hora y la de otros clientes se respete.</p>
+
+      <h3>1. Cancelar o cambiar tu hora</h3>
+      <p>Puedes cancelar o cambiar tu reserva sin costo avisando con al menos 2 horas de anticipación por WhatsApp al local donde reservaste
+         (Providencia +56 9 4943 0834 · Lampa +56 9 3030 1232).</p>
+
+      <h3>2. Atrasos</h3>
+      <p>Te esperamos hasta 10 minutos. Pasado ese tiempo, la hora puede reasignarse o el servicio acortarse para no atrasar al siguiente cliente.</p>
+
+      <h3>3. Inasistencias</h3>
+      <p>Si no asistes sin avisar, quedará registrado. Tras inasistencias repetidas podremos pedir confirmación previa para nuevas reservas.</p>
+
+      <h3>4. Beneficios</h3>
+      <p>Si tu hora tenía un descuento (como el 10% de primera visita) y la cancelas con aviso, el beneficio sigue disponible para tu próxima reserva.</p>
+
+      <div style="margin-top:30px;"><button class="boton" onclick="mostrar('inicio')">Volver al inicio</button></div>
+    </section>
+  </div>
+
   <!-- PANTALLA 6: TÉRMINOS Y CONDICIONES -->
   <div class="pantalla" id="terminos">
     <section class="bloque contenedor legal">
@@ -622,13 +687,61 @@
   </div>
  
   <!-- PIE DE PÁGINA con enlaces legales -->
-  <footer>
-    <div class="contenedor">
-      ClipperLab · Servicio técnico y equipamiento para barberías · Santiago, Chile
-      <div class="footer-links">
-        <button onclick="mostrar('privacidad')">Política de Privacidad</button>
-        <button onclick="mostrar('terminos')">Términos y Condiciones</button>
+  <!-- ============================================================
+       PIE DE PÁGINA
+       >>> EDITA AQUÍ los links de tus redes sociales (href de cada ícono) <<<
+       ============================================================ -->
+  <footer class="pie-bt">
+    <div class="marca"><b>Clipper<span>Lab</span></b><small>· SANTIAGO · CHILE ·</small></div>
+
+    <div class="pie-cols">
+      <!-- Columna 1: legal + redes -->
+      <div>
+        <h4>Términos y condiciones</h4>
+        <button class="pie-link" onclick="mostrar('terminos')">Términos del servicio</button>
+        <button class="pie-link" onclick="mostrar('privacidad')">Política de privacidad</button>
+        <button class="pie-link" onclick="mostrar('cancelacion')">Política de cancelación</button>
+        <div class="redes">
+          <a class="ig" href="https://www.instagram.com/clipperlab.cl/" target="_blank" rel="noopener" aria-label="Instagram de ClipperLab">
+            <svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.4 1.1.4 2.2.1 1.3.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1.1.4-2.2.4-1.3.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1.1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1.1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 4.9a4.9 4.9 0 1 0 0 9.8 4.9 4.9 0 0 0 0-9.8zm0 8.1a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4zm5.1-9.4a1.15 1.15 0 1 0 0 2.3 1.15 1.15 0 0 0 0-2.3z"/></svg>
+          </a>
+          <!-- TikTok: cuando tengas la cuenta, cambia href="#" por el link y borra onclick y title -->
+          <a class="tk" href="#" onclick="event.preventDefault()" title="Próximamente" aria-label="TikTok de ClipperLab">
+            <svg viewBox="0 0 24 24"><path d="M16.6 2h-3.3v13.4a2.9 2.9 0 1 1-2.9-2.9c.3 0 .6 0 .8.1V9.2a6.3 6.3 0 1 0 5.4 6.2V8.6a8 8 0 0 0 4.4 1.3V6.6a4.5 4.5 0 0 1-4.4-4.6z"/></svg>
+          </a>
+          <!-- Facebook: cuando tengas la página, cambia href="#" por el link y borra onclick y title -->
+          <a class="fb" href="#" onclick="event.preventDefault()" title="Próximamente" aria-label="Facebook de ClipperLab">
+            <svg viewBox="0 0 24 24"><path d="M13.5 22v-8h2.7l.4-3.2h-3.1V8.8c0-.9.3-1.5 1.6-1.5h1.7V4.4c-.3 0-1.3-.1-2.5-.1-2.4 0-4.1 1.5-4.1 4.2v2.3H7.5V14h2.7v8h3.3z"/></svg>
+          </a>
+        </div>
       </div>
+
+      <!-- Columna 2: ubicación -->
+      <div>
+        <h4>Ubicación</h4>
+        <div class="local">
+          <b>Local Providencia</b>
+          <a href="https://www.google.com/maps/search/?api=1&query=Av.+Nueva+Providencia+2160,+Providencia" target="_blank" rel="noopener">Av. Nueva Providencia 2160<br>Providencia · Metro Los Leones</a>
+        </div>
+        <div class="local">
+          <b>Local Lampa</b>
+          <a href="https://www.google.com/maps/search/?api=1&query=Los+Halcones+1171,+Lampa" target="_blank" rel="noopener">Av. Los Halcones 1171<br>Larapinta, Lampa</a>
+        </div>
+      </div>
+
+      <!-- Columna 3: contacto -->
+      <div>
+        <h4>Contacto</h4>
+        <!-- Si tienes correo de ClipperLab, agrégalo aquí: <a href="mailto:TU_CORREO">TU_CORREO</a> -->
+        <p class="etq">Providencia</p>
+        <a class="fono" href="https://wa.me/56949430834" target="_blank" rel="noopener">+56 9 4943 0834</a>
+        <p class="etq">Lampa</p>
+        <a class="fono" href="https://wa.me/56930301232" target="_blank" rel="noopener">+56 9 3030 1232</a>
+      </div>
+    </div>
+
+    <div class="pie-final">
+      © <span id="anioPie">2026</span> ClipperLab · Agenda online, equipamiento y servicio técnico para barberías · Santiago, Chile
     </div>
   </footer>
  
@@ -900,7 +1013,7 @@
     }
  
     // ============================================================
-    // INSCRIPCIÓN (10% en la primera visita a BarberTop)
+    // INSCRIPCIÓN (10% en la primera visita)
     // Llama a la función segura "inscribir_cliente" de la base de datos:
     // el sitio no puede leer la lista de clientes, solo agregar/actualizar.
     // ============================================================
@@ -924,6 +1037,8 @@
         <a class="boton" href="agenda.html">Reserva tu hora →</a></div>`;
       return false;
     }
+
+    document.getElementById('anioPie').textContent = new Date().getFullYear();
 
     function mostrar(id) {
       const pantallas = document.querySelectorAll('.pantalla');
