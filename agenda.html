@@ -4,225 +4,254 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="google" content="notranslate">
-  <title>Agenda — ClipperLab</title>
+  <title>Reserva tu hora — BarberTop</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root { --grafito:#15171c; --panel:#1d2028; --panel2:#23262f; --hueso:#edeae4; --voltaje:#ff7a2f; --gris:#9aa0a8; --verde:#4ade80; --rojo:#f87171; }
+    :root { --fondo:#111318; --panel:#1b1e25; --panel2:#232730; --borde:rgba(255,255,255,0.09); --hueso:#f1eee8; --voltaje:#ff7a2f;
+            --voltaje-suave:rgba(255,122,47,0.13); --gris:#9aa0a8; --verde:#4ade80; --rojo:#f87171; }
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:var(--grafito); color:var(--hueso); font-family:'Inter',system-ui,sans-serif; padding:24px 16px 80px; line-height:1.5; }
-    .caja { max-width:600px; margin:0 auto; }
+    html { scroll-behavior:smooth; }
+    body { background:var(--fondo); color:var(--hueso); font-family:'Inter',system-ui,-apple-system,sans-serif; line-height:1.45; padding-bottom:110px; }
     .oculto { display:none !important; }
-    h1 { font-size:24px; margin-bottom:4px; }
-    h1 span { color:var(--voltaje); }
-    .sub { color:var(--gris); margin-bottom:20px; font-size:14px; }
-    .nota { color:var(--gris); font-size:12px; }
-    .aviso { color:var(--rojo); font-size:13px; margin-top:8px; }
+    button { font-family:inherit; }
+    .caja { max-width:760px; margin:0 auto; padding:0 16px; }
 
-    .paso { background:var(--panel); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:20px; margin-bottom:14px; opacity:0.45; pointer-events:none; transition:opacity .3s; }
-    .paso.activo { opacity:1; pointer-events:auto; border-color:rgba(255,122,47,0.3); }
-    .paso-titulo { display:flex; align-items:center; gap:10px; font-size:15px; font-weight:600; margin-bottom:14px; }
-    .paso-num { width:24px; height:24px; border-radius:50%; background:var(--voltaje); color:var(--grafito); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0; }
-    .paso-check { color:var(--verde); font-size:13px; margin-left:auto; text-align:right; }
-    .quien-tag { color:var(--voltaje); font-weight:600; }
+    /* ---------- CABECERA ---------- */
+    header { border-bottom:1px solid var(--borde); background:rgba(17,19,24,0.92); backdrop-filter:blur(8px); position:sticky; top:0; z-index:20; }
+    .cab { display:flex; align-items:center; justify-content:space-between; height:58px; }
+    .marca { font-weight:800; font-size:19px; letter-spacing:.3px; }
+    .marca span { color:var(--voltaje); }
+    .cab-link { background:none; border:1px solid var(--borde); color:var(--hueso); padding:7px 14px; border-radius:999px; font-size:13px; cursor:pointer; }
+    .cab-link:hover { border-color:var(--voltaje); }
 
-    .chips { display:flex; gap:8px; flex-wrap:wrap; }
-    .chip { background:var(--panel2); border:1px solid rgba(255,255,255,0.12); color:var(--hueso); padding:10px 18px; border-radius:10px; cursor:pointer; font-size:14px; font-family:inherit; }
-    .chip:hover { border-color:var(--voltaje); }
-    .chip.sel { background:var(--voltaje); border-color:var(--voltaje); color:var(--grafito); font-weight:600; }
+    /* ---------- STEPPER ---------- */
+    .stepper { display:flex; justify-content:space-between; margin:22px 0 18px; position:relative; }
+    .stepper::before { content:''; position:absolute; top:15px; left:8%; right:8%; height:2px; background:var(--panel2); }
+    .st { position:relative; flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; background:none; border:none; color:var(--gris); cursor:default; }
+    .st-num { width:32px; height:32px; border-radius:50%; background:var(--panel2); border:2px solid var(--panel2); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:var(--gris); transition:all .25s; }
+    .st-txt { font-size:10.5px; font-weight:700; letter-spacing:.8px; }
+    .st.hecho { cursor:pointer; color:var(--hueso); }
+    .st.hecho .st-num { background:var(--voltaje-suave); border-color:var(--voltaje); color:var(--voltaje); }
+    .st.actual { color:var(--voltaje); }
+    .st.actual .st-num { background:var(--voltaje); border-color:var(--voltaje); color:#111; box-shadow:0 0 0 5px rgba(255,122,47,0.18); }
 
-    /* Progreso por persona */
-    .progreso { display:flex; gap:6px; margin:14px 0 0; flex-wrap:wrap; }
-    .prog { flex:1; min-width:120px; background:var(--panel2); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:8px 12px; font-size:13px; }
-    .prog b { display:block; font-size:13px; }
-    .prog span { color:var(--gris); font-size:12px; }
-    .prog.actual { border-color:var(--voltaje); background:rgba(255,122,47,0.12); }
-    .prog.lista { border-color:rgba(74,222,128,0.4); }
-    .prog.lista b { color:var(--verde); }
-    .prog button { background:none; border:none; color:var(--gris); text-decoration:underline; font-size:12px; cursor:pointer; font-family:inherit; padding:0; }
+    .contexto { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px; min-height:30px; }
+    .pill { display:inline-flex; align-items:center; gap:6px; background:var(--voltaje-suave); color:var(--voltaje); border:1px solid rgba(255,122,47,0.35);
+            padding:5px 12px; border-radius:999px; font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; }
+    .pill button { background:none; border:none; color:var(--hueso); text-decoration:underline; font-size:11px; cursor:pointer; text-transform:none; letter-spacing:0; font-weight:500; }
+    .pill.persona { background:var(--panel2); color:var(--hueso); border-color:var(--borde); }
+    .subtitulo { color:var(--gris); font-size:13px; }
+
+    /* ---------- CAPAS (pasos) ---------- */
+    .capa { animation:entra .28s ease; }
+    @keyframes entra { from { opacity:0; transform:translateX(18px); } to { opacity:1; transform:none; } }
+    .capa.atras { animation:sale .28s ease; }
+    @keyframes sale { from { opacity:0; transform:translateX(-18px); } to { opacity:1; transform:none; } }
+    h2 { font-size:22px; margin:6px 0 4px; }
+    .ayuda { color:var(--gris); font-size:14px; margin-bottom:18px; }
+    .volver { background:none; border:none; color:var(--gris); font-size:13px; cursor:pointer; padding:4px 0; margin-bottom:6px; }
+    .volver:hover { color:var(--hueso); }
+    .aviso { color:var(--rojo); font-size:14px; margin:10px 0; }
+    .nota { color:var(--gris); font-size:12.5px; }
+    .cat { font-size:12px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--voltaje); margin:22px 0 10px; display:flex; align-items:center; gap:10px; }
+    .cat::after { content:''; flex:1; height:1px; background:var(--borde); }
+
+    /* Sucursal */
+    .locales { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px; }
+    .local { text-align:left; background:var(--panel); border:1px solid var(--borde); border-radius:16px; padding:20px; cursor:pointer; color:var(--hueso); transition:all .2s; position:relative; overflow:hidden; }
+    .local:hover { border-color:var(--voltaje); transform:translateY(-2px); }
+    .local.sel { border-color:var(--voltaje); background:var(--voltaje-suave); }
+    .local-ic { width:44px; height:44px; border-radius:12px; background:var(--voltaje-suave); color:var(--voltaje); display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:12px; }
+    .local b { display:block; font-size:18px; }
+    .local .dir { color:var(--gris); font-size:13.5px; margin-top:2px; }
+    .local .ref { font-size:12.5px; margin-top:6px; color:var(--hueso); }
+    .local .pie-local { display:flex; justify-content:space-between; align-items:center; margin-top:14px; font-size:12.5px; color:var(--gris); }
+    .local a { color:var(--voltaje); text-decoration:none; font-weight:600; }
+
+    /* Personas */
+    .personas { display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:var(--panel); border:1px solid var(--borde); border-radius:14px; padding:12px 14px; }
+    .personas span { font-size:14px; margin-right:auto; }
+    .chip { background:var(--panel2); border:1px solid var(--borde); color:var(--hueso); padding:8px 14px; border-radius:999px; cursor:pointer; font-size:13.5px; }
+    .chip.sel { background:var(--voltaje); border-color:var(--voltaje); color:#111; font-weight:700; }
 
     /* Servicios */
-    .card-serv { display:flex; align-items:flex-start; gap:10px; padding:11px 12px; border:1px solid rgba(255,255,255,0.1); border-radius:10px; cursor:pointer; margin-bottom:6px; background:var(--panel2); }
-    .card-serv:hover { border-color:var(--voltaje); }
-    .card-serv.sel { border-color:var(--voltaje); background:rgba(255,122,47,0.12); }
-    .caja-check { width:20px; height:20px; border-radius:5px; border:2px solid var(--gris); flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:var(--grafito); }
-    .card-serv.sel .caja-check { background:var(--voltaje); border-color:var(--voltaje); }
+    .servicios { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:10px; }
+    .serv { display:flex; gap:12px; align-items:flex-start; text-align:left; background:var(--panel); border:1px solid var(--borde); border-radius:14px; padding:14px; cursor:pointer; color:var(--hueso); transition:all .15s; }
+    .serv:hover { border-color:rgba(255,122,47,0.6); }
+    .serv.sel { border-color:var(--voltaje); background:var(--voltaje-suave); }
+    .serv.no { opacity:.35; cursor:not-allowed; }
+    .serv-check { width:22px; height:22px; border-radius:7px; border:2px solid var(--gris); flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:#111; }
+    .serv.sel .serv-check { background:var(--voltaje); border-color:var(--voltaje); }
     .serv-info { flex:1; min-width:0; }
-    .serv-nom { font-size:14px; font-weight:600; }
-    .serv-desc { font-size:12px; color:var(--gris); }
-    .serv-precio { font-weight:600; white-space:nowrap; font-size:14px; }
-    .total-serv { display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08); }
-    .total-serv strong { font-size:18px; color:var(--voltaje); }
-    .total-serv small { color:var(--gris); display:block; font-size:12px; }
-    .boton-sec { background:var(--voltaje); color:var(--grafito); font-weight:600; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; font-size:14px; font-family:inherit; }
-    .boton-sec:disabled { opacity:0.35; cursor:not-allowed; }
+    .serv-nom { font-weight:700; font-size:15px; }
+    .serv-desc { color:var(--gris); font-size:12.5px; margin-top:2px; }
+    .serv-meta { display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
+    .dur { font-size:12px; color:var(--gris); background:var(--panel2); padding:3px 9px; border-radius:999px; }
+    .precio { font-weight:800; font-size:16px; }
 
-    /* Profesionales */
-    .pros { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; }
-    .pro { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--panel2); border:1px solid rgba(255,255,255,0.1); border-radius:10px; cursor:pointer; color:var(--hueso); font-family:inherit; font-size:14px; text-align:left; }
-    .pro:hover { border-color:var(--voltaje); }
-    .pro.sel { border-color:var(--voltaje); background:rgba(255,122,47,0.14); }
-    .pro small { display:block; font-size:11px; color:var(--gris); }
-    .pro:first-child { grid-column:1 / -1; }
-    .pro-av { width:34px; height:34px; border-radius:50%; background:var(--voltaje); color:var(--grafito); display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; }
-    .pro-av.alt { background:var(--verde); }
+    /* Barberos */
+    .barberos { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px; }
+    .barbero { background:var(--panel); border:1px solid var(--borde); border-radius:16px; padding:18px 12px 16px; cursor:pointer; color:var(--hueso); text-align:center; transition:all .2s; }
+    .barbero:hover { border-color:var(--voltaje); transform:translateY(-2px); }
+    .barbero.sel { border-color:var(--voltaje); background:var(--voltaje-suave); }
+    .foto { width:76px; height:76px; border-radius:50%; margin:0 auto 10px; background:var(--panel2) center/cover no-repeat; display:flex; align-items:center; justify-content:center;
+            font-size:28px; font-weight:800; color:var(--voltaje); border:2px solid var(--borde); }
+    .barbero.cualquiera .foto { background:linear-gradient(135deg, var(--voltaje), #ffb27f); color:#111; border:none; }
+    .barbero b { display:block; font-size:15px; }
+    .barbero small { color:var(--gris); font-size:12px; }
 
-    /* Días */
-    .dias-cab { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
-    .dias-cab button { background:none; border:1px solid rgba(255,255,255,0.15); color:var(--hueso); border-radius:8px; width:32px; height:32px; cursor:pointer; }
-    .dias-mes { font-weight:600; text-transform:capitalize; font-size:14px; }
-    .dias-fila { display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; }
-    .dias-fila::-webkit-scrollbar { height:5px; }
-    .dias-fila::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.15); border-radius:3px; }
-    .dia-card { flex-shrink:0; width:62px; text-align:center; padding:10px 0; background:var(--panel2); border:1px solid rgba(255,255,255,0.1); border-radius:10px; cursor:pointer; }
-    .dia-card:hover { border-color:var(--voltaje); }
-    .dia-card.sel { border-color:var(--voltaje); background:var(--voltaje); color:var(--grafito); }
-    .dia-card.sel .dia-nom { color:var(--grafito); }
-    .dia-card.off { opacity:0.3; pointer-events:none; }
-    .dia-nom { font-size:12px; color:var(--gris); text-transform:capitalize; }
-    .dia-num { font-size:18px; font-weight:600; }
-    .dia-extra { font-size:10px; color:var(--gris); }
-
-    /* Horas */
-    .franja { color:var(--voltaje); font-size:12px; font-weight:600; margin:14px 0 8px; text-transform:uppercase; letter-spacing:.5px; }
-    .franja:first-child { margin-top:0; }
-    .fila-horas { display:flex; flex-wrap:wrap; gap:8px; }
-    .hora { padding:10px 16px; border-radius:8px; cursor:pointer; font-size:14px; border:1px solid rgba(255,255,255,0.15); background:var(--panel2); color:var(--hueso); font-family:inherit; }
+    /* Fecha y hora */
+    .dias { display:flex; gap:8px; overflow-x:auto; padding:2px 2px 10px; scroll-snap-type:x mandatory; }
+    .dias::-webkit-scrollbar { height:5px; } .dias::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.15); border-radius:3px; }
+    .dia { flex-shrink:0; width:70px; scroll-snap-align:start; background:var(--panel); border:1px solid var(--borde); border-radius:14px; padding:10px 0 9px; text-align:center; cursor:pointer; color:var(--hueso); }
+    .dia:hover { border-color:var(--voltaje); }
+    .dia.sel { background:var(--voltaje); border-color:var(--voltaje); color:#111; }
+    .dia.off { opacity:.3; cursor:not-allowed; }
+    .dia-top { font-size:10.5px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; }
+    .dia-num { font-size:22px; font-weight:800; line-height:1.15; }
+    .dia-mes { font-size:11px; text-transform:uppercase; opacity:.8; }
+    .dia.sel .dia-top, .dia.sel .dia-mes { opacity:1; }
+    .otra { display:flex; align-items:center; gap:10px; margin:6px 0 18px; flex-wrap:wrap; }
+    .otra button { background:none; border:1px dashed rgba(255,255,255,0.25); color:var(--hueso); padding:8px 14px; border-radius:10px; cursor:pointer; font-size:13px; }
+    .otra input { background:var(--panel2); border:1px solid var(--borde); color:var(--hueso); border-radius:10px; padding:8px 10px; font-family:inherit; color-scheme:dark; }
+    .tabs { display:flex; gap:6px; margin-bottom:12px; }
+    .tab { flex:1; background:var(--panel); border:1px solid var(--borde); color:var(--gris); padding:10px; border-radius:12px; cursor:pointer; font-size:14px; font-weight:600; }
+    .tab b { color:var(--hueso); margin-left:4px; background:var(--panel2); padding:1px 8px; border-radius:999px; font-size:12px; }
+    .tab.sel { border-color:var(--voltaje); color:var(--hueso); background:var(--voltaje-suave); }
+    .tab.sel b { background:var(--voltaje); color:#111; }
+    .tab:disabled { opacity:.4; cursor:not-allowed; }
+    .horas { display:grid; grid-template-columns:repeat(auto-fill, minmax(82px, 1fr)); gap:8px; }
+    .hora { background:var(--panel); border:1px solid var(--borde); color:var(--hueso); border-radius:10px; padding:11px 4px; cursor:pointer; font-size:15px; font-weight:600; }
+    .hora small { display:block; font-size:10.5px; color:var(--gris); font-weight:500; margin-top:1px; }
     .hora:hover { border-color:var(--verde); }
-    .hora.sel { background:var(--verde); color:var(--grafito); border-color:var(--verde); font-weight:600; }
-    .hora.con-pro { padding:7px 14px; line-height:1.2; text-align:center; }
-    .hora small { display:block; font-size:10px; color:var(--gris); font-weight:400; }
-    .hora.sel small { color:var(--grafito); }
-    .elegida { margin-top:14px; padding:12px 14px; border-radius:10px; background:rgba(74,222,128,0.1); border:1px solid rgba(74,222,128,0.35); font-size:14px; }
-    .elegida .boton-sec { width:100%; margin-top:10px; padding:12px; }
+    .hora.sel { background:var(--verde); border-color:var(--verde); color:#111; }
+    .hora.sel small { color:#111; }
+    .vacio { background:var(--panel); border:1px dashed var(--borde); border-radius:14px; padding:22px; text-align:center; color:var(--gris); font-size:14px; }
 
     /* Datos */
-    input, textarea { width:100%; background:var(--panel2); border:1px solid rgba(255,255,255,0.12); border-radius:8px; padding:11px 13px; color:var(--hueso); font-size:15px; font-family:inherit; margin-bottom:10px; }
-    input:focus, textarea:focus { outline:none; border-color:var(--voltaje); }
-    textarea { min-height:70px; resize:vertical; }
-    label.lbl { display:block; font-size:12px; color:var(--gris); margin:2px 0 4px; }
-    .boton { background:var(--voltaje); color:var(--grafito); font-weight:600; border:none; padding:14px; border-radius:10px; cursor:pointer; font-size:15px; width:100%; font-family:inherit; }
-    .boton:disabled { opacity:.5; cursor:wait; }
-    .estado { font-size:14px; margin-top:12px; min-height:20px; }
-    .resumen { background:var(--panel2); border-radius:10px; padding:12px 14px; font-size:14px; margin-bottom:14px; }
-    .res-item { padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
-    .res-item:last-of-type { border-bottom:none; }
+    .tarjeta { background:var(--panel); border:1px solid var(--borde); border-radius:16px; padding:18px; margin-bottom:14px; }
+    .tarjeta h3 { font-size:14px; margin-bottom:12px; color:var(--gris); font-weight:600; text-transform:uppercase; letter-spacing:.8px; }
+    .res-item { padding:10px 0; border-bottom:1px solid var(--borde); font-size:14px; }
+    .res-item:last-child { border-bottom:none; padding-bottom:0; }
+    .res-item:first-child { padding-top:0; }
     .res-linea { display:flex; justify-content:space-between; gap:12px; }
-    .res-linea span:first-child { color:var(--gris); }
-    .res-total { display:flex; justify-content:space-between; border-top:1px solid rgba(255,255,255,0.1); margin-top:6px; padding-top:8px; font-weight:600; }
+    .res-linea .g { color:var(--gris); }
+    .link { background:none; border:none; color:var(--voltaje); cursor:pointer; font-size:12.5px; text-decoration:underline; }
+    .fila2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    label.lbl { display:block; font-size:12.5px; color:var(--gris); margin:0 0 5px; font-weight:600; }
+    .campo { margin-bottom:12px; }
+    input, textarea, select { width:100%; background:var(--panel2); border:1px solid var(--borde); border-radius:10px; padding:12px 13px; color:var(--hueso); font-size:15px; font-family:inherit; }
+    select { cursor:pointer; color-scheme:dark; }
+    input:focus, textarea:focus, select:focus { outline:none; border-color:var(--voltaje); }
+    textarea { min-height:76px; resize:vertical; }
+    .junto { display:flex; }
+    .junto > :first-child { border-radius:10px 0 0 10px; }
+    .junto > :last-child { border-radius:0 10px 10px 0; border-left:none; }
+    .junto select { width:auto; flex-shrink:0; }
+    .junto input { flex:1; min-width:0; }
+    .check { display:flex; gap:10px; align-items:flex-start; font-size:14px; cursor:pointer; margin:4px 0 14px; }
+    .check input { width:20px; height:20px; accent-color:var(--voltaje); flex-shrink:0; margin-top:1px; }
+    .subir { display:flex; align-items:center; gap:12px; background:var(--panel2); border:1px dashed rgba(255,255,255,0.22); border-radius:12px; padding:12px; cursor:pointer; font-size:14px; }
+    .subir:hover { border-color:var(--voltaje); }
+    .subir img { width:56px; height:56px; object-fit:cover; border-radius:8px; }
+    .subir .ic { width:56px; height:56px; border-radius:8px; background:var(--panel); display:flex; align-items:center; justify-content:center; font-size:24px; }
+    .total { display:flex; justify-content:space-between; align-items:center; background:var(--voltaje-suave); border:1px solid rgba(255,122,47,0.35); border-radius:14px; padding:16px 18px; margin:6px 0 14px; }
+    .total strong { font-size:24px; color:var(--voltaje); }
+    .total small { display:block; color:var(--gris); font-size:12.5px; }
+    .boton { width:100%; background:var(--voltaje); color:#111; border:none; border-radius:12px; padding:15px; font-size:16px; font-weight:800; cursor:pointer; }
+    .boton:disabled { opacity:.45; cursor:not-allowed; }
+    .boton.sec { background:var(--panel2); color:var(--hueso); border:1px solid var(--borde); font-weight:600; }
+    .estado { font-size:14px; margin-top:10px; min-height:20px; color:var(--rojo); }
 
-    .listo { text-align:center; }
-    .listo .ok { width:56px; height:56px; border-radius:50%; background:var(--verde); color:var(--grafito); font-size:28px; font-weight:700; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
-    .item-res { background:var(--panel2); border-radius:10px; padding:12px 14px; margin-top:8px; text-align:left; font-size:14px; }
+    /* Barra inferior fija */
+    .barra { position:fixed; left:0; right:0; bottom:0; z-index:30; background:rgba(27,30,37,0.97); backdrop-filter:blur(8px); border-top:1px solid var(--borde); transform:translateY(110%); visibility:hidden; transition:transform .25s, visibility .25s; }
+    .barra.ver { transform:none; visibility:visible; }
+    .barra .caja { display:flex; align-items:center; gap:14px; padding-top:12px; padding-bottom:calc(12px + env(safe-area-inset-bottom)); }
+    .barra-txt { flex:1; min-width:0; font-size:13px; color:var(--gris); }
+    .barra-txt b { display:block; color:var(--hueso); font-size:15px; }
+    .barra-txt .mal { color:var(--rojo); }
+    .barra .boton { width:auto; padding:13px 22px; font-size:15px; white-space:nowrap; }
+
+    /* Confirmación */
+    .listo { text-align:center; padding-top:10px; }
+    .ok { width:68px; height:68px; border-radius:50%; background:var(--verde); color:#111; font-size:34px; font-weight:800; display:flex; align-items:center; justify-content:center; margin:10px auto 14px; animation:pop .4s ease; }
+    @keyframes pop { 0% { transform:scale(.4); } 80% { transform:scale(1.1); } 100% { transform:scale(1); } }
+    .item-res { background:var(--panel); border:1px solid var(--borde); border-radius:14px; padding:14px 16px; margin-top:10px; text-align:left; font-size:14px; }
     .item-res b { color:var(--voltaje); }
-    .pie { margin-top:24px; text-align:center; font-size:13px; }
-    .pie a, .pie button { color:var(--gris); background:none; border:none; font-size:13px; text-decoration:underline; cursor:pointer; font-family:inherit; margin:0 8px; }
+    .acciones { display:grid; gap:10px; margin-top:16px; }
+    .acciones a { text-decoration:none; text-align:center; display:block; }
+    footer { text-align:center; color:var(--gris); font-size:12px; margin-top:36px; }
+    footer a { color:var(--gris); }
+
+    @media (max-width:560px) {
+      h2 { font-size:20px; }
+      .st-txt { font-size:9px; letter-spacing:.4px; }
+      .st-num { width:28px; height:28px; font-size:13px; }
+      .stepper::before { top:13px; }
+      .servicios { grid-template-columns:1fr; }
+      .barberos { grid-template-columns:repeat(2, 1fr); }
+      .fila2 { grid-template-columns:1fr; gap:0; }
+    }
   </style>
 </head>
 <body>
-  <div class="caja">
-    <h1>Agenda <span>ClipperLab</span></h1>
-    <p class="sub">Reserva tu hora en simples pasos.</p>
+  <header>
+    <div class="caja cab">
+      <div class="marca">Barber<span>Top</span></div>
+      <button class="cab-link" onclick="verMisReservas()">Mis reservas</button>
+    </div>
+  </header>
 
-    <div id="wizard">
-      <!-- PASO 1: CUÁNTAS PERSONAS -->
-      <div class="paso activo" id="paso1">
-        <div class="paso-titulo"><span class="paso-num">1</span> ¿Para cuántas personas? <span class="paso-check" id="check1"></span></div>
-        <div class="chips" id="chipsPersonas"></div>
-        <div class="progreso" id="progreso"></div>
-      </div>
-
-      <!-- PASO 2: SERVICIOS -->
-      <div class="paso activo" id="paso2">
-        <div class="paso-titulo"><span class="paso-num">2</span> <span>Servicios <span class="quien-tag"></span></span> <span class="paso-check" id="check2"></span></div>
-        <div id="listaServ"></div>
-        <div class="total-serv">
-          <div><small>Subtotal</small><strong id="totalServ">$0</strong> <small id="durServ"></small></div>
-          <button class="boton-sec" id="btnServ" onclick="confirmarServicios()" disabled>Continuar</button>
-        </div>
-      </div>
-
-      <!-- PASO 3: PROFESIONAL -->
-      <div class="paso" id="paso3">
-        <div class="paso-titulo"><span class="paso-num">3</span> <span>¿Con quién? <span class="quien-tag"></span></span> <span class="paso-check" id="check3"></span></div>
-        <div class="pros" id="listaPros"></div>
-      </div>
-
-      <!-- PASO 4: DÍA -->
-      <div class="paso" id="paso4">
-        <div class="paso-titulo"><span class="paso-num">4</span> <span>¿Qué día? <span class="quien-tag"></span></span> <span class="paso-check" id="check4"></span></div>
-        <div class="dias-cab">
-          <button onclick="cambiarMes(-1)" aria-label="Mes anterior">‹</button>
-          <span class="dias-mes" id="diasMes"></span>
-          <button onclick="cambiarMes(1)" aria-label="Mes siguiente">›</button>
-        </div>
-        <div class="dias-fila" id="diasFila"></div>
-      </div>
-
-      <!-- PASO 5: HORA -->
-      <div class="paso" id="paso5">
-        <div class="paso-titulo"><span class="paso-num">5</span> <span>¿A qué hora? <span class="quien-tag"></span></span> <span class="paso-check" id="check5"></span></div>
-        <div id="listaHoras"></div>
-        <div id="horaElegida"></div>
-      </div>
-
-      <!-- PASO 6: DATOS -->
-      <div class="paso" id="paso6">
-        <div class="paso-titulo"><span class="paso-num">6</span> Tus datos</div>
-        <div class="resumen" id="resumen"></div>
-        <label class="lbl" for="nombreCliente">Tu nombre</label>
-        <input type="text" id="nombreCliente" placeholder="Nombre y apellido">
-        <div id="acompanantes"></div>
-        <label class="lbl" for="correoCliente">Correo</label>
-        <input type="email" id="correoCliente" placeholder="tu@correo.com">
-        <label class="lbl" for="telefonoCliente">WhatsApp</label>
-        <input type="tel" id="telefonoCliente" placeholder="+56 9 1234 5678">
-        <label class="lbl" for="mensajeCliente">Mensaje para el profesional (opcional)</label>
-        <textarea id="mensajeCliente" placeholder="Ej: degradado bajo, traigo foto de referencia."></textarea>
-        <button class="boton" id="btnReservar" onclick="reservar()">Confirmar reserva</button>
-        <p class="estado" id="estado"></p>
-      </div>
+  <main class="caja">
+    <div id="asistente">
+      <nav class="stepper" id="stepper"></nav>
+      <div class="contexto" id="contexto"></div>
+      <div id="vista"><p class="nota" style="padding:30px 0;">Cargando agenda…</p></div>
     </div>
 
-    <!-- CONFIRMACIÓN -->
-    <div class="paso activo listo oculto" id="vistaListo">
-      <div class="ok">✓</div>
-      <h2 style="font-size:20px;">¡Reserva confirmada!</h2>
-      <p class="sub" id="listoSub" style="margin:4px 0 0;"></p>
-      <div id="listoLista"></div>
-      <button class="boton" style="margin-top:16px;" onclick="location.reload()">Hacer otra reserva</button>
-    </div>
+    <div id="vistaListo" class="oculto"></div>
 
-    <!-- MIS RESERVAS -->
-    <div class="paso activo oculto" id="vistaMis">
-      <div class="paso-titulo">Mis reservas</div>
-      <p class="nota" style="margin:0 0 10px;">Escribe el correo y WhatsApp con que reservaste.</p>
-      <input type="email" id="misCorreo" placeholder="Correo">
-      <input type="tel" id="misTelefono" placeholder="WhatsApp">
-      <button class="boton" onclick="buscarMisReservas()">Ver mis reservas</button>
+    <div id="vistaMis" class="oculto">
+      <button class="volver" onclick="volverDeMis()">← Volver</button>
+      <h2>Mis reservas</h2>
+      <p class="ayuda">Escribe el correo y el teléfono con que reservaste.</p>
+      <div class="tarjeta">
+        <div class="campo"><label class="lbl">Correo</label><input type="email" id="misCorreo" placeholder="tu@correo.com"></div>
+        <div class="campo"><label class="lbl">Teléfono</label><input type="tel" id="misTelefono" placeholder="+56 9 1234 5678"></div>
+        <button class="boton" onclick="buscarMisReservas()">Ver mis reservas</button>
+      </div>
       <div id="misLista"></div>
     </div>
 
-    <div class="pie">
-      <button onclick="toggleMis()">Mis reservas</button>
-      <a href="panel.html">Acceso equipo</a>
-    </div>
-  </div>
+    <footer>Agenda online · <a href="panel.html">Acceso equipo</a></footer>
+  </main>
+
+  <div class="barra" id="barra"><div class="caja"><div class="barra-txt" id="barraTxt"></div><button class="boton" id="barraBtn">Continuar</button></div></div>
 
   <script>
     const SUPABASE_URL = "https://ugchyfulwkzmxwqjwkwp.supabase.co";
     const SUPABASE_KEY = "sb_publishable__WRIUNVBq6-nxTAwPD360g_5UICkBn_";
 
-    const PASO_MIN = 30;          // cada cuántos minutos se ofrece una hora
+    const PASO_MIN = 15;          // las horas se ofrecen cada 15 minutos
     const MAX_PERSONAS = 3;
+    const DIAS_TIRA = 14;         // días visibles en la tira
     const DIAS_ADELANTE = 120;
-    const AUTO = "auto";          // "Cualquier profesional"
+    const AUTO = "auto";          // "Cualquiera disponible"
+    const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    const PASOS = ['Sucursal', 'Servicio', 'Barbero', 'Fecha', 'Datos'];
+    const DOMINIOS = ['@gmail.com', '@hotmail.com', '@outlook.com', '@yahoo.com', '@icloud.com', '@live.cl'];
+    const PAISES = [['+56','🇨🇱 +56'],['+54','🇦🇷 +54'],['+51','🇵🇪 +51'],['+57','🇨🇴 +57'],['+58','🇻🇪 +58'],['+593','🇪🇨 +593'],
+                    ['+591','🇧🇴 +591'],['+595','🇵🇾 +595'],['+598','🇺🇾 +598'],['+55','🇧🇷 +55'],['+1','🇺🇸 +1'],['+34','🇪🇸 +34']];
 
-    let CFG = { servicios:[], trabajadores:[], horarios:[], ahora:"" };
+    let CFG = { locales:[], servicios:[], trabajadores:[], horarios:[], ahora:"" };
+    let LOCAL = null;             // sucursal elegida
+    let paso = 1;                 // 1 sucursal · 2 servicio · 3 barbero · 4 fecha · 5 datos
     let n = 1;                    // cuántas personas
-    let citas = [];               // citas ya elegidas: { servicios, eleccion, tid, fecha, t }
-    let draft = nuevoDraft();     // la cita de la persona que se está eligiendo
-    let ocupacion = [], carga = {}, libres = [];
-    let fechaVista = new Date();
+    let citas = [];               // personas ya listas: { servicios, eleccion, tid, fecha, t }
+    let draft = nuevoDraft();     // la persona que se está eligiendo
+    let ocupacion = [], carga = {}, libres = [], franja = 'man';
+    let foto = null;              // foto de referencia comprimida
+    let datosCliente = {};        // lo escrito en "Tus datos" (se mantiene al volver)
 
     const $ = id => document.getElementById(id);
     const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -232,114 +261,186 @@
     const fechaTexto = f => `${f.getFullYear()}-${String(f.getMonth()+1).padStart(2,'0')}-${String(f.getDate()).padStart(2,'0')}`;
     const deTexto = t => { const [a,m,d] = t.split('-').map(Number); return new Date(a, m-1, d); };
     const fechaLinda = t => deTexto(t).toLocaleDateString('es-CL', { weekday:'short', day:'numeric', month:'short' });
-    const nombreTrab = id => CFG.trabajadores.find(t => t.id === id)?.nombre || '';
+    const hoyTxt = () => CFG.ahora.split('T')[0];
+    const guardarLocal = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} };
+    const leerLocal = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch(e) { return null; } };
     function nuevoDraft(){ return { servicios:[], eleccion:null, tid:null, fecha:'', t:null }; }
-    function activar(id){ $(id).classList.add('activo'); }
-    function desactivar(id){ $(id).classList.remove('activo'); }
 
+    // ---------- LO QUE HAY EN LA SUCURSAL ----------
+    const localSel   = () => CFG.locales.find(l => l.id === LOCAL);
+    const trabsLocal = () => CFG.trabajadores.filter(t => t.local_id === LOCAL);
+    const servsLocal = () => CFG.servicios.filter(s => s.local_id === LOCAL && trabsLocal().some(t => t.servicios.includes(s.id)));
+    const aptos      = ids => trabsLocal().filter(t => ids.every(id => t.servicios.includes(id)));   // barberos que hacen TODOS esos servicios
+    const trab       = id => CFG.trabajadores.find(t => t.id === id);
+    const nombreTrab = id => trab(id)?.nombre || '';
     const servDe  = c => CFG.servicios.filter(s => c.servicios.includes(s.id));
     const durDe   = c => servDe(c).reduce((a,s) => a + s.duracion, 0);
     const totalDe = c => servDe(c).reduce((a,s) => a + s.precio, 0);
-    const actual  = () => citas.length;                               // índice de la persona que se está eligiendo
+    const persona = () => citas.length;                    // índice de la persona que se está eligiendo
     const etiqueta = i => n === 1 ? '' : (i === 0 ? 'Persona 1 (tú)' : `Persona ${i+1}`);
 
     // ---------- CARGA ----------
     async function iniciar(){
       const { data, error } = await db.rpc('agenda_config');
-      if (error){ $('wizard').innerHTML = `<p class="aviso">No pudimos cargar la agenda: ${esc(error.message)}</p>`; return; }
+      if (error){ $('vista').innerHTML = `<p class="aviso">No pudimos cargar la agenda: ${esc(error.message)}</p>`; return; }
       CFG = data;
-      const [a, m] = CFG.ahora.split('T')[0].split('-').map(Number);
-      fechaVista = new Date(a, m-1, 1);
-      dibujarTodo();
+      CFG.locales = CFG.locales || [];
+      CFG.trabajadores.forEach(t => t.servicios = t.servicios || []);
+      datosCliente = leerLocal('clipperlab-cliente') || {};
+      // ?local=2 (o ?local=providencia) deja la sucursal elegida: sirve para links de Instagram de cada local
+      const q = new URLSearchParams(location.search).get('local');
+      const pre = q && CFG.locales.find(l => String(l.id) === q || l.nombre.toLowerCase() === q.toLowerCase());
+      if (pre) { LOCAL = pre.id; paso = 2; }
+      else if (CFG.locales.length === 1) { LOCAL = CFG.locales[0].id; paso = 2; }
+      history.replaceState({ paso, i: 0 }, '');
+      dibujar();
     }
 
-    // ---------- DIBUJO GENERAL ----------
-    function dibujarTodo(){
-      // Paso 1
-      let chips = '';
-      const max = MAX_PERSONAS;
-      for (let k=1; k<=max; k++) chips += `<button class="chip ${k===n?'sel':''}" onclick="elegirPersonas(${k})">${k} ${k===1?'persona':'personas'}</button>`;
-      $('chipsPersonas').innerHTML = chips;
-      $('check1').textContent = '✓ ' + n;
-      $('progreso').innerHTML = n === 1 ? '' : [...Array(n)].map((_, i) => {
-        const c = citas[i];
-        if (c) return `<div class="prog lista"><b>✓ ${etiqueta(i)}</b><span>${fechaLinda(c.fecha)} · ${aHora(c.t)} · ${esc(nombreTrab(c.tid))}</span><br><button onclick="editarPersona(${i})">Cambiar</button></div>`;
-        return `<div class="prog ${i === actual() ? 'actual' : ''}"><b>${etiqueta(i)}</b><span>${i === actual() ? 'Eligiendo ahora…' : 'Pendiente'}</span></div>`;
+    // ---------- NAVEGACIÓN ENTRE CAPAS ----------
+    // Cada capa queda en el historial: el botón "atrás" del teléfono vuelve una capa (no se sale de la página)
+    let empujados = 0, pos = 0, misAbierto = false, reservado = false;
+    function empujar(st){ history.pushState({ ...st, i: ++pos }, ''); empujados++; }
+    function avanzar(a){ paso = a; empujar({ paso }); dibujar(); window.scrollTo({ top:0 }); }
+    function atras(){ if (empujados > 0) history.back(); else { retroceder(); dibujar(true); window.scrollTo({ top:0 }); } }
+    window.addEventListener('popstate', e => {
+      const i = e.state?.i ?? 0;
+      if (i > pos){ pos = i; empujados++; return; }      // "adelante" del navegador: se queda donde está
+      pos = i;
+      empujados = Math.max(0, empujados - 1);
+      if (misAbierto) { cerrarMisReservas(); return; }
+      if (reservado) return;
+      retroceder(); dibujar(true); window.scrollTo({ top:0 });
+    });
+    function retroceder(){
+      if (paso === 2 && persona() > 0){            // vuelve a la hora de la persona anterior
+        draft = citas.pop(); paso = 4;
+      } else if (paso === 5){
+        draft = citas.pop(); paso = 4;
+      } else if (paso > 1){
+        paso--;
+      }
+    }
+    // Tocar un paso ya hecho del stepper
+    function irAPaso(k){
+      if (k >= paso) return;
+      if (k === 1 && CFG.locales.length === 1) return;
+      if (paso === 5){ draft = citas.pop(); }
+      paso = k; empujar({ paso }); dibujar(true);
+    }
+
+    function dibujar(haciaAtras){
+      $('stepper').innerHTML = PASOS.map((p, i) => {
+        const k = i + 1, cls = k < paso ? 'hecho' : k === paso ? 'actual' : '';
+        return `<button class="st ${cls}" onclick="irAPaso(${k})" ${k < paso ? '' : 'tabindex="-1"'}><span class="st-num">${k < paso ? '✓' : k}</span><span class="st-txt">${p.toUpperCase()}</span></button>`;
       }).join('');
-      document.querySelectorAll('.quien-tag').forEach(e => e.textContent = n > 1 && actual() < n ? '· ' + etiqueta(actual()) : '');
+      const l = localSel();
+      let ctx = '';
+      if (l && paso > 1) ctx += `<span class="pill">📍 Reservando en ${esc(l.nombre)} ${CFG.locales.length > 1 ? `<button onclick="cambiarLocal()">cambiar</button>` : ''}</span>`;
+      if (n > 1 && paso < 5) ctx += `<span class="pill persona">👤 ${etiqueta(persona())} de ${n}</span>`;
+      const partes = [];
+      if (paso > 2 && draft.servicios.length) partes.push(servDe(draft).map(s => s.nombre).join(' + '));
+      if (paso > 3 && draft.eleccion !== null) partes.push(draft.eleccion === AUTO ? 'Cualquiera disponible' : 'con ' + nombreTrab(draft.eleccion));
+      if (partes.length) ctx += `<span class="subtitulo">${esc(partes.join(' · '))}</span>`;
+      $('contexto').innerHTML = ctx;
 
-      const enDatos = actual() >= n;
-      ['paso2','paso3','paso4','paso5'].forEach(id => $(id).classList.toggle('oculto', enDatos));
-      $('paso6').classList.toggle('activo', enDatos);
-      if (enDatos){ dibujarDatos(); return; }
-      dibujarServicios(); dibujarPros(); dibujarDias();
+      const v = $('vista');
+      v.className = 'capa' + (haciaAtras ? ' atras' : '');
+      void v.offsetWidth;                          // reinicia la animación
+      barra(null);
+      [null, capaSucursal, capaServicio, capaBarbero, capaFecha, capaDatos][paso]();
     }
-
-    function elegirPersonas(k){
-      n = k; citas = citas.slice(0, Math.min(citas.length, k)); draft = nuevoDraft();
-      reiniciar(2); dibujarTodo();
-    }
-    function editarPersona(i){
-      // Se vuelve a elegir desde esa persona (las siguientes también, porque dependen de sus horas)
-      draft = { ...citas[i], t:null, tid:null };
-      citas = citas.slice(0, i);
-      reiniciar(3); dibujarTodo();
-      $('paso2').scrollIntoView({ behavior:'smooth', block:'start' });
-    }
-    // Deja sin elegir los pasos desde "desde" en adelante (2 = servicios … 5 = hora)
-    function reiniciar(desde){
-      if (desde <= 2){ $('check2').textContent = ''; draft.eleccion = null; }
-      if (desde <= 3){ desactivar('paso3'); $('check3').textContent = ''; }
-      if (desde <= 4){ desactivar('paso4'); $('check4').textContent = ''; draft.fecha = ''; }
-      if (desde <= 5){ desactivar('paso5'); $('check5').textContent = ''; $('listaHoras').innerHTML = ''; $('horaElegida').innerHTML = ''; draft.t = null; draft.tid = null; }
-      desactivar('paso6');
+    function cambiarLocal(){
+      if ((citas.length || draft.servicios.length) && !confirm('Si cambias de sucursal se borra lo que elegiste. ¿Seguir?')) return;
+      citas = []; draft = nuevoDraft(); paso = 1; empujar({ paso }); dibujar(true);
     }
 
-    // ---------- PASO 2: SERVICIOS ----------
-    function dibujarServicios(){
-      $('listaServ').innerHTML = CFG.servicios.map(s => {
-        const sel = draft.servicios.includes(s.id);
-        return `<div class="card-serv ${sel?'sel':''}" onclick="toggleServicio(${s.id})">
-          <div class="caja-check">${sel?'✓':''}</div>
-          <div class="serv-info"><div class="serv-nom">${esc(s.nombre)}</div><div class="serv-desc">${esc(s.descripcion||'')} · ${s.duracion} min</div></div>
-          <div class="serv-precio">${clp(s.precio)}</div></div>`;
-      }).join('');
-      $('totalServ').textContent = clp(totalDe(draft));
-      $('durServ').textContent = draft.servicios.length ? `· ${durDe(draft)} min` : '';
-      $('btnServ').disabled = !draft.servicios.length;
+    // Barra inferior fija (resumen + botón)
+    function barra(cfg){
+      const b = $('barra');
+      if (!cfg){ b.classList.remove('ver'); return; }
+      $('barraTxt').innerHTML = cfg.html;
+      $('barraBtn').textContent = cfg.boton;
+      $('barraBtn').disabled = !!cfg.deshabilitado;
+      $('barraBtn').onclick = cfg.accion;
+      b.classList.add('ver');
     }
+
+    // ---------- 1) SUCURSAL ----------
+    function capaSucursal(){
+      $('vista').innerHTML = `<h2>¿Dónde te quieres atender?</h2><p class="ayuda">Elige la barbería. Cada local tiene su propio equipo y precios.</p>
+        <div class="locales">${CFG.locales.map(l => {
+          const nb = CFG.trabajadores.filter(t => t.local_id === l.id).length;
+          const mapa = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('BarberTop ' + (l.direccion || l.nombre));
+          return `<button class="local ${l.id === LOCAL ? 'sel' : ''}" onclick="elegirLocal(${l.id})">
+            <div class="local-ic">📍</div><b>${esc(l.nombre)}</b>
+            <div class="dir">${esc(l.direccion || '')}</div>
+            ${l.referencia ? `<div class="ref">🚇 ${esc(l.referencia)}</div>` : ''}
+            <div class="pie-local"><span>${nb} ${nb === 1 ? 'barbero' : 'barberos'}</span><a href="${mapa}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Cómo llegar ↗</a></div>
+          </button>`; }).join('')}</div>`;
+    }
+    function elegirLocal(id){
+      if (LOCAL !== id){ citas = []; draft = nuevoDraft(); n = 1; }
+      LOCAL = id; avanzar(2);
+    }
+
+    // ---------- 2) SERVICIO ----------
+    function capaServicio(){
+      const servs = servsLocal();
+      if (!servs.length){ $('vista').innerHTML = `<h2>Elige tu servicio</h2><div class="vacio">Este local aún no tiene servicios disponibles para reservar online.</div>`; return; }
+      // Categorías en orden: "Promociones" primero, luego como vienen
+      const cats = [...new Set(servs.map(s => s.categoria || 'Servicios'))].sort((a, b) => (b.toLowerCase().startsWith('promo')) - (a.toLowerCase().startsWith('promo')));
+      const posible = id => aptos([...new Set([...draft.servicios, id])]).length > 0;
+      const quien = persona() === 0 ? '' : ` para ${etiqueta(persona()).toLowerCase()}`;
+      $('vista').innerHTML = `${persona() > 0 ? '<button class="volver" onclick="atras()">← Volver</button>' : (CFG.locales.length > 1 ? '<button class="volver" onclick="atras()">← Cambiar sucursal</button>' : '')}
+        <h2>Elige tu servicio${quien}</h2><p class="ayuda">Puedes elegir más de uno. Los precios son de ${esc(localSel().nombre)}.</p>
+        ${persona() === 0 ? `<div class="personas"><span>¿Para cuántas personas es la reserva?</span>${[1,2,3].slice(0, MAX_PERSONAS).map(k =>
+          `<button class="chip ${k === n ? 'sel' : ''}" onclick="elegirPersonas(${k})">${k} ${k === 1 ? 'persona' : 'personas'}</button>`).join('')}</div>` : ''}
+        ${cats.map(c => `<div class="cat">${esc(c)}</div><div class="servicios">${servs.filter(s => (s.categoria || 'Servicios') === c).map(s => {
+          const sel = draft.servicios.includes(s.id), ok = sel || posible(s.id);
+          return `<button class="serv ${sel ? 'sel' : ''} ${ok ? '' : 'no'}" ${ok ? `onclick="toggleServicio(${s.id})"` : 'title="Ningún barbero hace este servicio junto a lo que ya elegiste"'}>
+            <span class="serv-check">${sel ? '✓' : ''}</span>
+            <span class="serv-info"><span class="serv-nom">${esc(s.nombre)}</span>${s.descripcion ? `<span class="serv-desc" style="display:block">${esc(s.descripcion)}</span>` : ''}
+              <span class="serv-meta"><span class="dur">⏱ ${s.duracion} min</span><span class="precio">${clp(s.precio)}</span></span></span>
+          </button>`; }).join('')}</div>`).join('')}`;
+      barraServicio();
+    }
+    function barraServicio(){
+      const k = draft.servicios.length;
+      barra({ html: k ? `<b>${clp(totalDe(draft))}</b>${k} ${k === 1 ? 'servicio' : 'servicios'} · ${durDe(draft)} min` : '<b>Elige un servicio</b>Toca una tarjeta para agregarla',
+              boton: 'Continuar →', deshabilitado: !k, accion: () => avanzar(3) });
+    }
+    function elegirPersonas(k){ n = k; dibujar(); }
     function toggleServicio(id){
       draft.servicios = draft.servicios.includes(id) ? draft.servicios.filter(x => x !== id) : [...draft.servicios, id];
-      $('check2').textContent = '';
-      reiniciar(3); dibujarServicios();
-    }
-    function confirmarServicios(){
-      if (!draft.servicios.length) return;
-      $('check2').textContent = '✓ ' + clp(totalDe(draft));
-      activar('paso3'); dibujarPros();
-      $('paso3').scrollIntoView({ behavior:'smooth', block:'start' });
+      draft.eleccion = null; draft.tid = null; draft.t = null;
+      const y = window.scrollY; capaServicio(); window.scrollTo({ top:y });
     }
 
-    // ---------- PASO 3: PROFESIONAL ----------
-    function dibujarPros(){
-      $('listaPros').innerHTML =
-        `<button class="pro ${draft.eleccion===AUTO?'sel':''}" onclick="elegirPro('${AUTO}')"><span class="pro-av alt">⚡</span><span>Cualquier profesional<small>Te asignamos al más disponible</small></span></button>` +
-        CFG.trabajadores.map(t => `<button class="pro ${draft.eleccion===t.id?'sel':''}" onclick="elegirPro(${t.id})"><span class="pro-av">${esc(t.nombre[0])}</span><span>${esc(t.nombre)}<small>Ver sus horas</small></span></button>`).join('');
+    // ---------- 3) BARBERO ----------
+    function capaBarbero(){
+      const lista = aptos(draft.servicios);
+      const foto = t => t.foto_url ? `style="background-image:url('${esc(t.foto_url)}')"` : '';
+      $('vista').innerHTML = `<button class="volver" onclick="atras()">← Volver a servicios</button>
+        <h2>¿Con quién agendas?</h2><p class="ayuda">Solo aparecen los barberos de ${esc(localSel().nombre)} que realizan lo que elegiste.</p>
+        ${lista.length ? `<div class="barberos">
+          <button class="barbero cualquiera ${draft.eleccion === AUTO ? 'sel' : ''}" onclick="elegirBarbero('${AUTO}')"><div class="foto">⚡</div><b>Cualquiera disponible</b><small>Más horas para elegir</small></button>
+          ${lista.map(t => `<button class="barbero ${draft.eleccion === t.id ? 'sel' : ''}" onclick="elegirBarbero(${t.id})">
+            <div class="foto" ${foto(t)}>${t.foto_url ? '' : esc(t.nombre[0])}</div><b>${esc(t.nombre)}</b><small>Ver sus horas</small></button>`).join('')}
+        </div>` : '<div class="vacio">Ningún barbero de este local realiza todos esos servicios juntos. Vuelve y quita alguno.</div>'}`;
     }
-    function elegirPro(v){
-      draft.eleccion = v === AUTO ? AUTO : Number(v);
-      $('check3').textContent = '✓ ' + (draft.eleccion === AUTO ? 'Cualquiera' : nombreTrab(draft.eleccion));
-      reiniciar(4); activar('paso3'); activar('paso4'); dibujarPros(); dibujarDias();
-      $('paso4').scrollIntoView({ behavior:'smooth', block:'start' });
+    function elegirBarbero(v){
+      const e = v === AUTO ? AUTO : Number(v);
+      if (e !== draft.eleccion){ draft.t = null; draft.tid = null; }
+      draft.eleccion = e; avanzar(4);
     }
 
     // ---------- DISPONIBILIDAD ----------
     function horarioDe(tid, dow){ return CFG.horarios.find(h => h.trabajador_id === tid && h.dia === dow); }
     function candidatos(){
       if (draft.eleccion !== AUTO) return [draft.eleccion];
-      return CFG.trabajadores.map(t => t.id).sort((a, b) => (carga[a]||0) - (carga[b]||0));   // el menos cargado primero
+      return aptos(draft.servicios).map(t => t.id).sort((a, b) => (carga[a]||0) - (carga[b]||0));   // el menos cargado primero
     }
-    function trabaja(dow){ return draft.eleccion !== null && candidatos().some(tid => horarioDe(tid, dow)); }
+    const trabaja = dow => candidatos().some(tid => horarioDe(tid, dow));
     function estaLibre(tid, dow, desde, hasta, minimo){
       const h = horarioDe(tid, dow);
       if (!h || desde < aMin(h.inicio) || hasta > aMin(h.fin) || desde < minimo) return false;
@@ -347,168 +448,293 @@
       return !ocupacion.some(o => o.trabajador_id === tid && desde < o.hasta && hasta > o.desde);
     }
 
-    // ---------- PASO 4: DÍA ----------
-    const NOMBRES_DIA = ["dom","lun","mar","mié","jue","vie","sáb"];
-    function dibujarDias(){
-      if (!CFG.ahora) return;
-      const año = fechaVista.getFullYear(), mes = fechaVista.getMonth();
-      $('diasMes').textContent = fechaVista.toLocaleDateString('es-CL', { month:'long', year:'numeric' });
-      const hoyTxt = CFG.ahora.split('T')[0];
-      const limite = deTexto(hoyTxt); limite.setDate(limite.getDate() + DIAS_ADELANTE);
-      const diasEnMes = new Date(año, mes+1, 0).getDate();
-      let html = '';
-      for (let d=1; d<=diasEnMes; d++){
-        const f = new Date(año, mes, d), ft = fechaTexto(f), abre = trabaja(f.getDay());
-        const off = ft < hoyTxt || f > limite || !abre;
-        html += `<div class="dia-card ${off?'off':''} ${ft===draft.fecha?'sel':''}" ${off?'':`onclick="elegirDia('${ft}', this)"`}>
-          <div class="dia-nom">${NOMBRES_DIA[f.getDay()]}</div><div class="dia-num">${d}</div>
-          ${draft.eleccion !== null && !abre ? '<div class="dia-extra">no atiende</div>' : ''}</div>`;
-      }
-      $('diasFila').innerHTML = html;
-      const sel = $('diasFila').querySelector('.sel') || $('diasFila').querySelector('.dia-card:not(.off)');
-      if (sel) sel.scrollIntoView({ block:'nearest', inline:'center' });
+    // ---------- 4) FECHA Y HORA ----------
+    function capaFecha(){
+      const hoy = deTexto(hoyTxt());
+      const limite = new Date(hoy); limite.setDate(limite.getDate() + DIAS_ADELANTE);
+      const dias = [];
+      for (let i = 0; i < DIAS_TIRA; i++){ const f = new Date(hoy); f.setDate(f.getDate() + i); dias.push(f); }
+      if (draft.fecha && !dias.some(f => fechaTexto(f) === draft.fecha)) dias.push(deTexto(draft.fecha));
+      if (!draft.fecha){ const primero = dias.find(f => trabaja(f.getDay())); if (primero) draft.fecha = fechaTexto(primero); }
+      const top = (f, i) => i === 0 && fechaTexto(f) === hoyTxt() ? 'Hoy' : i === 1 ? 'Mañana' : f.toLocaleDateString('es-CL', { weekday:'short' }).replace('.', '');
+      $('vista').innerHTML = `<button class="volver" onclick="atras()">← Volver a barberos</button>
+        <h2>Elige fecha y hora</h2><p class="ayuda">${draft.eleccion === AUTO ? 'Te asignamos al barbero con menos reservas ese día; si está ocupado a esa hora, pasa al siguiente.' : 'Horas libres de ' + esc(nombreTrab(draft.eleccion)) + '.'}</p>
+        <div class="dias" id="dias">${dias.map((f, i) => {
+          const ft = fechaTexto(f), abre = trabaja(f.getDay());
+          return `<button class="dia ${ft === draft.fecha ? 'sel' : ''} ${abre ? '' : 'off'}" ${abre ? `onclick="elegirDia('${ft}')"` : 'title="Cerrado"'}>
+            <div class="dia-top">${top(f, i)}</div><div class="dia-num">${f.getDate()}</div><div class="dia-mes">${abre ? MESES[f.getMonth()] : 'cerrado'}</div></button>`; }).join('')}</div>
+        <div class="otra"><button onclick="$('otraFecha').classList.toggle('oculto'); $('otraFecha').showPicker?.()">📅 ¿Otra fecha?</button>
+          <input type="date" id="otraFecha" class="oculto" min="${hoyTxt()}" max="${fechaTexto(limite)}" onchange="otraFecha(this.value)"></div>
+        <div id="horas"></div>`;
+      const sel = $('dias').querySelector('.sel'); if (sel) sel.scrollIntoView({ block:'nearest', inline:'center' });
+      if (draft.fecha) cargarHoras(); else $('horas').innerHTML = '<div class="vacio">No hay días con atención en las próximas semanas. Prueba "¿Otra fecha?".</div>';
     }
-    function cambiarMes(delta){ fechaVista.setMonth(fechaVista.getMonth() + delta); dibujarDias(); }
-    function elegirDia(ft, el){
-      draft.fecha = ft;
-      document.querySelectorAll('.dia-card').forEach(c => c.classList.remove('sel'));
-      el.classList.add('sel');
-      $('check4').textContent = '✓ ' + fechaLinda(ft);
-      reiniciar(5); activar('paso5'); cargarHoras();
+    function elegirDia(ft){ draft.fecha = ft; draft.t = null; draft.tid = null; capaFecha(); }
+    function otraFecha(v){
+      if (!v) return;
+      if (!trabaja(deTexto(v).getDay())){ alertaHoras('Ese día no atendemos. Elige otro.'); return; }
+      elegirDia(v);
     }
+    function alertaHoras(txt){ $('horas').innerHTML = `<div class="vacio">${esc(txt)}</div>`; }
 
-    // ---------- PASO 5: HORA ----------
     async function cargarHoras(){
-      const cont = $('listaHoras');
-      cont.innerHTML = '<p class="nota">Buscando horas libres…</p>';
-      const { data, error } = await db.rpc('ocupacion', { p_fecha: draft.fecha });
-      if (error){ cont.innerHTML = `<p class="aviso">Error: ${esc(error.message)}</p>`; return; }
-      // Lo ocupado = reservas y bloqueos del servidor + las horas que ya elegiste para las otras personas
-      ocupacion = data.concat(citas.filter(c => c.fecha === draft.fecha).map(c => ({ trabajador_id: c.tid, desde: c.t, hasta: c.t + durDe(c) })));
+      alertaHoras('Buscando horas libres…');
+      const fecha = draft.fecha;
+      const { data, error } = await db.rpc('ocupacion', { p_fecha: fecha });
+      if (fecha !== draft.fecha || paso !== 4) return;           // cambió de día mientras cargaba
+      if (error){ $('horas').innerHTML = `<p class="aviso">Error: ${esc(error.message)}</p>`; return; }
+      // Ocupado = reservas y bloqueos + las horas que ya elegiste para las otras personas
+      ocupacion = data.concat(citas.filter(c => c.fecha === fecha).map(c => ({ trabajador_id: c.tid, desde: c.t, hasta: c.t + durDe(c) })));
       carga = {}; ocupacion.forEach(o => { carga[o.trabajador_id] = (carga[o.trabajador_id]||0) + (o.hasta - o.desde); });
 
-      const dow = deTexto(draft.fecha).getDay(), dur = durDe(draft);
+      const dow = deTexto(fecha).getDay(), dur = durDe(draft);
       const [hoy, hhmm] = CFG.ahora.split('T');
-      const minimo = draft.fecha === hoy ? aMin(hhmm) + 15 : 0;
+      const minimo = fecha === hoy ? Math.ceil((aMin(hhmm) + 15) / PASO_MIN) * PASO_MIN : 0;
       const cands = candidatos(), hs = cands.map(tid => horarioDe(tid, dow)).filter(Boolean);
-      if (!hs.length){ cont.innerHTML = '<p class="nota">Ese día no atendemos.</p>'; return; }
+      if (!hs.length){ alertaHoras('Ese día no atendemos.'); return; }
       const desdeDia = Math.min(...hs.map(h => aMin(h.inicio))), hastaDia = Math.max(...hs.map(h => aMin(h.fin)));
       libres = [];
-      for (let t = desdeDia; t + dur <= hastaDia; t += PASO_MIN){
+      for (let t = Math.ceil(desdeDia / PASO_MIN) * PASO_MIN; t + dur <= hastaDia; t += PASO_MIN){
         const tid = cands.find(id => estaLibre(id, dow, t, t + dur, minimo));
         if (tid) libres.push({ t, tid });
       }
-      if (!libres.length){ cont.innerHTML = '<p class="nota">No quedan horas este día. Prueba otro día.</p>'; return; }
-      const auto = draft.eleccion === AUTO;
-      const boton = k => `<button class="hora ${auto ? 'con-pro' : ''}" onclick="elegirHora(${k}, this)">${aHora(libres[k].t)}${auto ? `<small>${esc(nombreTrab(libres[k].tid))}</small>` : ''}</button>`;
-      const idx = libres.map((_, k) => k);
-      const man = idx.filter(k => libres[k].t < 13*60), tar = idx.filter(k => libres[k].t >= 13*60);
-      const aviso = auto ? `<p class="nota" style="margin-bottom:10px;">Te asignamos al profesional con menos reservas ese día; si está ocupado a esa hora, pasa al siguiente.</p>` : '';
-      cont.innerHTML = aviso + (man.length ? '<div class="franja">Mañana</div><div class="fila-horas">' + man.map(boton).join('') + '</div>' : '') +
-                       (tar.length ? '<div class="franja">Tarde</div><div class="fila-horas">' + tar.map(boton).join('') + '</div>' : '');
+      dibujarHoras();
     }
-    function elegirHora(k, el){
-      draft.t = libres[k].t; draft.tid = libres[k].tid;
-      document.querySelectorAll('.hora').forEach(b => b.classList.remove('sel'));
-      el.classList.add('sel');
-      $('check5').textContent = '✓ ' + aHora(draft.t);
-      const siguiente = actual() + 1 < n ? `Listo, seguir con ${etiqueta(actual()+1)} →` : 'Continuar a tus datos →';
-      $('horaElegida').innerHTML = `<div class="elegida">
-        <b>${esc(servDe(draft).map(s => s.nombre).join(' + '))}</b><br>
-        ${fechaLinda(draft.fecha)} · ${aHora(draft.t)}–${aHora(draft.t + durDe(draft))} · con <b>${esc(nombreTrab(draft.tid))}</b> · ${clp(totalDe(draft))}
-        <button class="boton-sec" onclick="guardarCita()">${siguiente}</button></div>`;
+    function dibujarHoras(){
+      if (!libres.length){ alertaHoras('No quedan horas este día. Prueba otro día.'); return; }
+      const man = libres.filter(x => x.t < 13*60), tar = libres.filter(x => x.t >= 13*60);
+      if (franja === 'man' && !man.length) franja = 'tar';
+      if (franja === 'tar' && !tar.length) franja = 'man';
+      if (draft.t !== null) franja = draft.t < 13*60 ? 'man' : 'tar';
+      const lista = franja === 'man' ? man : tar, auto = draft.eleccion === AUTO;
+      $('horas').innerHTML = `<div class="tabs">
+          <button class="tab ${franja === 'man' ? 'sel' : ''}" ${man.length ? '' : 'disabled'} onclick="franja='man'; draft.t=null; dibujarHoras()">☀️ Mañana<b>${man.length}</b></button>
+          <button class="tab ${franja === 'tar' ? 'sel' : ''}" ${tar.length ? '' : 'disabled'} onclick="franja='tar'; draft.t=null; dibujarHoras()">🌙 Tarde<b>${tar.length}</b></button></div>
+        <div class="horas">${lista.map(x => `<button class="hora ${draft.t === x.t ? 'sel' : ''}" onclick="elegirHora(${x.t})">${aHora(x.t)}${auto ? `<small>${esc(nombreTrab(x.tid))}</small>` : ''}</button>`).join('')}</div>`;
+      barraHora();
+    }
+    function elegirHora(t){
+      const x = libres.find(l => l.t === t); if (!x) return;
+      draft.t = x.t; draft.tid = x.tid; dibujarHoras();
+    }
+    function barraHora(){
+      const listo = draft.t !== null;
+      const sig = persona() + 1 < n ? `Seguir con ${etiqueta(persona() + 1)} →` : 'Continuar →';
+      barra({ html: listo ? `<b>${fechaLinda(draft.fecha)} · ${aHora(draft.t)}</b>con ${esc(nombreTrab(draft.tid))} · hasta ${aHora(draft.t + durDe(draft))} · ${clp(totalDe(draft))}`
+                          : '<b>Elige una hora</b>Toca una de las horas libres',
+              boton: sig, deshabilitado: !listo, accion: guardarCita });
     }
     function guardarCita(){
       citas.push({ ...draft });
+      const fechaAnterior = draft.fecha;
       draft = nuevoDraft();
-      if (actual() < n){
-        // La siguiente persona parte en el mismo día (lo más común cuando vienen juntos)
-        draft.fecha = '';
-        reiniciar(2); dibujarTodo();
-        $('paso1').scrollIntoView({ behavior:'smooth', block:'start' });
-      } else {
-        dibujarTodo();
-        $('paso6').scrollIntoView({ behavior:'smooth', block:'start' });
-      }
+      if (persona() < n){ draft.fecha = fechaAnterior; avanzar(2); }    // la siguiente persona parte en el mismo día
+      else avanzar(5);
     }
 
-    // ---------- PASO 6: DATOS ----------
-    function dibujarDatos(){
-      const total = citas.reduce((a, c) => a + totalDe(c), 0);
-      $('resumen').innerHTML = citas.map((c, i) => `
-        <div class="res-item">
-          ${n > 1 ? `<div class="res-linea"><span>${etiqueta(i)}</span><span><button class="link-mini" onclick="editarPersona(${i})" style="background:none;border:none;color:var(--gris);text-decoration:underline;cursor:pointer;font-size:12px;">Cambiar</button></span></div>` : ''}
-          <div class="res-linea"><span>${esc(servDe(c).map(s => s.nombre).join(' + '))}</span><span>${clp(totalDe(c))}</span></div>
-          <div class="res-linea"><span>${fechaLinda(c.fecha)} · con ${esc(nombreTrab(c.tid))}</span><span>${aHora(c.t)} – ${aHora(c.t + durDe(c))}</span></div>
-        </div>`).join('') + `<div class="res-total"><span>Total</span><span>${clp(total)}</span></div>`;
-      const previos = [...document.querySelectorAll('.acomp')].map(x => x.value);
-      $('acompanantes').innerHTML = citas.slice(1).map((c, i) =>
-        `<label class="lbl">Nombre de la persona ${i+2}</label><input type="text" class="acomp" placeholder="Nombre" value="${esc(previos[i]||'')}">`).join('');
+    // ---------- 5) DATOS ----------
+    function capaDatos(){
+      const d = datosCliente, total = citas.reduce((a, c) => a + totalDe(c), 0);
+      const dominio = d.dominio || DOMINIOS[0], cod = d.cod || '+56';
+      $('vista').innerHTML = `<button class="volver" onclick="atras()">← Volver a la hora</button>
+        <h2>Tus datos</h2><p class="ayuda">Revisa tu reserva y completa tus datos para confirmar.</p>
+        <div class="tarjeta"><h3>Tu reserva · ${esc(localSel().nombre)}</h3>${citas.map((c, i) => `
+          <div class="res-item">
+            ${n > 1 ? `<div class="res-linea"><b>${etiqueta(i)}</b><button class="link" onclick="editarPersona(${i})">Cambiar</button></div>` : ''}
+            <div class="res-linea"><span>${esc(servDe(c).map(s => s.nombre).join(' + '))}</span><b>${clp(totalDe(c))}</b></div>
+            <div class="res-linea g"><span>${fechaLinda(c.fecha)} · ${aHora(c.t)} – ${aHora(c.t + durDe(c))}</span><span>con ${esc(nombreTrab(c.tid))}</span></div>
+          </div>`).join('')}</div>
+
+        <div class="tarjeta">
+          <div class="fila2">
+            <div class="campo"><label class="lbl" for="fNombre">Nombre</label><input id="fNombre" autocomplete="given-name" value="${esc(d.nombre || '')}" placeholder="Tu nombre"></div>
+            <div class="campo"><label class="lbl" for="fApellido">Apellido</label><input id="fApellido" autocomplete="family-name" value="${esc(d.apellido || '')}" placeholder="Tu apellido"></div>
+          </div>
+          ${citas.slice(1).map((c, i) => `<div class="campo"><label class="lbl">Nombre de la persona ${i+2}</label><input class="acomp" value="${esc((d.acomp || [])[i] || '')}" placeholder="Nombre"></div>`).join('')}
+          <div class="campo"><label class="lbl" for="fEmail">Email</label>
+            <div class="junto" id="juntoEmail"><input id="fEmail" autocomplete="email" autocapitalize="off" spellcheck="false" value="${esc(d.email || '')}" placeholder="ej: barbertopventas.cl" oninput="revisarEmail()">
+              <select id="fDominio" onchange="revisarEmail()">${DOMINIOS.map(x => `<option ${x === dominio ? 'selected' : ''}>${x}</option>`).join('')}<option value="otro" ${dominio === 'otro' ? 'selected' : ''}>otro…</option></select></div>
+            <div class="nota" id="emailFinal" style="margin-top:5px;"></div></div>
+          <div class="campo"><label class="lbl" for="fTel">Teléfono</label>
+            <div class="junto"><select id="fCod" onchange="cambiarPais()">${PAISES.map(([v, t]) => `<option value="${v}" ${v === cod ? 'selected' : ''}>${t}</option>`).join('')}</select>
+              <input id="fTel" type="tel" inputmode="tel" autocomplete="tel-national" value="${esc(d.tel ?? (cod === '+56' ? '9 ' : ''))}" placeholder="${cod === '+56' ? '9 1234 5678' : 'Número'}" oninput="formatoTel()"></div></div>
+          <label class="check"><input type="checkbox" id="fWsp" ${d.wsp === false ? '' : 'checked'}><span>Quiero recibir la confirmación y recordatorios por <b>WhatsApp</b></span></label>
+          <div class="campo"><label class="lbl" for="fObs">Observaciones (opcional)</label><textarea id="fObs" placeholder="Ej: degradado bajo, dejar largo arriba…">${esc(d.obs || '')}</textarea></div>
+          <label class="lbl">Foto del corte que quieres (opcional)</label>
+          <label class="subir" id="subir">${cajaFoto()}<input type="file" accept="image/*" class="oculto" onchange="cargarFoto(this.files[0])"></label>
+        </div>
+
+        <div class="total"><div><small>Total a pagar</small><strong>${clp(total)}</strong></div><div style="text-align:right;"><small>Se paga en el local</small><small>Efectivo, débito o transferencia</small></div></div>
+        <button class="boton" id="btnReservar" onclick="reservar()">Confirmar reserva</button>
+        <p class="estado" id="estado"></p>
+        <p class="nota" style="text-align:center; margin-top:6px;">Al confirmar, tu hora queda reservada al instante. Si no puedes venir, avísanos.</p>`;
+      revisarEmail(); formatoTel();
+    }
+    function cajaFoto(){
+      return foto ? `<img src="${foto}" alt="Foto de referencia"><span style="flex:1;">Foto agregada ✓<br><span class="nota">Toca para cambiarla</span></span><button class="link" onclick="event.preventDefault(); quitarFoto()">Quitar</button>`
+                  : `<span class="ic">📷</span><span style="flex:1;">Agregar foto de referencia<br><span class="nota">Así tu barbero sabe qué corte quieres</span></span>`;
+    }
+    function quitarFoto(){ foto = null; $('subir').innerHTML = cajaFoto() + '<input type="file" accept="image/*" class="oculto" onchange="cargarFoto(this.files[0])">'; }
+    // La foto se achica en el teléfono (máx. 900 px) para que suba rápido
+    function cargarFoto(archivo){
+      if (!archivo) return;
+      const img = new Image(), url = URL.createObjectURL(archivo);
+      img.onload = () => {
+        const k = Math.min(1, 900 / Math.max(img.width, img.height));
+        const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        let q = 0.78, out = c.toDataURL('image/jpeg', q);
+        while (out.length > 600000 && q > 0.3){ q -= 0.12; out = c.toDataURL('image/jpeg', q); }
+        foto = out; URL.revokeObjectURL(url);
+        $('subir').innerHTML = cajaFoto() + '<input type="file" accept="image/*" class="oculto" onchange="cargarFoto(this.files[0])">';
+      };
+      img.onerror = () => { $('estado').textContent = 'No se pudo leer esa imagen.'; };
+      img.src = url;
+    }
+
+    // Email: se escribe solo el usuario; el dominio (@gmail.com) viene elegido
+    function correoFinal(){
+      const u = $('fEmail').value.trim().replace(/\s/g, ''), dom = $('fDominio').value;
+      if (!u) return '';
+      if (u.includes('@') || dom === 'otro') return u;
+      return u + dom;
+    }
+    function revisarEmail(){
+      const u = $('fEmail').value, conArroba = u.includes('@') || $('fDominio').value === 'otro';
+      $('fDominio').classList.toggle('oculto', u.includes('@'));
+      $('fEmail').style.borderRadius = u.includes('@') ? '10px' : '';
+      $('fEmail').placeholder = conArroba ? 'tu@correo.com' : 'ej: barbertopventas.cl';
+      const c = correoFinal();
+      $('emailFinal').textContent = c ? 'Te escribiremos a: ' + c : '';
+    }
+    // Teléfono: Chile (+56) parte con "9 " y se ordena como 9 1234 5678
+    function cambiarPais(){
+      const cod = $('fCod').value, t = $('fTel');
+      if (cod === '+56' && !t.value.trim()) t.value = '9 ';
+      if (cod !== '+56' && t.value.trim() === '9') t.value = '';
+      t.placeholder = cod === '+56' ? '9 1234 5678' : 'Número';
+      formatoTel(); t.focus();
+    }
+    function formatoTel(){
+      if ($('fCod').value !== '+56') return;
+      const t = $('fTel');
+      let dig = t.value.replace(/\D/g, '');
+      if (dig.startsWith('56') && dig.length > 9) dig = dig.slice(2);
+      dig = dig.slice(0, 9);
+      if (!dig){ return; }
+      const f = dig.length <= 1 ? dig + ' ' : dig[0] + ' ' + dig.slice(1, 5) + (dig.length > 5 ? ' ' + dig.slice(5) : '');
+      if (f.trim() !== t.value.trim()) t.value = f;
+    }
+    function telefonoFinal(){
+      const cod = $('fCod').value, dig = $('fTel').value.replace(/\D/g, '');
+      return { cod, dig, texto: `${cod} ${cod === '+56' ? dig.replace(/^(\d)(\d{4})(\d{4})$/, '$1 $2 $3') : dig}` };
+    }
+    function leerFormulario(){
+      datosCliente = { nombre: $('fNombre').value.trim(), apellido: $('fApellido').value.trim(), email: $('fEmail').value.trim(),
+        dominio: $('fDominio').value, cod: $('fCod').value, tel: $('fTel').value, wsp: $('fWsp').checked, obs: $('fObs').value.trim(),
+        acomp: [...document.querySelectorAll('.acomp')].map(x => x.value.trim()) };
+      return datosCliente;
+    }
+    function editarPersona(i){
+      leerFormulario();
+      // Se vuelve a elegir desde esa persona (las siguientes también, porque dependen de sus horas)
+      draft = { ...citas[i], t:null, tid:null };
+      citas = citas.slice(0, i);
+      paso = 4; empujar({ paso }); dibujar(true);
     }
 
     async function reservar(){
-      const nombre = $('nombreCliente').value.trim(), correo = $('correoCliente').value.trim();
-      const telefono = $('telefonoCliente').value.trim(), mensaje = $('mensajeCliente').value.trim();
-      const acomp = [...document.querySelectorAll('.acomp')].map(x => x.value.trim());
-      const est = $('estado');
-      if (!nombre){ est.textContent = "Escribe tu nombre."; return; }
-      if (acomp.some(a => !a)){ est.textContent = "Escribe el nombre de cada acompañante."; return; }
-      if (!/^\S+@\S+\.\S+$/.test(correo)){ est.textContent = "Escribe un correo válido."; return; }
-      if (telefono.replace(/\D/g,'').length < 8){ est.textContent = "Escribe tu WhatsApp."; return; }
+      const d = leerFormulario(), est = $('estado');
+      const correo = correoFinal(), tel = telefonoFinal();
+      if (!d.nombre){ est.textContent = "Escribe tu nombre."; $('fNombre').focus(); return; }
+      if (!d.apellido){ est.textContent = "Escribe tu apellido."; $('fApellido').focus(); return; }
+      if (d.acomp.some(a => !a)){ est.textContent = "Escribe el nombre de cada acompañante."; return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)){ est.textContent = "Revisa tu email."; $('fEmail').focus(); return; }
+      if (tel.cod === '+56' ? !/^9\d{8}$/.test(tel.dig) : tel.dig.length < 6){ est.textContent = tel.cod === '+56' ? "El celular debe tener 9 dígitos y partir con 9." : "Revisa tu teléfono."; $('fTel').focus(); return; }
 
-      $('btnReservar').disabled = true; est.textContent = "Reservando...";
-      const payload = { nombre, correo, telefono, mensaje,
-        personas: citas.map((c, i) => ({ nombre: i === 0 ? nombre : acomp[i-1], servicios: c.servicios, trabajador_id: c.tid, fecha: c.fecha, hora: aHora(c.t) })) };
+      $('btnReservar').disabled = true; est.style.color = 'var(--gris)'; est.textContent = "Reservando…";
+      const nombre = `${d.nombre} ${d.apellido}`;
+      const payload = { nombre, correo, telefono: tel.texto, mensaje: d.obs, whatsapp: d.wsp, foto,
+        personas: citas.map((c, i) => ({ nombre: i === 0 ? nombre : d.acomp[i-1], servicios: c.servicios, trabajador_id: c.tid, fecha: c.fecha, hora: aHora(c.t) })) };
       const { data, error } = await db.rpc('reservar_grupo', { p: payload });
-      $('btnReservar').disabled = false;
+      $('btnReservar').disabled = false; est.style.color = '';
       if (error){
-        est.textContent = error.message.includes('HORA_OCUPADA') || error.message.includes('bloqueado')
-          ? "Alguien acaba de tomar una de esas horas. Toca \"Cambiar\" en esa persona para elegir otra."
+        est.textContent = error.message.includes('HORA_OCUPADA') || error.message.includes('bloqueado') || error.message.includes('ocupad')
+          ? "Alguien acaba de tomar esa hora. Vuelve y elige otra, por favor."
           : "No se pudo reservar: " + error.message;
         return;
       }
+      guardarLocal('clipperlab-cliente', { ...d, obs:'', acomp:[] });
+      const l = localSel();
       const detalle = data.map(r => `${r.nombre}: ${r.servicios} con ${r.trabajador} ${r.fecha} ${r.desde}-${r.hasta} (${clp(r.total)})`).join('\n');
       try {
         await fetch("https://formspree.io/f/xzezawgo", { method:"POST", headers:{ "Content-Type":"application/json", "Accept":"application/json" },
-          body: JSON.stringify({ _subject:`Nueva reserva ClipperLab (${data.length} persona${data.length>1?'s':''})`, reservas: detalle,
-            total: clp(data.reduce((a,r)=>a+r.total,0)), nombre, correo, telefono, mensaje }) });
+          body: JSON.stringify({ _subject:`Nueva reserva ${l.nombre} (${data.length} persona${data.length>1?'s':''})`, local: l.nombre, reservas: detalle,
+            total: clp(data.reduce((a,r)=>a+r.total,0)), nombre, correo, telefono: tel.texto, whatsapp: d.wsp ? 'sí' : 'no', observaciones: d.obs, foto: foto ? 'sí (ver en el panel)' : 'no' }) });
       } catch(e) {}
       mostrarConfirmacion(data);
     }
 
     function mostrarConfirmacion(data){
-      $('wizard').classList.add('oculto');
+      const l = localSel(), r0 = data[0];
+      const f = (fe, h) => fe.replace(/-/g, '') + 'T' + h.replace(':', '') + '00';
+      const cal = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent('BarberTop ' + l.nombre + ' · ' + r0.servicios) +
+        '&dates=' + f(r0.fecha, r0.desde) + '/' + f(r0.fecha, r0.hasta) + '&ctz=America/Santiago&location=' + encodeURIComponent(l.direccion || l.nombre) +
+        '&details=' + encodeURIComponent('Con ' + r0.trabajador + '. Se paga en el local.');
+      const mapa = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('BarberTop ' + (l.direccion || l.nombre));
+      barra(null); reservado = true;
+      $('asistente').classList.add('oculto');
       $('vistaListo').classList.remove('oculto');
-      $('listoSub').textContent = `Total ${clp(data.reduce((a,r)=>a+r.total,0))}`;
-      $('listoLista').innerHTML = data.map(r => `<div class="item-res"><b>${fechaLinda(r.fecha)} · ${esc(r.desde)} – ${esc(r.hasta)}</b> · ${esc(r.nombre)}<br>${esc(r.servicios)} con ${esc(r.trabajador)} · ${clp(r.total)}</div>`).join('') +
-        `<p class="nota" style="margin-top:12px;">Puedes revisar tus reservas en "Mis reservas" con tu correo y WhatsApp.</p>`;
+      $('vistaListo').innerHTML = `<div class="listo"><div class="ok">✓</div><h2>¡Reserva confirmada!</h2>
+        <p class="ayuda" style="margin-bottom:6px;">Te esperamos en <b style="color:var(--hueso)">${esc(l.nombre)}</b> · ${esc(l.direccion || '')}${l.referencia ? ' · ' + esc(l.referencia) : ''}</p></div>
+        ${data.map(r => `<div class="item-res"><b>${fechaLinda(r.fecha)} · ${esc(r.desde)} – ${esc(r.hasta)}</b> · ${esc(r.nombre)}<br>${esc(r.servicios)} con ${esc(r.trabajador)} · ${clp(r.total)}</div>`).join('')}
+        <div class="total" style="margin-top:14px;"><div><small>Total</small><strong>${clp(data.reduce((a,r)=>a+r.total,0))}</strong></div><div style="text-align:right;"><small>Se paga en el local</small></div></div>
+        <div class="acciones">
+          <a class="boton sec" href="${cal}" target="_blank" rel="noopener">📅 Agregar a mi calendario</a>
+          <a class="boton sec" href="${mapa}" target="_blank" rel="noopener">📍 Cómo llegar</a>
+          <button class="boton" onclick="location.href = location.pathname">Hacer otra reserva</button>
+        </div>
+        <p class="nota" style="text-align:center; margin-top:14px;">Puedes revisar tus reservas en "Mis reservas" con tu email y teléfono.</p>`;
       window.scrollTo({ top:0, behavior:'smooth' });
     }
 
     // ---------- MIS RESERVAS ----------
-    function toggleMis(){
-      $('vistaMis').classList.toggle('oculto');
-      if (!$('vistaMis').classList.contains('oculto')) $('vistaMis').scrollIntoView({ behavior:'smooth' });
+    function verMisReservas(){
+      $('asistente').classList.add('oculto'); $('vistaListo').classList.add('oculto'); $('vistaMis').classList.remove('oculto'); barra(null);
+      const d = leerLocal('clipperlab-cliente');
+      if (d && !$('misCorreo').value){
+        $('misCorreo').value = d.email ? (d.email.includes('@') || d.dominio === 'otro' ? d.email : d.email + d.dominio) : '';
+        $('misTelefono').value = d.tel ? `${d.cod} ${d.tel}` : '';
+      }
+      if (!misAbierto){ misAbierto = true; empujar({ mis:true }); }
+    }
+    function volverDeMis(){ if (empujados > 0) history.back(); else cerrarMisReservas(); }
+    function cerrarMisReservas(){
+      misAbierto = false;
+      $('vistaMis').classList.add('oculto');
+      if (reservado) $('vistaListo').classList.remove('oculto');
+      else { $('asistente').classList.remove('oculto'); dibujar(true); }
     }
     async function buscarMisReservas(){
       const cont = $('misLista');
       const correo = $('misCorreo').value.trim(), tel = $('misTelefono').value.trim();
-      if (!correo || tel.replace(/\D/g,'').length < 8){ cont.innerHTML = '<p class="aviso">Escribe tu correo y WhatsApp.</p>'; return; }
+      if (!correo || tel.replace(/\D/g,'').length < 8){ cont.innerHTML = '<p class="aviso">Escribe tu correo y teléfono.</p>'; return; }
       cont.innerHTML = '<p class="nota">Buscando…</p>';
       const { data, error } = await db.rpc('mis_reservas', { p_correo: correo, p_telefono: tel });
       if (error){ cont.innerHTML = `<p class="aviso">Error: ${esc(error.message)}</p>`; return; }
-      if (!data.length){ cont.innerHTML = '<p class="nota" style="margin-top:10px;">No encontramos reservas próximas con esos datos.</p>'; return; }
-      const est = { confirmada:'Confirmada', completada:'Completada', cancelada:'Cancelada', no_asistio:'No asistió' };
+      if (!data.length){ cont.innerHTML = '<div class="vacio">No encontramos reservas próximas con esos datos.</div>'; return; }
+      const est = { confirmada:'Confirmada', en_atencion:'En atención', completada:'Atendida', cancelada:'Cancelada', no_asistio:'No asistió' };
       cont.innerHTML = data.map(r => `<div class="item-res"><b>${fechaLinda(r.fecha)} · ${esc(r.desde)} – ${esc(r.hasta)}</b> · ${esc(r.nombre)}<br>
-        ${esc(r.servicios || 'Reserva')} con ${esc(r.trabajador)}${r.total ? ' · ' + clp(r.total) : ''} · ${est[r.estado] || esc(r.estado)}</div>`).join('');
+        ${esc(r.servicios || 'Reserva')} con ${esc(r.trabajador)}${r.total ? ' · ' + clp(r.total) : ''} · ${est[r.estado] || esc(r.estado)}
+        ${r.local ? `<br><span class="nota">📍 ${esc(r.local)} · ${esc(r.direccion || '')}</span>` : ''}</div>`).join('');
     }
 
     // Si algo falla, se muestra en pantalla en vez de quedar en blanco
     window.addEventListener('error', e => {
-      const w = $('wizard'); if (w) w.insertAdjacentHTML('afterbegin', `<p class="aviso" style="margin-bottom:12px;">Error en la página: ${esc(e.message)}</p>`);
+      const v = $('vista'); if (v) v.insertAdjacentHTML('afterbegin', `<p class="aviso">Error en la página: ${esc(e.message)}</p>`);
     });
     let db;
-    if (typeof supabase === 'undefined') $('wizard').innerHTML = '<p class="aviso">No se pudo conectar con la base de datos. Revisa tu internet y recarga la página.</p>';
+    if (typeof supabase === 'undefined') $('vista').innerHTML = '<p class="aviso">No se pudo conectar con la base de datos. Revisa tu internet y recarga la página.</p>';
     else { db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); iniciar(); }
   </script>
 </body>
