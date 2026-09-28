@@ -18,6 +18,8 @@
   <title>ClipperLab — Equipamiento y servicio técnico para barberías</title>
  
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <!-- Conexión a la base de datos (para la inscripción de clientes) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
  
   <style>
@@ -136,7 +138,39 @@
     }
     .footer-links button:hover { color: var(--hueso); }
  
+    /* ---- INSCRIPCIÓN: 10% EN LA PRIMERA VISITA ---- */
+    .boton-linea { background: none; border: 1px solid var(--voltaje); color: var(--voltaje); }
+    .boton-linea:hover { background: var(--voltaje); color: var(--grafito); opacity: 1; }
+    .menu a.menu-reserva { color: var(--voltaje); text-decoration: none; font-size: 15px; font-weight: 600; }
+    .inscripcion { background: linear-gradient(135deg, rgba(255,122,47,0.14), rgba(29,32,40,0.9)); border-top: 1px solid rgba(255,122,47,0.35);
+                   border-bottom: 1px solid rgba(255,122,47,0.35); padding: 70px 0; text-align: center; }
+    .inscripcion .etiqueta { display: inline-block; font-size: 12px; letter-spacing: 3px; color: var(--voltaje); border: 1px solid var(--voltaje);
+                             padding: 4px 12px; border-radius: 20px; margin-bottom: 16px; }
+    .inscripcion h2 { font-family: 'Space Grotesk', sans-serif; font-size: 44px; line-height: 1.05; text-transform: uppercase; margin-bottom: 10px; }
+    .inscripcion h2 span { color: var(--voltaje); }
+    .inscripcion .subtitulo { margin-bottom: 28px; }
+    .form-insc { max-width: 620px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; text-align: left; }
+    .form-insc input, .form-insc select { width: 100%; background: var(--grafito); border: 1px solid rgba(255,255,255,0.14); border-radius: 6px;
+                                         padding: 14px 16px; color: var(--hueso); font-family: 'Inter', sans-serif; font-size: 15px; }
+    .form-insc input:focus, .form-insc select:focus { outline: none; border-color: var(--voltaje); }
+    .form-insc .completo { grid-column: 1 / -1; }
+    .form-insc .tel { display: flex; }
+    .form-insc .tel select { width: auto; border-radius: 6px 0 0 6px; border-right: none; }
+    .form-insc .tel input { border-radius: 0 6px 6px 0; }
+    .form-insc label.acepto { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--gris); }
+    .form-insc label.acepto input { width: auto; accent-color: var(--voltaje); }
+    .form-insc .boton { grid-column: 1 / -1; width: 100%; letter-spacing: 1px; }
+    .form-insc .boton:disabled { opacity: .5; cursor: wait; }
+    .estado-insc { grid-column: 1 / -1; min-height: 18px; font-size: 14px; color: #f87171; text-align: center; }
+    .insc-ok { max-width: 560px; margin: 0 auto; background: var(--panel); border: 1px solid var(--voltaje); border-radius: 10px; padding: 30px; }
+    .insc-ok .check { width: 56px; height: 56px; border-radius: 50%; background: #4ade80; color: var(--grafito); font-size: 28px; font-weight: 700;
+                      display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+    .insc-ok h3 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; margin-bottom: 8px; }
+    .insc-ok p { color: var(--gris); margin-bottom: 18px; }
+
     @media (max-width: 720px) {
+      .inscripcion h2 { font-size: 32px; }
+      .form-insc { grid-template-columns: 1fr; }
       .hero h1 { font-size: 38px; }
       .grilla  { grid-template-columns: 1fr; }
       .fila-doble { grid-template-columns: 1fr; }
@@ -310,6 +344,7 @@
           <button onclick="mostrar('catalogo')">Catálogo y precios</button>
           <button onclick="mostrar('mantencion')">Mantención</button>
           <button onclick="mostrar('contacto')">Contacto</button>
+          <a class="menu-reserva" href="agenda.html">Reservar hora</a>
           <button class="carrito-btn" onclick="abrirCarrito()">🛒<span class="carrito-contador" id="contadorCarrito">0</span></button>
         </nav>
       </div>
@@ -322,7 +357,10 @@
       <div class="contenedor">
         <h1>Equipamiento y <span>servicio técnico</span> para barberías</h1>
         <p>Venta de máquinas, mantención de sillones y equipos, e instalación integral para locales nuevos o remodelaciones.</p>
-        <button class="boton" onclick="mostrar('contacto')">Solicitar asesoría</button>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <button class="boton" onclick="mostrar('contacto')">Solicitar asesoría</button>
+          <a class="boton boton-linea" href="agenda.html">Reserva tu hora en BarberTop</a>
+        </div>
       </div>
     </section>
     <section class="bloque contenedor">
@@ -332,6 +370,41 @@
         <div class="tarjeta"><h3>Venta de máquinas e insumos</h3><p>Máquinas profesionales, repuestos, cuchillas y accesorios.</p></div>
         <div class="tarjeta"><h3>Mantención y reparación</h3><p>Servicio técnico de máquinas y sillones.</p></div>
         <div class="tarjeta"><h3>Instalaciones y asesoría</h3><p>Montaje integral para locales nuevos o remodelaciones.</p></div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         INSCRIPCIÓN: 10% EN LA PRIMERA VISITA A BARBERTOP
+         Guarda nombre, apellido, correo y WhatsApp en la base de clientes
+         (Supabase → función inscribir_cliente). El 10% se aplica solo
+         cuando la persona reserva en agenda.html con ese mismo WhatsApp.
+         ============================================================ -->
+    <section class="inscripcion" id="inscribete">
+      <div class="contenedor">
+        <span class="etiqueta">BARBERTOP · LAMPA Y PROVIDENCIA</span>
+        <h2>Inscríbete y recibe <span>10%</span><br>en tu primera visita</h2>
+        <p class="subtitulo">Sin spam. Te avisamos solo cuando vale la pena.</p>
+        <div id="cajaInsc">
+          <form class="form-insc" onsubmit="return inscribirme(event)">
+            <input id="insNombre" placeholder="Nombre" autocomplete="given-name" required>
+            <input id="insApellido" placeholder="Apellido" autocomplete="family-name" required>
+            <input id="insCorreo" class="completo" type="email" placeholder="Correo (ej: tunombre@gmail.com)" autocomplete="email" required>
+            <div class="tel completo">
+              <select id="insCod" aria-label="Código de país" onchange="if (this.value !== '+56' && document.getElementById('insTel').value.trim() === '9') document.getElementById('insTel').value = ''">
+                <option value="+56">🇨🇱 +56</option><option value="+54">🇦🇷 +54</option><option value="+51">🇵🇪 +51</option><option value="+57">🇨🇴 +57</option>
+                <option value="+58">🇻🇪 +58</option><option value="+593">🇪🇨 +593</option><option value="+591">🇧🇴 +591</option><option value="+1">🇺🇸 +1</option>
+              </select>
+              <input id="insTel" type="tel" inputmode="tel" value="9 " placeholder="WhatsApp: 9 1234 5678" autocomplete="tel-national" required>
+            </div>
+            <label class="acepto"><input type="checkbox" id="insPromos" checked> Acepto recibir promociones y descuentos de BarberTop</label>
+            <button type="submit" class="boton" id="insBoton">Quiero mi 10%</button>
+            <p class="estado-insc" id="insEstado"></p>
+          </form>
+          <p class="aviso-privacidad" style="margin:14px auto 0; text-align:center;">
+            Tus datos se usan solo para tu reserva y, si lo aceptas, para enviarte promociones. Puedes darte de baja cuando quieras.
+            <button onclick="mostrar('privacidad')" style="background:none;border:none;color:var(--voltaje);cursor:pointer;text-decoration:underline;font-size:13px;padding:0;">Política de Privacidad</button>.
+          </p>
+        </div>
       </div>
     </section>
   </div>
@@ -395,12 +468,6 @@
       <h3 class="cat-titulo">Insumos y mantención</h3>
       <div class="lista-precios" id="cat-insumos"></div>
  
-      <div style="margin-top:36px;">
-        <button class="boton" onclick="abrirCarrito()">Ver mi carrito</button>
-      </div>
-    </section>
-  </div>
- 
       <h3 style="font-family:'Space Grotesk',sans-serif;color:var(--voltaje);margin:36px 0 4px;">Servicios técnicos</h3>
       <div class="lista-precios">
         <div class="item-precio">
@@ -420,12 +487,13 @@
         </div>
       </div>
  
-      <div style="margin-top:36px;">
-        <button class="boton" onclick="mostrar('contacto')">Agendar una hora</button>
+      <div style="margin-top:36px; display:flex; gap:12px; flex-wrap:wrap;">
+        <button class="boton" onclick="abrirCarrito()">Ver mi carrito</button>
+        <button class="boton boton-linea" onclick="mostrar('contacto')">Agendar un servicio técnico</button>
       </div>
     </section>
   </div>
- 
+
   <!-- PANTALLA 4: CONTACTO -->
   <div class="pantalla" id="contacto">
     <section class="bloque contenedor">
@@ -486,20 +554,25 @@
       <p class="subtitulo">Cómo tratamos tus datos personales.</p>
  
       <h3>1. Responsable de los datos</h3>
-      <p>ClipperLab (Santiago, Chile) es responsable del tratamiento de los datos personales que nos entregas a través de este sitio.</p>
- 
+      <p>ClipperLab y BarberTop (Santiago, Chile) son responsables del tratamiento de los datos personales que nos entregas a través de este sitio y de la agenda online de BarberTop.</p>
+
       <h3>2. Qué datos recopilamos</h3>
-      <p>Recopilamos los datos que ingresas voluntariamente en nuestro formulario de contacto: nombre, apellido, correo electrónico, número de WhatsApp y el motivo de tu consulta.</p>
- 
+      <p>Solo los que ingresas voluntariamente: nombre, apellido, correo electrónico y número de WhatsApp, al inscribirte, reservar una hora o escribirnos por el formulario de contacto.
+         Al reservar también guardamos el historial de tus atenciones (fecha, local, servicios y montos) y, si la envías, la foto de referencia del corte.</p>
+
       <h3>3. Para qué los usamos</h3>
-      <p>Usamos tus datos exclusivamente para responder tu consulta, contactarte y ofrecerte nuestros servicios. No los vendemos ni los compartimos con terceros ajenos a la prestación del servicio.</p>
- 
-      <h3>4. Tus derechos (Ley 19.628)</h3>
-      <p>Conforme a la Ley 19.628 sobre protección de la vida privada, tienes derecho a acceder, rectificar, cancelar y oponerte al tratamiento de tus datos. Para ejercerlos, escríbenos por los canales de contacto de este sitio.</p>
- 
-      <h3>5. Conservación y seguridad</h3>
-      <p>Conservamos tus datos solo por el tiempo necesario para atender tu solicitud y tomamos medidas razonables para protegerlos.</p>
- 
+      <p>Para gestionar tus reservas, aplicar tus beneficios (como el 10% de la primera visita), responder tus consultas y, solo si lo aceptaste, enviarte promociones y novedades por correo o WhatsApp.
+         No vendemos ni compartimos tus datos con terceros ajenos a la prestación del servicio. Los barberos solo ven tu nombre y el servicio; tus datos de contacto los maneja únicamente la administración.</p>
+
+      <h3>4. Promociones y cómo darte de baja</h3>
+      <p>Puedes dejar de recibir promociones en cualquier momento respondiendo "BAJA" a cualquiera de nuestros mensajes o escribiéndonos por WhatsApp. Seguirás recibiendo solo los avisos de tus reservas.</p>
+
+      <h3>5. Tus derechos</h3>
+      <p>Conforme a la legislación chilena de protección de datos personales (Ley 19.628 y sus modificaciones), tienes derecho a acceder, rectificar, cancelar y oponerte al tratamiento de tus datos. Para ejercerlos, escríbenos por los canales de contacto de este sitio.</p>
+
+      <h3>6. Conservación y seguridad</h3>
+      <p>Conservamos tus datos mientras seas cliente o hasta que pidas eliminarlos. Las fotos de referencia se borran automáticamente 45 días después de tu atención. Los datos se guardan en servidores con acceso restringido y tomamos medidas razonables para protegerlos.</p>
+
       <div style="margin-top:30px;"><button class="boton" onclick="mostrar('inicio')">Volver al inicio</button></div>
     </section>
   </div>
@@ -826,6 +899,32 @@
       window.open("https://wa.me/" + numero + "?text=" + mensaje, "_blank");
     }
  
+    // ============================================================
+    // INSCRIPCIÓN (10% en la primera visita a BarberTop)
+    // Llama a la función segura "inscribir_cliente" de la base de datos:
+    // el sitio no puede leer la lista de clientes, solo agregar/actualizar.
+    // ============================================================
+    const db = window.supabase ? window.supabase.createClient("https://ugchyfulwkzmxwqjwkwp.supabase.co", "sb_publishable__WRIUNVBq6-nxTAwPD360g_5UICkBn_") : null;
+    async function inscribirme(ev) {
+      ev.preventDefault();
+      const g = id => document.getElementById(id), est = g('insEstado');
+      const cod = g('insCod').value, dig = g('insTel').value.replace(/\D/g, '');
+      if (cod === '+56' ? !/^9\d{8}$/.test(dig) : dig.length < 6) { est.textContent = 'Revisa tu WhatsApp (9 dígitos, parte con 9).'; return false; }
+      if (!db) { est.textContent = 'No hay conexión. Revisa tu internet y recarga la página.'; return false; }
+      const p = { nombre: g('insNombre').value.trim(), apellido: g('insApellido').value.trim(), correo: g('insCorreo').value.trim(),
+                  telefono: cod === '+56' ? `+56 ${dig.slice(0, 1)} ${dig.slice(1, 5)} ${dig.slice(5)}` : `${cod} ${dig}`, promos: g('insPromos').checked };
+      g('insBoton').disabled = true; est.textContent = '';
+      const { data, error } = await db.rpc('inscribir_cliente', { p });
+      g('insBoton').disabled = false;
+      if (error) { est.textContent = error.message; return false; }
+      try { localStorage.setItem('clipperlab-inscrito', 'true'); } catch (e) {}   // la agenda muestra "Estás inscrito"
+      g('cajaInsc').innerHTML = `<div class="insc-ok"><div class="check">✓</div>
+        <h3>${data.beneficio ? '¡Listo, ' + p.nombre + '! Tienes 10% en tu primera visita' : '¡Gracias, ' + p.nombre + '!'}</h3>
+        <p>${data.beneficio ? 'Se aplica automáticamente cuando reserves con este WhatsApp.' : 'Como ya te has atendido con nosotros, el 10% de primera visita no aplica, pero te llegarán nuestras promociones.'}</p>
+        <a class="boton" href="agenda.html">Reserva tu hora →</a></div>`;
+      return false;
+    }
+
     function mostrar(id) {
       const pantallas = document.querySelectorAll('.pantalla');
       pantallas.forEach(p => p.classList.remove('visible'));
@@ -840,4 +939,3 @@
  
 </body>
 </html>
- 
