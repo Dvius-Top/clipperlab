@@ -138,6 +138,8 @@
     .tabla-caja td { padding:7px 8px; border-bottom:1px solid var(--linea); white-space:nowrap; }
     .tabla-caja td.num, .tabla-caja th.num { text-align:right; }
     .tabla-caja tr.total td { font-weight:700; border-bottom:none; }
+    .kpi.destacado { border-color:rgba(255,122,47,0.45); background:rgba(255,122,47,0.08); }
+    .kpi.destacado b { color:var(--voltaje); }
     .toasts { position:fixed; right:16px; bottom:16px; display:flex; flex-direction:column; gap:10px; z-index:50; max-width:min(360px, calc(100vw - 32px)); }
     .toast { background:var(--panel); border:1px solid rgba(255,122,47,0.5); border-left:4px solid var(--voltaje); border-radius:12px; padding:12px 14px; box-shadow:0 12px 40px rgba(0,0,0,0.55); font-size:13px; cursor:pointer; animation:entra .25s ease-out; }
     .toast b { display:block; font-size:14px; margin-bottom:2px; }
@@ -148,6 +150,32 @@
     .en-vivo i { width:7px; height:7px; border-radius:50%; background:var(--gris); display:inline-block; }
     .en-vivo.on i { background:var(--verde); box-shadow:0 0 6px var(--verde); }
     @media (max-width:720px){ .grid-caja { grid-template-columns:1fr; } }
+
+    /* Fase 5 */
+    .rol.pestana { background:rgba(74,222,128,0.12); color:var(--verde); margin-left:4px; }
+    .modo-pestana { margin-top:10px; }
+    .grid-midia { display:grid; grid-template-columns:minmax(0, 1.1fr) minmax(0, 1fr); gap:16px; margin-top:14px; align-items:start; }
+    .grid-midia h3 { margin-bottom:8px; }
+    .resumen-dia { display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; }
+    .resumen-dia div { background:var(--panel); border:1px solid var(--linea); border-radius:10px; padding:10px 6px; text-align:center; }
+    .resumen-dia b { display:block; font-size:20px; }
+    .resumen-dia span { font-size:11px; color:var(--gris); }
+    .boton.llegada { background:var(--verde); }
+    .llegada-borde { border-color:rgba(74,222,128,0.5) !important; color:var(--verde) !important; }
+    .pulso { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--voltaje); animation:pulso 1.2s ease-in-out infinite; vertical-align:middle; }
+    @keyframes pulso { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.25; transform:scale(.7); } }
+    .ag-res.en_atencion { background:rgba(255,122,47,0.35); border-left-color:var(--voltaje); animation:parpadeo 1.6s ease-in-out infinite; }
+    @keyframes parpadeo { 0%,100% { box-shadow:0 0 0 0 rgba(255,122,47,0.0); } 50% { box-shadow:0 0 0 3px rgba(255,122,47,0.55); } }
+    .badge.en_atencion { background:rgba(255,122,47,0.18); color:var(--voltaje); }
+    .cita.en_atencion { border-color:rgba(255,122,47,0.6); animation:parpadeo 1.6s ease-in-out infinite; }
+    .proxima.atendiendo { border-color:var(--voltaje); animation:parpadeo 1.6s ease-in-out infinite; }
+    .cobrar { display:flex; justify-content:space-between; align-items:center; background:var(--panel2); border-radius:10px; padding:12px 14px; margin-top:12px; font-size:14px; }
+    .cobrar b { font-size:22px; color:var(--voltaje); }
+    .pros-llegada { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:8px; }
+    .pros-llegada .boton-linea { display:flex; align-items:center; gap:8px; padding:10px; font-size:14px; }
+    .notif .ico.llegada { background:rgba(74,222,128,0.15); } .notif .ico.completada { background:rgba(96,165,250,0.15); } .notif .ico.no_asistio { background:rgba(248,113,113,0.15); }
+    .toast.llegada, .toast.completada { border-left-color:var(--verde); border-color:rgba(74,222,128,0.5); }
+    @media (max-width:820px){ .grid-midia { grid-template-columns:1fr; } .resumen-dia { grid-template-columns:repeat(3, 1fr); } }
 
     /* Lista */
     .filtros { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; align-items:center; }
@@ -181,7 +209,7 @@
     /* Equipo */
     .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
     .trab { background:var(--panel); border:1px solid var(--linea); border-radius:14px; padding:16px; margin-top:12px; }
-    .trab-cab { display:grid; grid-template-columns:auto 1fr 1.4fr auto auto; gap:10px; align-items:center; }
+    .trab-cab { display:grid; grid-template-columns:auto 1fr 1.4fr auto auto auto; gap:10px; align-items:center; }
     .acceso { font-size:12px; margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
     .acceso input { width:180px; padding:7px 10px; }
     .tabla-horario { width:100%; border-collapse:collapse; margin-top:12px; font-size:13px; }
@@ -222,6 +250,7 @@
         <label for="loginClave">Contraseña</label>
         <input type="password" id="loginClave" autocomplete="current-password" onkeydown="if(event.key==='Enter')entrar()">
         <button class="boton ancho" onclick="entrar()">Entrar</button>
+        <div class="modo-pestana" id="modoPestanaLogin"></div>
         <button class="link" onclick="mostrarCodigo()">¿Olvidaste tu contraseña? Entra con un código a tu correo</button>
         <p class="estado" id="estadoLogin"></p>
         <div id="cajaCodigo" class="oculto" style="margin-top:6px;border-top:1px solid var(--linea);padding-top:12px;">
@@ -263,7 +292,8 @@
           <h1>Panel <span>ClipperLab</span></h1>
           <div class="quien">
             <div class="avatar" id="yoAvatar"></div>
-            <div><div id="yoNombre" style="font-weight:600;"></div><span class="rol" id="yoRol"></span></div>
+            <div><div id="yoNombre" style="font-weight:600;"></div><span class="rol" id="yoRol"></span>
+              <span class="rol pestana oculto" id="yoPestana" title="Esta sesión existe solo en esta pestaña">solo esta pestaña</span></div>
           </div>
         </div>
         <div style="display:flex; gap:8px; align-items:flex-start; position:relative;">
@@ -273,7 +303,7 @@
             <span class="contador oculto" id="nNoLeidas"></span>
           </button>
           <div class="panel-notif oculto" id="panelNotif">
-            <div class="pn-cab"><b>Notificaciones</b><button class="link" style="margin:0;" onclick="marcarTodasLeidas()">Marcar todas como leídas</button></div>
+            <div class="pn-cab"><b>Actividad</b><button class="link" style="margin:0;" onclick="marcarTodasLeidas()">Marcar todas como leídas</button></div>
             <div id="listaNotif"></div>
           </div>
           <a class="boton-linea" href="agenda.html">Ver agenda pública</a>
@@ -299,13 +329,23 @@
         <p class="sub" id="saludoSub" style="text-transform:capitalize;margin-bottom:12px;"></p>
         <div class="kpis" id="kpisTrab"></div>
         <div class="acciones-dia">
-          <button class="boton" onclick="abrirAccion({ modo:'agendar', fecha: hoyTxt(), tid: yo.trabajador_id })">+ Agendar cliente</button>
+          <button class="boton llegada" onclick="ordenLlegada(yo.trabajador_id)">⚡ Orden de llegada</button>
+          <button class="boton-linea" onclick="abrirAccion({ modo:'agendar', fecha: hoyTxt(), tid: yo.trabajador_id })">+ Agendar cliente</button>
           <button class="boton-linea" onclick="abrirAccion({ modo:'bloquear', fecha: hoyTxt(), tid: yo.trabajador_id })">🔒 Bloquear horario</button>
         </div>
         <div id="proxima"></div>
-        <div id="bloqueosHoy"></div>
-        <h3 style="margin-top:18px;">Citas de hoy</h3>
-        <div id="citasHoy"></div>
+        <div class="grid-midia">
+          <div>
+            <h3>Agenda de hoy</h3>
+            <div class="agenda-scroll"><div class="agenda" id="agendaMiDia"></div></div>
+          </div>
+          <div>
+            <h3>Resumen del día</h3>
+            <div id="resumenDia"></div>
+            <h3 style="margin-top:16px;">Clientes de hoy</h3>
+            <div id="citasHoy"></div>
+          </div>
+        </div>
       </div>
 
       <!-- Semana -->
@@ -331,7 +371,8 @@
           <button class="boton-linea" onclick="moverDia(1)" aria-label="Día siguiente">›</button>
           <button class="boton-linea" onclick="irHoy()">Hoy</button>
           <input type="date" id="diaInput" onchange="irFecha(this.value)">
-          <span class="barra-der"><button class="boton" onclick="abrirAccion({ modo:'agendar', fecha: diaVista })">+ Agendar</button>
+          <span class="barra-der"><button class="boton-linea llegada-borde" onclick="ordenLlegada(null)">⚡ Llegada</button>
+          <button class="boton" onclick="abrirAccion({ modo:'agendar', fecha: diaVista })">+ Agendar</button>
           <button class="boton-linea" onclick="abrirAccion({ modo:'bloquear', fecha: diaVista })">🔒 Bloquear</button></span>
         </div>
         <div class="kpis" id="kpis"></div>
@@ -362,6 +403,7 @@
             <div><label for="nuevoNombre">Nombre (así aparece en la agenda)</label><input id="nuevoNombre" placeholder="Ej: Diego"></div>
             <div><label for="nuevoCorreo">Correo (con este entra al panel)</label><input id="nuevoCorreo" type="email" placeholder="diego@gmail.com"></div>
             <div><label for="nuevaClaveTrab">Contraseña inicial (mín. 6)</label><input id="nuevaClaveTrab" type="text" placeholder="Ej: Barber2026"></div>
+            <div><label for="nuevaComision">Comisión del profesional (%)</label><input id="nuevaComision" type="number" min="0" max="100" value="50"></div>
           </div>
           <button class="boton" style="margin-top:12px;" onclick="agregarTrabajador()">Agregar</button>
           <p class="nota" style="margin-top:6px;">Queda con horario lunes a sábado 09:00–18:00 y colación 13:00–14:00 (lo ajustas abajo). Con correo y contraseña, su cuenta queda lista para entrar de inmediato.</p>
@@ -420,9 +462,19 @@
   <script>
     const SUPABASE_URL = "https://ugchyfulwkzmxwqjwkwp.supabase.co";
     const SUPABASE_KEY = "sb_publishable__WRIUNVBq6-nxTAwPD360g_5UICkBn_";
-    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // Sesión normal = compartida por las pestañas de este navegador (recordada).
+    // Sesión "solo esta pestaña" = independiente: permite tener admin y profesional abiertos a la vez.
+    if (new URLSearchParams(location.search).get('pestana') === '1') sessionStorage.setItem('clipperlab-pestana', '1');
+    const MODO_PESTANA = sessionStorage.getItem('clipperlab-pestana') === '1';
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, MODO_PESTANA
+      ? { auth: { storage: window.sessionStorage, storageKey: 'clipperlab-sesion-pestana' } } : {});
+    function usarPestanaIndependiente(activar){
+      if (activar) sessionStorage.setItem('clipperlab-pestana', '1'); else sessionStorage.removeItem('clipperlab-pestana');
+      location.href = location.pathname;
+    }
+    function abrirOtraCuenta(){ window.open(location.pathname + '?pestana=1', '_blank', 'noopener'); }
 
-    const ESTADOS = { confirmada:"Confirmada", completada:"Completada", no_asistio:"No asistió", cancelada:"Cancelada" };
+    const ESTADOS = { confirmada:"Confirmada", en_atencion:"En atención", completada:"Completada", no_asistio:"No asistió", cancelada:"Cancelada" };
     const DIAS = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
     const ORDEN_DIAS = [1,2,3,4,5,6,0];     // la semana parte en lunes
     const PX_MIN = 1.5;                     // alto de 1 minuto en la agenda del día
@@ -461,7 +513,8 @@
       if (error) estado('estadoLogin', error.message.includes('Invalid') ? "Correo o contraseña incorrectos." :
                                        error.message.includes('confirm') ? "Falta confirmar tu correo: revisa tu bandeja de entrada." : "Error: " + error.message, 'error');
     }
-    async function salir(){ clearInterval(relojNotif); if (canal){ db.removeChannel(canal); canal = null; } await db.auth.signOut(); }
+    // Cierra la sesión SOLO en este dispositivo/pestaña (no saca a la persona de sus otros equipos)
+    async function salir(){ clearInterval(relojNotif); if (canal){ db.removeChannel(canal); canal = null; } await db.auth.signOut({ scope: 'local' }); }
     function mostrarCodigo(){ $('cajaCodigo').classList.toggle('oculto'); }
     async function enviarCodigo(){
       const email = $('loginCorreo').value.trim().toLowerCase();
@@ -497,7 +550,13 @@
 
     async function cargarSesion(session){
       if (modoRecuperacion){ mostrar('vistaNuevaClave'); return; }
-      if (!session){ yo = null; mostrar('vistaLogin'); return; }
+      if (!session){
+        yo = null; mostrar('vistaLogin');
+        $('modoPestanaLogin').innerHTML = MODO_PESTANA
+          ? `<p class="nota">🔒 Esta pestaña usa una sesión propia: puedes entrar con otra cuenta sin cerrar la de las demás pestañas. <button class="link" style="margin:0;" onclick="usarPestanaIndependiente(false)">Volver a la sesión normal</button></p>`
+          : `<p class="nota">¿Necesitas otra cuenta abierta al mismo tiempo en este navegador? <button class="link" style="margin:0;" onclick="usarPestanaIndependiente(true)">Entrar solo en esta pestaña</button></p>`;
+        return;
+      }
       const { data, error } = await db.rpc('mi_sesion');
       if (error || !data || data.rol === 'pendiente'){
         $('pendCorreo').textContent = session.user.email;
@@ -511,6 +570,7 @@
       $('yoAvatar').textContent = (yo.nombre || '?')[0].toUpperCase();
       $('yoNombre').textContent = yo.nombre || yo.correo;
       $('yoRol').textContent = yo.rol; $('yoRol').className = 'rol ' + yo.rol;
+      $('yoPestana').classList.toggle('oculto', !MODO_PESTANA);
       document.querySelectorAll('.solo-admin').forEach(e => e.classList.toggle('oculto', yo.rol !== 'admin'));
       document.querySelectorAll('.solo-trab').forEach(e => e.classList.toggle('oculto', yo.rol !== 'trabajador'));
       mostrar('vistaPanel');
@@ -663,7 +723,7 @@
       const deSemana = reservasTodas.filter(r => r.trabajador_id === tid && r.fecha >= txt[0] && r.fecha <= txt[6]);
       $('kpisSemana').innerHTML =
         `<div class="kpi"><b>${deSemana.filter(activa).length}</b><span>reservas en la semana</span></div>` +
-        `<div class="kpi"><b>${clp(sumaTotal(deSemana))}</b><span>total de la semana</span></div>` +
+        `<div class="kpi"><b>${clp(yo.rol === 'admin' ? sumaTotal(deSemana) : gananciaHecha(deSemana))}</b><span>${yo.rol === 'admin' ? 'total de la semana' : 'tu ganancia'}</span></div>` +
         `<div class="kpi"><b>${deSemana.filter(r => r.estado === 'completada').length}</b><span>completadas</span></div>`;
       if (!tid){ $('agendaSemana').innerHTML = '<p class="vacio">Elige un profesional.</p>'; return; }
       grillaAgenda($('agendaSemana'), dias.map((d, i) => {
@@ -676,6 +736,12 @@
     }
 
     // ================= MI DÍA (vista principal del profesional) =================
+    // ================= MI DÍA (vista principal del profesional) =================
+    // Plata que ve cada rol: el admin ve el total cobrado; el profesional ve SU parte (sin mostrar el %)
+    const plata = r => yo.rol === 'admin' ? (r.total || 0) : (r.ganancia || 0);
+    const sumaPlata = lista => lista.filter(activa).reduce((a, r) => a + plata(r), 0);
+    const gananciaHecha = lista => lista.filter(r => r.estado === 'completada').reduce((a, r) => a + plata(r), 0);
+
     function dibujarMiDia(){
       const hoy = hoyTxt(), ahora = new Date(), ahoraMin = ahora.getHours()*60 + ahora.getMinutes();
       const mias = reservasTodas.filter(r => r.trabajador_id === yo.trabajador_id);
@@ -686,54 +752,127 @@
       $('saludo').textContent = `${hora < 12 ? 'Buenos días' : hora < 20 ? 'Buenas tardes' : 'Buenas noches'}, ${yo.nombre}`;
       $('saludoSub').textContent = ahora.toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' });
       $('kpisTrab').innerHTML =
-        `<div class="kpi"><b>${deHoy.filter(activa).length}</b><span>citas hoy</span></div>` +
-        `<div class="kpi"><b>${clp(cobrado(deHoy))}</b><span>cobrado hoy</span></div>` +
-        `<div class="kpi"><b>${clp(sumaTotal(deHoy))}</b><span>agendado hoy</span></div>` +
-        `<div class="kpi"><b>${clp(sumaTotal(semana))}</b><span>esta semana</span></div>` +
-        `<div class="kpi"><b>${clp(sumaTotal(mes))}</b><span>este mes</span></div>`;
+        `<div class="kpi"><b>${deHoy.filter(activa).length}</b><span>clientes hoy</span></div>` +
+        `<div class="kpi"><b>${clp(gananciaHecha(deHoy))}</b><span>tu ganancia hoy</span></div>` +
+        `<div class="kpi"><b>${clp(gananciaHecha(semana))}</b><span>esta semana</span></div>` +
+        `<div class="kpi"><b>${clp(gananciaHecha(mes))}</b><span>este mes</span></div>`;
 
-      const enCurso = deHoy.find(r => r.estado === 'confirmada' && rangoDe(r)[0] <= ahoraMin && rangoDe(r)[1] > ahoraMin);
-      const proxima = deHoy.find(r => r.estado === 'confirmada' && rangoDe(r)[0] > ahoraMin);
-      const destacada = enCurso || proxima;
-      if (destacada){
-        const falta = rangoDe(destacada)[0] - ahoraMin;
-        $('proxima').innerHTML = `<div class="proxima" onclick="abrirDetalle(${destacada.id})">
-          <span class="etq">${enCurso ? 'Atendiendo ahora' : falta < 60 ? `Próxima cita en ${falta} min` : 'Próxima cita'}</span>
-          <div class="p-hora">${aHora(rangoDe(destacada)[0])} – ${aHora(rangoDe(destacada)[1])}</div>
-          <div class="p-nombre">${esc(destacada.nombre)}</div>
-          <div class="r-sub">${esc(destacada.servicios || '')}${destacada.total ? ' · ' + clp(destacada.total) : ''}</div></div>`;
-      } else $('proxima').innerHTML = deHoy.length ? '<div class="proxima libre">No te quedan citas pendientes hoy 👌</div>' : '';
+      // Tarjeta destacada: quién está en la silla o quién viene
+      const enSilla = deHoy.find(r => r.estado === 'en_atencion');
+      const proxima = deHoy.find(r => r.estado === 'confirmada' && rangoDe(r)[1] > ahoraMin);
+      if (enSilla){
+        $('proxima').innerHTML = `<div class="proxima atendiendo" onclick="abrirTerminar(${enSilla.id})">
+          <span class="etq"><i class="pulso"></i> En atención desde las ${aHora(rangoDe(enSilla)[0])}${enSilla.origen === 'llegada' ? ' · orden de llegada' : ''}</span>
+          <div class="p-nombre" style="margin-top:4px;">${esc(enSilla.nombre)}</div>
+          <div class="r-sub">${esc(enSilla.servicios || 'Toca para marcar el término y el pago')}</div>
+          <button class="boton" style="margin-top:10px;" onclick="event.stopPropagation(); abrirTerminar(${enSilla.id})">✓ Terminó la atención</button></div>`;
+      } else if (proxima){
+        const falta = rangoDe(proxima)[0] - ahoraMin;
+        $('proxima').innerHTML = `<div class="proxima" onclick="abrirDetalle(${proxima.id})">
+          <span class="etq">${falta <= 0 ? 'Ya debería estar aquí' : falta < 60 ? `Próximo cliente en ${falta} min` : 'Próximo cliente'}</span>
+          <div class="p-hora">${aHora(rangoDe(proxima)[0])} – ${aHora(rangoDe(proxima)[1])}</div>
+          <div class="p-nombre">${esc(proxima.nombre)}</div>
+          <div class="r-sub">${esc(proxima.servicios || '')}</div></div>`;
+      } else $('proxima').innerHTML = deHoy.length ? '<div class="proxima libre">No te quedan clientes agendados hoy 👌 Si llega alguien, usa "Orden de llegada".</div>' : '';
 
-      const bq = bloqueosDe(yo.trabajador_id, hoy);
-      $('bloqueosHoy').innerHTML = bq.map(b => `<div class="bloq-item" onclick="abrirBloqueo(${b.id})">🔒 <b>${aHora(b.desde)}–${b.hasta >= 1440 ? '24:00' : aHora(b.hasta)}</b> · ${esc(b.motivo || 'Bloqueado')}</div>`).join('');
-      if (!deHoy.length){ $('citasHoy').innerHTML = '<p class="vacio">Hoy no tienes citas agendadas.</p>'; return; }
-      $('citasHoy').innerHTML = deHoy.map(r => {
-        const [ri, rf] = rangoDe(r), est = r.estado || 'confirmada';
-        const pasada = rf <= ahoraMin;
-        return `<div class="cita ${est} ${pasada && est === 'confirmada' ? 'pendiente' : ''}">
-          <div class="r-hora">${aHora(ri)}<small>hasta ${aHora(rf)}</small></div>
-          <div>
-            <div class="r-top"><div class="r-nombre">${esc(r.nombre)}</div><span class="badge ${est}">${ESTADOS[est] || est}${r.metodo_pago ? ' · ' + PAGOS[r.metodo_pago] : ''}</span></div>
-            <div class="r-sub">${esc(r.servicios || '')}${r.total ? ' · ' + clp(r.total) : ''}</div>
-            ${r.descripcion ? `<div class="r-msg">“${esc(r.descripcion)}”</div>` : ''}
-            <div class="acciones-rapidas">
-              ${est !== 'completada' ? `<button class="boton-linea verde" onclick="elegirPagoRapido(${r.id})">✓ Atendido</button>` : ''}
-              ${est === 'confirmada' ? `<button class="boton-linea rojo" onclick="estadoRapido(${r.id}, 'no_asistio')">No vino</button>` : ''}
-              ${est === 'completada' && !r.metodo_pago ? `<button class="boton-linea verde" onclick="elegirPagoRapido(${r.id})">Registrar pago</button>` : ''}
-              ${est !== 'confirmada' ? `<button class="boton-linea" onclick="estadoRapido(${r.id}, 'confirmada')">Deshacer</button>` : ''}
-            </div>
-            <div class="pagos oculto" id="pago-${r.id}"><span class="nota">¿Cómo pagó?</span>
-              ${Object.entries(PAGOS).map(([k, v]) => `<button class="chip" onclick="estadoRapido(${r.id}, 'completada', '${k}')">${v}</button>`).join('')}
-            </div>
-          </div></div>`;
-      }).join('');
+      // Agenda del día (siempre visible)
+      grillaAgenda($('agendaMiDia'), [{ titulo: 'Hoy', avatar: (yo.nombre || '?')[0], tid: yo.trabajador_id, fecha: hoy, esHoy: true,
+        horario: horarios.find(h => h.trabajador_id === yo.trabajador_id && h.dia === ahora.getDay()), reservas: deHoy,
+        bloqueos: bloqueosDe(yo.trabajador_id, hoy), sub: `${deHoy.filter(activa).length} cliente${deHoy.filter(activa).length === 1 ? '' : 's'}` }]);
+
+      // Resumen del día
+      const n = est => deHoy.filter(r => r.estado === est).length;
+      const llegadas = deHoy.filter(r => r.origen === 'llegada' && r.estado !== 'cancelada').length;
+      $('resumenDia').innerHTML = `<div class="resumen-dia">
+        <div><b>${n('completada')}</b><span>Atendidos</span></div>
+        <div><b>${n('confirmada') + n('en_atencion')}</b><span>Por atender</span></div>
+        <div><b>${n('no_asistio')}</b><span>No asistieron</span></div>
+        <div><b>${llegadas}</b><span>Orden de llegada</span></div>
+        <div><b>${n('cancelada')}</b><span>Cancelados</span></div>
+      </div>`;
+
+      if (!deHoy.length){ $('citasHoy').innerHTML = '<p class="vacio">Aún no hay clientes hoy.</p>'; return; }
+      $('citasHoy').innerHTML = deHoy.map(tarjetaCita).join('');
+    }
+
+    function tarjetaCita(r){
+      const [ri, rf] = rangoDe(r), est = r.estado || 'confirmada';
+      const llegada = r.origen === 'llegada';
+      return `<div class="cita ${est}">
+        <div class="r-hora">${aHora(ri)}<small>${est === 'en_atencion' ? 'en curso' : 'hasta ' + aHora(rf)}</small></div>
+        <div>
+          <div class="r-top"><div class="r-nombre">${esc(r.nombre)}${llegada ? ' <span class="badge grupo">Llegada</span>' : ''}</div>
+            <span class="badge ${est}">${est === 'en_atencion' ? '<i class="pulso"></i> ' : ''}${ESTADOS[est] || est}${r.metodo_pago ? ' · ' + PAGOS[r.metodo_pago] : ''}</span></div>
+          <div class="r-sub">${esc(r.servicios || (llegada ? 'Servicio por definir' : ''))}${est === 'completada' && plata(r) ? ` · ${yo.rol === 'admin' ? '' : 'tu parte '}${clp(plata(r))}` : ''}</div>
+          ${r.descripcion ? `<div class="r-msg">“${esc(r.descripcion)}”</div>` : ''}
+          <div class="acciones-rapidas">
+            ${est === 'confirmada' ? `<button class="boton-linea" onclick="iniciarAtencion(${r.id})">▶ Iniciar</button>` : ''}
+            ${est === 'confirmada' || est === 'en_atencion' ? `<button class="boton-linea verde" onclick="abrirTerminar(${r.id})">✓ Terminó</button>` : ''}
+            ${est === 'confirmada' ? `<button class="boton-linea rojo" onclick="estadoRapido(${r.id}, 'no_asistio')">No vino</button>` : ''}
+            ${est === 'completada' || est === 'no_asistio' ? `<button class="boton-linea" onclick="estadoRapido(${r.id}, 'confirmada')">Deshacer</button>` : ''}
+          </div>
+        </div></div>`;
     }
     async function estadoRapido(id, nuevo, pago){
       const err = await marcar(id, nuevo, pago);
       if (err){ alert(err); return; }
-      dibujarMiDia();
+      refrescarVista();
     }
-    function elegirPagoRapido(id){ const e = document.getElementById('pago-' + id); e.classList.toggle('oculto'); }
+    async function iniciarAtencion(id){ await estadoRapido(id, 'en_atencion'); }
+
+    // ----- Orden de llegada: se registra en el momento, sin formulario -----
+    async function ordenLlegada(tid){
+      if (!tid){ return elegirProfesionalLlegada(); }
+      const { data, error } = await db.rpc('iniciar_llegada', { p_trabajador_id: tid, p_nombre: null });
+      if (error){ alert(mensajeError(error)); return; }
+      await recargarTodo();
+      mostrarToast({ id: 0, tipo: 'llegada', titulo: 'Orden de llegada registrada', detalle: `${data.trabajador} · en atención desde las ${data.desde}. Al terminar, toca "✓ Terminó".` });
+    }
+    function elegirProfesionalLlegada(){
+      $('ventanaDetalle').innerHTML = `<h3 style="font-size:18px;">⚡ Orden de llegada</h3>
+        <p class="nota" style="margin-bottom:10px;">¿Quién atiende? Queda en atención desde ahora.</p>
+        <div class="pros-llegada">${trabajadores.filter(t => t.activo).map(t => `<button class="boton-linea" onclick="cerrarDetalle(); ordenLlegada(${t.id})"><span class="avatar mini">${esc(t.nombre[0])}</span> ${esc(t.nombre)}</button>`).join('')}</div>
+        <div class="det-acciones"><button class="boton-linea" style="margin-left:auto;" onclick="cerrarDetalle()">Cerrar</button></div>`;
+      $('fondoDetalle').classList.remove('oculto');
+    }
+
+    // ----- Terminar atención: servicios realizados + cómo pagó -----
+    let pagoElegido = null;
+    function abrirTerminar(id){
+      const r = reservasTodas.find(x => x.id === id); if (!r) return;
+      pagoElegido = r.metodo_pago || null;
+      const nombres = (r.servicios || '').split(' + ');
+      const marcados = serviciosActivos.filter(s => nombres.includes(s.nombre)).map(s => s.id);
+      $('ventanaDetalle').innerHTML = `<h3 style="font-size:18px;">✓ Terminar atención</h3>
+        <div class="det-fila"><span>Cliente</span><span>${esc(r.nombre)}</span></div>
+        <div class="det-fila"><span>Inicio</span><span>${aHora(rangoDe(r)[0])}${r.origen === 'llegada' ? ' · orden de llegada' : ''}</span></div>
+        ${r.origen === 'llegada' ? `<label for="fNombreLlegada">Nombre del cliente (opcional)</label><input id="fNombreLlegada" placeholder="Ej: Pedro">` : ''}
+        <label>Servicios realizados</label><div class="serv-checks">${checksServicios(marcados)}</div>
+        <div class="cobrar">Total a cobrar <b id="totalCobrar">$0</b></div>
+        <label>¿Cómo pagó?</label>
+        <div class="pagos" style="margin-top:0;">${Object.entries(PAGOS).map(([k, v]) => `<button class="chip ${pagoElegido === k ? 'sel' : ''}" data-pago="${k}" onclick="pagoElegido='${k}'; this.parentNode.querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c === this))">${v}</button>`).join('')}</div>
+        <div class="det-acciones"><button class="boton" onclick="confirmarTermino(${r.id})">Confirmar pago y terminar</button>
+          <button class="boton-linea" style="margin-left:auto;" onclick="cerrarDetalle()">Cerrar</button></div>
+        <p class="estado" id="estadoAccion"></p>`;
+      document.querySelectorAll('.f-serv').forEach(c => c.addEventListener('change', totalACobrar));
+      totalACobrar();
+      $('fondoDetalle').classList.remove('oculto');
+    }
+    function totalACobrar(){
+      const ids = servSeleccionados();
+      $('totalCobrar').textContent = clp(serviciosActivos.filter(s => ids.includes(s.id)).reduce((a, s) => a + s.precio, 0));
+    }
+    async function confirmarTermino(id){
+      const r = reservasTodas.find(x => x.id === id), ids = servSeleccionados();
+      if (!ids.length && !r.total) return estado('estadoAccion', 'Marca los servicios que se hicieron.', 'error');
+      if (!pagoElegido) return estado('estadoAccion', 'Elige cómo pagó el cliente.', 'error');
+      estado('estadoAccion', 'Guardando…');
+      const { error } = await db.rpc('terminar_atencion', { p_id: id, p_servicios: ids.length ? ids : null, p_pago: pagoElegido,
+                                                            p_nombre: $('fNombreLlegada') ? $('fNombreLlegada').value.trim() : null });
+      if (error) return estado('estadoAccion', mensajeError(error), 'error');
+      await recargarTodo(); cerrarDetalle();
+      mostrarToast({ id: 0, tipo: 'completada', titulo: 'Atención terminada', detalle: `${r.nombre} · pagó con ${PAGOS[pagoElegido]}` });
+    }
 
     // ================= LISTA =================
     function filtrar(f){ filtro = f; document.querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c.dataset.f === f)); dibujarLista(); }
@@ -745,7 +884,9 @@
       if (filtro === 'proximas') lista = lista.filter(r => r.fecha >= hoy);
       if (filtro === 'pasadas')  lista = lista.filter(r => r.fecha < hoy).reverse();
       const activas = lista.filter(r => r.estado !== 'cancelada');
-      $('resumenLista').textContent = `${lista.length} reserva${lista.length===1?'':'s'} · ${clp(activas.reduce((a,r)=>a+(r.total||0),0))} en reservas activas`;
+      $('resumenLista').textContent = yo.rol === 'admin'
+        ? `${lista.length} reserva${lista.length===1?'':'s'} · ${clp(activas.reduce((a,r)=>a+(r.total||0),0))} en reservas activas`
+        : `${lista.length} cliente${lista.length===1?'':'s'} · tu ganancia ${clp(gananciaHecha(lista))}`;
       if (!lista.length){ $('listaReservas').innerHTML = '<p class="vacio">No hay reservas aquí.</p>'; return; }
 
       const tamGrupo = g => g ? reservasTodas.filter(x => x.grupo === g).length : 1;
@@ -760,7 +901,7 @@
           <div class="r-hora">${aHora(ri)}<small>hasta ${aHora(rf)}</small></div>
           <div class="r-top"><div class="r-nombre">${esc(r.nombre)}</div>
             <div style="display:flex;gap:6px;">${g > 1 ? `<span class="badge grupo">Grupo de ${g}</span>` : ''}<span class="badge ${est}">${ESTADOS[est] || est}</span></div></div>
-          <div class="r-sub">${esc(r.servicios || r.descripcion || '')}${r.total ? ' · ' + clp(r.total) : ''}</div>
+          <div class="r-sub">${esc(r.servicios || r.descripcion || '')}${yo.rol === 'admin' ? (r.total ? ' · ' + clp(r.total) : '') : (est === 'completada' && r.ganancia ? ' · tu parte ' + clp(r.ganancia) : '')}</div>
           ${yo.rol === 'admin' ? `<div class="r-sub">con ${esc(r.trabajador)}</div>` : ''}
         </div>`;
       }
@@ -780,14 +921,18 @@
         <div class="det-fila"><span>Profesional</span><span>${esc(r.trabajador)}</span></div>
         ${r.creado_por ? `<div class="det-fila"><span>Agendada por</span><span>${esc(r.creado_por)}${r.origen === 'panel' ? ' (panel)' : ''}</span></div>` : ''}
         <div class="det-fila"><span>Servicios</span><span>${esc(r.servicios || '—')}</span></div>
-        <div class="det-fila"><span>Total</span><span>${r.total ? clp(r.total) : '—'}</span></div>
+        <div class="det-fila"><span>${admin ? 'Total' : 'Valor del servicio'}</span><span>${r.total ? clp(r.total) : '—'}</span></div>
+        ${!admin && est === 'completada' ? `<div class="det-fila"><span>Tu parte</span><span><b>${clp(r.ganancia || 0)}</b></span></div>` : ''}
         ${admin ? `<div class="det-fila"><span>WhatsApp</span><span>${esc(r.telefono || '—')}</span></div>
         <div class="det-fila"><span>Correo</span><span>${esc(r.correo || '—')}</span></div>` : ''}
         ${r.descripcion ? `<div class="det-fila"><span>Mensaje</span><span style="text-align:right;">${esc(r.descripcion)}</span></div>` : ''}
         ${admin && grupo.length ? `<div class="det-fila"><span>Viene con</span><span>${grupo.map(x => esc(x.nombre) + ' (' + esc(x.trabajador) + ')').join(', ')}</span></div>` : ''}
         <div class="det-fila"><span>Pago</span><span>${r.metodo_pago ? PAGOS[r.metodo_pago] : (est === 'completada' ? 'Sin registrar' : '—')}</span></div>
-        ${est !== 'cancelada' ? `<div class="pagos"><span class="nota">${est === 'completada' ? 'Método de pago:' : 'Marcar atendido y pagado con:'}</span>
+        ${est === 'completada' ? `<div class="pagos"><span class="nota">Método de pago:</span>
           ${Object.entries(PAGOS).map(([k, v]) => `<button class="chip ${r.metodo_pago === k ? 'sel' : ''}" onclick="cambiarPago(${r.id}, '${k}')">${v}</button>`).join('')}</div>` : ''}
+        ${est === 'confirmada' || est === 'en_atencion' ? `<div class="det-acciones">
+          ${est === 'confirmada' ? `<button class="boton-linea" onclick="cerrarDetalle(); iniciarAtencion(${r.id})">▶ Iniciar atención</button>` : ''}
+          <button class="boton" onclick="abrirTerminar(${r.id})">✓ Terminó · cobrar</button></div>` : ''}
         <div class="det-acciones">
           ${admin && tel ? `<a class="boton-linea" href="https://wa.me/${tel}?text=${msgWa}" target="_blank" rel="noopener">WhatsApp</a>` : ''}
           <select onchange="cambiarEstado(${r.id}, this.value)">
@@ -1021,20 +1166,54 @@
                sin: hechas.filter(r => !r.metodo_pago).reduce((a, r) => a + (r.total || 0), 0), total: cobrado(hechas) };
     }
     function dibujarCaja(){
-      const sel = $('cajaTrab');
-      if (yo.rol === 'admin' && !sel.options.length)
+      const admin = yo.rol === 'admin', sel = $('cajaTrab');
+      if (admin && !sel.options.length)
         sel.innerHTML = '<option value="">Todo el equipo</option>' + trabajadores.map(t => `<option value="${t.id}">${esc(t.nombre)}</option>`).join('');
       const [desde, hasta, txt] = rangoCaja(); $('cajaTxt').textContent = txt;
-      const tid = yo.rol === 'admin' ? (Number(sel.value) || null) : yo.trabajador_id;
+      const tid = admin ? (Number(sel.value) || null) : yo.trabajador_id;
       const lista = reservasTodas.filter(r => r.fecha >= desde && r.fecha <= hasta && (!tid || r.trabajador_id === tid));
-      const R = resumenPagos(lista), pend = lista.filter(r => r.estado === 'confirmada');
+      const hechas = lista.filter(r => r.estado === 'completada').sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+      const llegadas = lista.filter(r => r.origen === 'llegada' && r.estado !== 'cancelada').length;
+      // Parte del profesional: el admin la calcula con la comisión; el profesional la recibe ya calculada
+      const pct = r => (trabajadores.find(t => t.id === r.trabajador_id) || {}).comision ?? 50;
+      const parteDe = r => admin ? Math.round((r.total || 0) * pct(r) / 100) : (r.ganancia || 0);
+      const sumaParte = l => l.filter(r => r.estado === 'completada').reduce((a, r) => a + parteDe(r), 0);
+      const tarjetas = document.querySelectorAll('#tab-caja .grid-caja > .tarjeta');
+
+      if (!admin){
+        // ----- Vista del profesional: solo lo que le corresponde -----
+        tarjetas[0].classList.add('oculto');
+        $('kpisCaja').innerHTML =
+          `<div class="kpi destacado"><b>${clp(sumaParte(hechas))}</b><span>tu ganancia</span></div>` +
+          `<div class="kpi"><b>${hechas.length}</b><span>atendidos</span></div>` +
+          `<div class="kpi"><b>${llegadas}</b><span>por orden de llegada</span></div>` +
+          `<div class="kpi"><b>${lista.filter(r => r.estado === 'no_asistio').length}</b><span>no asistieron</span></div>`;
+        $('cajaTituloDetalle').textContent = cajaPeriodo === 'dia' ? 'Tu día' : 'Tu ganancia por día';
+        const dias = [...new Set(hechas.map(r => r.fecha))].sort();
+        $('cajaDetalle').innerHTML = `<table class="tabla-caja"><tr><th></th><th class="num">Atendidos</th><th class="num">Tu ganancia</th></tr>
+          ${dias.map(d => { const x = hechas.filter(r => r.fecha === d); return `<tr><td>${deTexto(d).toLocaleDateString('es-CL', { weekday:'short', day:'numeric', month:'short' })}</td><td class="num">${x.length}</td><td class="num">${clp(sumaParte(x))}</td></tr>`; }).join('')}
+          <tr class="total"><td>Total</td><td class="num">${hechas.length}</td><td class="num">${clp(sumaParte(hechas))}</td></tr></table>`;
+        $('cajaLista').innerHTML = hechas.length ? `<div style="overflow-x:auto;"><table class="tabla-caja">
+          <tr><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Servicios</th><th>Pago</th><th class="num">Tu parte</th></tr>
+          ${hechas.map(r => `<tr style="cursor:pointer;" onclick="abrirDetalle(${r.id})"><td>${deTexto(r.fecha).toLocaleDateString('es-CL', { day:'numeric', month:'short' })}</td>
+            <td>${aHora(rangoDe(r)[0])}</td><td>${esc(r.nombre)}${r.origen === 'llegada' ? ' ⚡' : ''}</td><td>${esc(r.servicios || '')}</td>
+            <td>${r.metodo_pago ? PAGOS[r.metodo_pago] : '—'}</td><td class="num">${clp(parteDe(r))}</td></tr>`).join('')}
+          </table></div>` : '<p class="vacio">Aún no hay atenciones en este período.</p>';
+        return;
+      }
+
+      // ----- Vista del admin: todo, con comisiones -----
+      tarjetas[0].classList.remove('oculto');
+      const R = resumenPagos(lista), pend = lista.filter(r => r.estado === 'confirmada' || r.estado === 'en_atencion');
+      const pagoProf = sumaParte(hechas);
       $('kpisCaja').innerHTML =
-        `<div class="kpi"><b>${clp(R.total)}</b><span>cobrado</span></div>` +
-        `<div class="kpi"><b>${R.n}</b><span>atenciones</span></div>` +
+        `<div class="kpi destacado"><b>${clp(R.total)}</b><span>cobrado</span></div>` +
+        `<div class="kpi"><b>${clp(pagoProf)}</b><span>pago a profesionales</span></div>` +
+        `<div class="kpi"><b>${clp(R.total - pagoProf)}</b><span>para BarberTop</span></div>` +
+        `<div class="kpi"><b>${R.n}</b><span>atenciones (${llegadas} por llegada)</span></div>` +
         `<div class="kpi"><b>${R.n ? clp(Math.round(R.total / R.n)) : '—'}</b><span>ticket promedio</span></div>` +
         `<div class="kpi"><b>${clp(sumaTotal(pend))}</b><span>por atender (${pend.length})</span></div>` +
-        `<div class="kpi"><b>${lista.filter(r => r.estado === 'no_asistio').length}</b><span>no asistieron</span></div>` +
-        `<div class="kpi"><b>${lista.filter(r => r.estado === 'cancelada').length}</b><span>canceladas</span></div>`;
+        `<div class="kpi"><b>${lista.filter(r => r.estado === 'no_asistio').length}</b><span>no asistieron</span></div>`;
 
       const filas = [['efectivo', 'Efectivo'], ['debito', 'Débito'], ['transferencia', 'Transferencia'], ['sin', 'Sin registrar']];
       $('cajaMetodos').innerHTML = filas.map(([k, v]) => `<div class="barra-metodo">
@@ -1042,28 +1221,27 @@
           <div class="pista"><div class="relleno" style="width:${R.total ? Math.round(R[k] / R.total * 100) : 0}%;background:${COLOR_PAGO[k]}"></div></div></div>`).join('') +
         (R.sin ? `<p class="nota">Hay atenciones sin método de pago: regístralo en la lista de abajo.</p>` : '');
 
-      const cab = `<tr><th></th><th class="num">Atenc.</th><th class="num">Efectivo</th><th class="num">Débito</th><th class="num">Transf.</th><th class="num">Total</th></tr>`;
-      const fila = (nombre, x, total) => `<tr class="${total ? 'total' : ''}"><td>${nombre}</td><td class="num">${x.n}</td><td class="num">${clp(x.efectivo)}</td><td class="num">${clp(x.debito)}</td><td class="num">${clp(x.transferencia)}</td><td class="num">${clp(x.total)}</td></tr>`;
-      let cuerpo = '';
-      if (yo.rol === 'admin' && !tid){
+      const cab = `<tr><th></th><th class="num">Atenc.</th><th class="num">Efectivo</th><th class="num">Débito</th><th class="num">Transf.</th><th class="num">Total</th><th class="num">Profesional</th><th class="num">BarberTop</th></tr>`;
+      const fila = (nombre, l, total) => { const x = resumenPagos(l), p = sumaParte(l.filter(r => r.estado === 'completada'));
+        return `<tr class="${total ? 'total' : ''}"><td>${nombre}</td><td class="num">${x.n}</td><td class="num">${clp(x.efectivo)}</td><td class="num">${clp(x.debito)}</td><td class="num">${clp(x.transferencia)}</td><td class="num">${clp(x.total)}</td><td class="num">${clp(p)}</td><td class="num">${clp(x.total - p)}</td></tr>`; };
+      let cuerpo;
+      if (!tid){
         $('cajaTituloDetalle').textContent = 'Por profesional';
-        cuerpo = trabajadores.map(t => fila(esc(t.nombre), resumenPagos(lista.filter(r => r.trabajador_id === t.id)))).join('') + fila('Total', R, true);
+        cuerpo = trabajadores.map(t => fila(`${esc(t.nombre)} <span class="nota">${t.comision ?? 50}%</span>`, lista.filter(r => r.trabajador_id === t.id))).join('') + fila('Total', lista, true);
       } else if (cajaPeriodo !== 'dia'){
         $('cajaTituloDetalle').textContent = 'Por día';
-        const dias = [...new Set(lista.map(r => r.fecha))].sort();
-        cuerpo = dias.map(d => fila(deTexto(d).toLocaleDateString('es-CL', { weekday:'short', day:'numeric', month:'short' }), resumenPagos(lista.filter(r => r.fecha === d)))).join('') + fila('Total', R, true);
+        cuerpo = [...new Set(lista.map(r => r.fecha))].sort().map(d => fila(deTexto(d).toLocaleDateString('es-CL', { weekday:'short', day:'numeric', month:'short' }), lista.filter(r => r.fecha === d))).join('') + fila('Total', lista, true);
       } else {
         $('cajaTituloDetalle').textContent = 'Resumen del día';
-        cuerpo = fila('Día', R, true);
+        cuerpo = fila('Día', lista, true);
       }
       $('cajaDetalle').innerHTML = `<div style="overflow-x:auto;"><table class="tabla-caja">${cab}${cuerpo}</table></div>`;
 
-      const hechas = lista.filter(r => r.estado === 'completada').sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
       $('cajaLista').innerHTML = hechas.length ? `<div style="overflow-x:auto;"><table class="tabla-caja">
-        <tr><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Servicios</th>${yo.rol === 'admin' ? '<th>Profesional</th>' : ''}<th>Pago</th><th class="num">Total</th></tr>
+        <tr><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Servicios</th><th>Profesional</th><th>Pago</th><th class="num">Total</th><th class="num">Profesional</th></tr>
         ${hechas.map(r => `<tr style="cursor:pointer;" onclick="abrirDetalle(${r.id})"><td>${deTexto(r.fecha).toLocaleDateString('es-CL', { day:'numeric', month:'short' })}</td><td>${aHora(rangoDe(r)[0])}</td>
-          <td>${esc(r.nombre)}</td><td>${esc(r.servicios || '')}</td>${yo.rol === 'admin' ? `<td>${esc(r.trabajador)}</td>` : ''}
-          <td>${r.metodo_pago ? PAGOS[r.metodo_pago] : '<span class="error">Registrar</span>'}</td><td class="num">${clp(r.total)}</td></tr>`).join('')}
+          <td>${esc(r.nombre)}${r.origen === 'llegada' ? ' ⚡' : ''}</td><td>${esc(r.servicios || '')}</td><td>${esc(r.trabajador)}</td>
+          <td>${r.metodo_pago ? PAGOS[r.metodo_pago] : '<span class="error">Registrar</span>'}</td><td class="num">${clp(r.total)}</td><td class="num">${clp(parteDe(r))}</td></tr>`).join('')}
         </table></div>` : '<p class="vacio">No hay atenciones completadas en este período.</p>';
     }
 
@@ -1077,6 +1255,9 @@
         <label for="mcClave">Nueva contraseña (mínimo 6)</label><input type="password" id="mcClave" autocomplete="new-password">
         <label for="mcClave2">Repítela</label><input type="password" id="mcClave2" autocomplete="new-password" onkeydown="if(event.key==='Enter')cambiarMiClave()">
         <div class="det-acciones"><button class="boton" onclick="cambiarMiClave()">Guardar contraseña</button></div>
+        <h3 style="margin-top:18px;">Otra cuenta al mismo tiempo</h3>
+        <p class="nota">Abre una pestaña con sesión propia para entrar, por ejemplo, como profesional sin cerrar esta cuenta.</p>
+        <button class="boton-linea" style="margin-top:8px;" onclick="abrirOtraCuenta()">Abrir otra cuenta en una pestaña nueva</button>
         <h3 style="margin-top:18px;">Avisos del navegador</h3>
         <p class="nota">Te avisa cuando te agendan, cancelan o modifican una hora, aunque estés en otra pestaña.</p>
         <button class="boton-linea" style="margin-top:8px;" onclick="activarAvisosNavegador()">${permiso === 'granted' ? '✓ Activados' : permiso === 'denied' ? 'Bloqueados en el navegador' : 'Activar avisos'}</button>
@@ -1133,7 +1314,8 @@
     }
 
     // ================= NOTIFICACIONES =================
-    let relojNotif = null;
+    let relojNotif = null, notifLimite = 40;
+    function verMasNotif(){ notifLimite += 40; cargarNotif(); }
     function iniciarNotif(){
       clearInterval(relojNotif); ultimoNoLeidas = -1; ultimoIdVisto = null;
       cargarNotif(); relojNotif = setInterval(cargarNotif, 20000);   // respaldo por si el tiempo real se corta
@@ -1141,7 +1323,7 @@
     }
     async function cargarNotif(){
       if (!yo) return;
-      const { data, error } = await db.from('notificaciones').select('*').order('creado', { ascending:false }).limit(40);
+      const { data, error } = await db.from('notificaciones').select('*').order('creado', { ascending:false }).limit(notifLimite);
       if (error) return;
       notificaciones = data;
       const n = notificaciones.filter(x => !x.leida).length;
@@ -1156,7 +1338,7 @@
       ultimoNoLeidas = n;
       dibujarNotif();
     }
-    const ICONOS = { nueva:'＋', cancelada:'✕', eliminada:'🗑', modificada:'✎', bloqueo:'🔒', desbloqueo:'🔓' };
+    const ICONOS = { nueva:'＋', cancelada:'✕', eliminada:'🗑', modificada:'✎', bloqueo:'🔒', desbloqueo:'🔓', llegada:'⚡', completada:'✓', no_asistio:'!' };
     function haceCuanto(iso){
       const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
       if (m < 1) return 'recién'; if (m < 60) return `hace ${m} min`;
@@ -1169,7 +1351,8 @@
           <div class="ico ${x.tipo}">${ICONOS[x.tipo] || '•'}</div>
           <div style="flex:1;"><b>${esc(x.titulo)}</b>${esc(x.detalle || '')}<div class="cuando">${haceCuanto(x.creado)}</div></div>
           ${x.leida ? '' : '<div class="punto"></div>'}
-        </div>`).join('') : '<p class="vacio">Sin notificaciones.</p>';
+        </div>`).join('') + (notificaciones.length >= notifLimite ? `<button class="link" style="display:block;margin:10px auto;" onclick="verMasNotif()">Ver actividad más antigua</button>` : '')
+        : '<p class="vacio">Sin actividad todavía.</p>';
     }
     function toggleNotif(){ $('panelNotif').classList.toggle('oculto'); }
     document.addEventListener('click', e => { if (!e.target.closest('#panelNotif') && !e.target.closest('#btnCampana')) $('panelNotif')?.classList.add('oculto'); });
@@ -1211,6 +1394,7 @@
             <div class="avatar">${esc(t.nombre[0] || '?')}</div>
             <input value="${esc(t.nombre)}" data-campo="nombre" aria-label="Nombre">
             <input value="${esc(t.correo || '')}" data-campo="correo" type="email" placeholder="correo@gmail.com" aria-label="Correo">
+            <label style="margin:0;display:flex;gap:6px;align-items:center;white-space:nowrap;" title="% de lo cobrado que le corresponde">Comisión <input type="number" min="0" max="100" data-campo="comision" value="${t.comision ?? 50}" style="width:70px;padding:7px 8px;"> %</label>
             <label style="margin:0;display:flex;gap:6px;align-items:center;white-space:nowrap;"><input type="checkbox" data-campo="activo" ${t.activo?'checked':''}> Activo</label>
             <button class="boton-linea ancho-full" onclick="guardarTrabajador(${t.id})">Guardar</button>
           </div>
@@ -1284,8 +1468,10 @@
       const nombre = c.querySelector('[data-campo=nombre]').value.trim();
       const correo = c.querySelector('[data-campo=correo]').value.trim().toLowerCase() || null;
       const activo = c.querySelector('[data-campo=activo]').checked;
+      const comision = parseInt(c.querySelector('[data-campo=comision]').value);
       if (!nombre) return estado(id, 'El nombre no puede quedar vacío.', 'error');
-      const { error } = await db.from('trabajadores').update({ nombre, correo, activo }).eq('id', tid);
+      if (isNaN(comision) || comision < 0 || comision > 100) return estado(id, 'La comisión debe estar entre 0 y 100 %.', 'error');
+      const { error } = await db.from('trabajadores').update({ nombre, correo, activo, comision }).eq('id', tid);
       if (error) return estado(id, error.code === '23505' ? 'Ese correo ya lo usa otro trabajador.' : 'Error: ' + error.message, 'error');
       await cargarEquipo();
       estado('estado-trab-' + tid, '✓ Guardado', 'ok');
@@ -1294,7 +1480,8 @@
       const nombre = $('nuevoNombre').value.trim(), correo = $('nuevoCorreo').value.trim().toLowerCase() || null;
       if (!nombre) return estado('estadoNuevo', 'Escribe el nombre.', 'error');
       const orden = Math.max(0, ...trabajadores.map(t => t.orden || 0)) + 1;
-      const { data, error } = await db.from('trabajadores').insert({ nombre, correo, orden }).select().single();
+      const comision = Math.min(100, Math.max(0, parseInt($('nuevaComision').value) || 50));
+      const { data, error } = await db.from('trabajadores').insert({ nombre, correo, orden, comision }).select().single();
       if (error) return estado('estadoNuevo', error.code === '23505' ? 'Ese correo ya lo usa otro trabajador.' : 'Error: ' + error.message, 'error');
       const base = [1,2,3,4,5,6].map(d => ({ trabajador_id: data.id, dia: d, inicio: '09:00', fin: '18:00', almuerzo_inicio: '13:00', almuerzo_fin: '14:00' }));
       const { error: e2 } = await db.from('horarios').insert(base);
