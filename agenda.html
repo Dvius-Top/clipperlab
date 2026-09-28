@@ -312,11 +312,11 @@
 
     // ---------- CARGA ----------
     async function iniciar(){
-      const { data, error } = await db.rpc('agenda_config', { p_negocio: SLUG || null });
+      const { data, error } = await rpcNeg('agenda_config', { p_negocio: SLUG || null });
       if (error){
         $('vista').innerHTML = (error.message || '').includes('NEGOCIO_NO_EXISTE')
           ? '<div class="vacio" style="margin-top:20px;">Esta agenda no existe. Revisa el link que te enviaron.</div>'
-          : `<p class="aviso">No pudimos cargar la agenda: ${esc(error.message)}</p>`;
+          : `<p class="aviso">No pudimos cargar la agenda: ${esc(error.message)}${/schema cache/i.test(error.message || '') ? '<br><br>👉 Falta instalar en Supabase el archivo <b>INSTALAR-FASES-7-a-10</b>.' : ''}</p>`;
         $('stepper').innerHTML = ''; return;
       }
       if (data.suspendido){
@@ -341,6 +341,15 @@
       if (new URLSearchParams(location.search).has('inscribete')) verInscripcion();   // link directo: agenda.html?inscribete
     }
 
+    // Llamada a la base con respaldo: si la base aún no tiene la Fase 10, se vuelve a intentar sin el negocio
+    async function rpcNeg(nombre, args){
+      let r = await db.rpc(nombre, args);
+      if (r.error && 'p_negocio' in args && (r.error.code === 'PGRST202' || /schema cache/i.test(r.error.message || ''))){
+        const { p_negocio, ...resto } = args;
+        if (!p_negocio) r = await db.rpc(nombre, resto);
+      }
+      return r;
+    }
     // Nombre, logo y color de la barbería dueña de esta agenda
     function pintarMarca(n){
       const nombre = n.nombre || 'ClipperLab';
@@ -585,7 +594,7 @@
     async function cargarHoras(){
       alertaHoras('Buscando horas libres…');
       const fecha = draft.fecha;
-      const { data, error } = await db.rpc('ocupacion', { p_fecha: fecha, p_negocio: SLUG || null });
+      const { data, error } = await rpcNeg('ocupacion', { p_fecha: fecha, p_negocio: SLUG || null });
       if (fecha !== draft.fecha || paso !== 4) return;           // cambió de día mientras cargaba
       if (error){ $('horas').innerHTML = `<p class="aviso">Error: ${esc(error.message)}</p>`; return; }
       // Ocupado = reservas y bloqueos + las horas que ya elegiste para las otras personas
@@ -830,7 +839,7 @@
       const correo = $('misCorreo').value.trim(), tel = $('misTelefono').value.trim();
       if (!correo || tel.replace(/\D/g,'').length < 8){ cont.innerHTML = '<p class="aviso">Escribe tu correo y teléfono.</p>'; return; }
       cont.innerHTML = '<p class="nota">Buscando…</p>';
-      const { data, error } = await db.rpc('mis_reservas', { p_correo: correo, p_telefono: tel, p_negocio: SLUG || null });
+      const { data, error } = await rpcNeg('mis_reservas', { p_correo: correo, p_telefono: tel, p_negocio: SLUG || null });
       if (error){ cont.innerHTML = `<p class="aviso">Error: ${esc(error.message)}</p>`; return; }
       if (!data.length){ cont.innerHTML = '<div class="vacio">No encontramos reservas próximas con esos datos.</div>'; return; }
       const est = { confirmada:'Confirmada', en_atencion:'En atención', completada:'Atendida', cancelada:'Cancelada', no_asistio:'No asistió' };
