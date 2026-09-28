@@ -363,10 +363,20 @@
   <script>
     const SUPABASE_URL = "https://ugchyfulwkzmxwqjwkwp.supabase.co";
     const SUPABASE_KEY = "sb_publishable__WRIUNVBq6-nxTAwPD360g_5UICkBn_";
-    // ¿De qué barbería es esta agenda?  agenda.html?b=link-del-negocio  (sin link = negocio principal)
+    // ¿De qué barbería es esta agenda?  1) su dominio propio (minadeoro.cl/agenda.html)  2) agenda.html?b=link-del-negocio
+    //   (sin nada = negocio principal ClipperLab)
     const QS = new URLSearchParams(location.search);
-    const SLUG = (QS.get('b') || QS.get('negocio') || '').trim().toLowerCase();
+    const HOST = location.hostname.toLowerCase().replace(/^www\./, '');
+    const DOMINIO_PROPIO = /\./.test(HOST) && !/^\d+(\.\d+){3}$/.test(HOST) &&
+      !/(^|\.)(clipperlab\.cl|github\.dev|github\.io|pages\.dev|githubpreview\.dev)$/.test(HOST) ? HOST : '';
+    const SLUG = (QS.get('b') || QS.get('negocio') || DOMINIO_PROPIO || '').trim().toLowerCase();
     const PRINCIPAL = 'clipperlab';                 // el aviso por Formspree y el link a la página de inicio son solo del principal
+    // Si se llegó por el link corto (clipperlab.cl/minadeoro/reservar) se deja esa dirección bonita en la barra
+    function urlCorta(sufijo){
+      if (!QS.has('_c') || !SLUG || DOMINIO_PROPIO) return undefined;
+      const b = document.createElement('base'); b.href = '/'; document.head.prepend(b);
+      return '/' + SLUG + (sufijo ? '/' + sufijo : '');
+    }
     const K_TEMA = 'clipperlab-tema-' + (SLUG || PRINCIPAL);
     const K_INSCRITO = 'clipperlab-inscrito' + (SLUG && SLUG !== PRINCIPAL ? '-' + SLUG : '');
 
@@ -439,13 +449,13 @@
       CFG.trabajadores.forEach(t => t.servicios = t.servicios || []);
       datosCliente = leerLocal('clipperlab-cliente') || {};
       // ?local=2 (o ?local=providencia) deja la sucursal elegida: sirve para links de Instagram de cada local
-      const q = new URLSearchParams(location.search).get('local');
+      const q = QS.get('local');
       const pre = q && CFG.locales.find(l => String(l.id) === q || l.nombre.toLowerCase() === q.toLowerCase());
       if (pre) { LOCAL = pre.id; paso = 2; }
       else if (CFG.locales.length === 1) { LOCAL = CFG.locales[0].id; paso = 2; }
-      history.replaceState({ paso, i: 0 }, '');
+      history.replaceState({ paso, i: 0 }, '', urlCorta('reservar'));
       dibujar();
-      if (promoActiva() && new URLSearchParams(location.search).has('inscribete')) verInscripcion();   // link directo: agenda.html?inscribete
+      if (promoActiva() && QS.has('inscribete')) verInscripcion();   // link directo: agenda.html?inscribete
     }
 
     // Llamada a la base con respaldo: si la base aún no tiene la Fase 10, se vuelve a intentar sin el negocio
@@ -470,13 +480,14 @@
       }
       else if (nombre === 'ClipperLab') m.innerHTML = 'Clipper<span>Lab</span>';
       else m.textContent = nombre;
-      if ((n.slug || PRINCIPAL) !== PRINCIPAL){ m.removeAttribute('href'); m.removeAttribute('title'); m.style.cursor = 'default'; }
+      // el logo lleva a la página web de la barbería (en su dominio: la portada; si no: barberia.html?b=...)
+      if ((n.slug || PRINCIPAL) !== PRINCIPAL){ m.href = DOMINIO_PROPIO ? './' : QS.has('_c') ? '/' + n.slug : 'barberia.html?b=' + encodeURIComponent(n.slug); m.title = 'Ir a la página de ' + nombre; }
       document.querySelectorAll('.nombreNeg').forEach(e => e.textContent = nombre);
       // Tema elegido por la barbería (?tema= y ?color= solo para que el admin lo pruebe antes de guardar)
       const tema = TEMAS.includes(QS.get('tema')) ? QS.get('tema') : n.tema, color = /^#[0-9a-f]{6}$/i.test(QS.get('color') || '') ? QS.get('color') : n.color;
       aplicarTema(tema, color);
       if (!QS.get('tema')) try { localStorage.setItem(K_TEMA, JSON.stringify({ tema, color })); } catch(e) {}
-      $('creditos').innerHTML = (n.slug || PRINCIPAL) !== PRINCIPAL ? '· con <a href="index.html" style="color:inherit;">ClipperLab</a>' : '';
+      $('creditos').innerHTML = (n.slug || PRINCIPAL) !== PRINCIPAL ? '· con <a href="https://clipperlab.cl" target="_blank" rel="noopener" style="color:inherit;">ClipperLab</a>' : '';
     }
     // ---------- TEMAS: colores, formas y letras de cada barbería ----------
     const TEMAS = ['clasico', 'burbuja', 'vintage', 'neon', 'minimal', 'organico'];
@@ -958,7 +969,7 @@
         <div class="acciones">
           <a class="boton sec" href="${cal}" target="_blank" rel="noopener">📅 Agregar a mi calendario</a>
           <a class="boton sec" href="${mapa}" target="_blank" rel="noopener">📍 Cómo llegar</a>
-          <button class="boton" onclick="location.href = location.pathname">Hacer otra reserva</button>
+          <button class="boton" onclick="location.reload()">Hacer otra reserva</button>
         </div>
         <p class="nota" style="text-align:center; margin-top:14px;">Puedes revisar tus reservas en "Mis reservas" con tu email y teléfono.</p>`;
       window.scrollTo({ top:0, behavior:'smooth' });
