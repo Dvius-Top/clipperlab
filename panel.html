@@ -220,6 +220,16 @@
     .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
     .trab { background:var(--panel); border:1px solid var(--linea); border-radius:14px; padding:16px; margin-top:12px; }
     .trab-cab { display:grid; grid-template-columns:auto 1fr 1.4fr auto auto auto; gap:10px; align-items:center; }
+    .trab.es-admin { border-color:rgba(255,122,47,0.55); box-shadow:0 0 0 1px rgba(255,122,47,0.25) inset; }
+    .badge-admin { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:800; letter-spacing:.8px; padding:3px 10px; border-radius:20px; background:var(--voltaje); color:#111; }
+    .badge-local { display:inline-flex; font-size:11px; font-weight:600; padding:2px 9px; border-radius:20px; background:rgba(255,255,255,0.08); color:var(--hueso); }
+    .trab-extra { display:grid; grid-template-columns:200px 1fr; gap:10px; margin-top:10px; align-items:end; }
+    .trab-extra label { font-size:12px; }
+    .asig { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
+    .asig label { display:flex; gap:6px; align-items:center; margin:0; background:var(--panel2); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:6px 10px; font-size:13px; color:var(--hueso); cursor:pointer; }
+    .asig label:has(input:checked) { border-color:var(--voltaje); background:rgba(255,122,47,0.12); }
+    .selector-local { margin-left:auto; align-self:center; width:auto; padding:6px 10px; font-size:13px; flex-shrink:0; }
+    .foto-mini { width:100%; max-height:320px; object-fit:contain; border-radius:10px; margin-top:8px; background:#000; }
     .acceso { font-size:12px; margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
     .acceso input { width:180px; padding:7px 10px; }
     .tabla-horario { width:100%; border-collapse:collapse; margin-top:12px; font-size:13px; }
@@ -229,7 +239,7 @@
     .tabla-horario tr.no-trabaja input[type=time] { opacity:.3; }
     .detalle-horario { margin-top:10px; }
     .detalle-horario summary { cursor:pointer; color:var(--voltaje); font-size:13px; font-weight:600; }
-    .serv-fila { display:grid; grid-template-columns:1.2fr 2fr 110px 90px 60px 130px; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid var(--linea); }
+    .serv-fila { display:grid; grid-template-columns:1fr 1.2fr 0.9fr 110px 95px 68px 44px 172px; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid var(--linea); }
     .serv-fila.cab { color:var(--gris); font-size:12px; border-bottom:none; padding-bottom:0; }
     @media (max-width:640px){
       .panel-notif { position:fixed; top:64px; left:12px; right:12px; width:auto; }
@@ -240,6 +250,7 @@
     @media (max-width:720px){
       .trab-cab { grid-template-columns:auto 1fr; }
       .trab-cab .ancho-full { grid-column:1 / -1; }
+      .trab-extra { grid-template-columns:1fr; }
       .serv-fila { grid-template-columns:1fr 1fr; }
       .serv-fila.cab { display:none; }
       .serv-fila .desc { grid-column:1 / -1; }
@@ -331,6 +342,7 @@
         <button class="tab solo-admin" data-tab="equipo" onclick="verTab('equipo')">Equipo y horarios</button>
         <button class="tab solo-admin" data-tab="servicios" onclick="verTab('servicios')">Servicios</button>
         <button class="tab solo-trab" data-tab="mihorario" onclick="verTab('mihorario')">Mi horario</button>
+        <select id="filtroLocal" class="solo-admin selector-local" onchange="cambiarLocalPanel(this.value)" title="Ver solo un local"></select>
       </div>
 
       <!-- Mi día (profesional) -->
@@ -410,9 +422,10 @@
             <div><label for="nuevoCorreo">Correo (con este entra al panel)</label><input id="nuevoCorreo" type="email" placeholder="diego@gmail.com"></div>
             <div><label for="nuevaClaveTrab">Contraseña inicial (mín. 6)</label><input id="nuevaClaveTrab" type="text" placeholder="Ej: Barber2026"></div>
             <div><label for="nuevaComision">Comisión del profesional (%)</label><input id="nuevaComision" type="number" min="0" max="100" value="50"></div>
+            <div><label for="nuevoLocal">Local donde atiende</label><select id="nuevoLocal"></select></div>
           </div>
           <button class="boton" style="margin-top:12px;" onclick="agregarTrabajador()">Agregar</button>
-          <p class="nota" style="margin-top:6px;">Queda con horario lunes a sábado 09:00–18:00 y colación 13:00–14:00 (lo ajustas abajo). Con correo y contraseña, su cuenta queda lista para entrar de inmediato.</p>
+          <p class="nota" style="margin-top:6px;">Queda con horario lunes a sábado 09:00–18:00 y colación 13:00–14:00, y con todos los servicios de su local (lo ajustas abajo). Con correo y contraseña, su cuenta queda lista para entrar de inmediato.</p>
           <p class="estado" id="estadoNuevo"></p>
         </div>
         <div id="listaTrab"></div>
@@ -421,11 +434,12 @@
       <!-- Servicios (admin) -->
       <div id="tab-servicios" class="oculto">
         <div class="tarjeta">
-          <div class="serv-fila cab"><span>Nombre</span><span>Descripción</span><span>Precio ($)</span><span>Minutos</span><span>Activo</span><span></span></div>
+          <div class="serv-fila cab"><span>Nombre</span><span>Descripción</span><span>Categoría</span><span>Local</span><span>Precio ($)</span><span>Minutos</span><span>Activo</span><span></span></div>
           <div id="listaServ"></div>
           <button class="boton-linea" style="margin-top:12px;" onclick="nuevoServicio()">+ Nuevo servicio</button>
           <p class="estado" id="estadoServ"></p>
-          <p class="nota">Los servicios inactivos no aparecen en la agenda pública, pero se conservan en reservas antiguas.</p>
+          <p class="nota">Cada servicio es de un local (así el mismo "Corte" puede costar distinto en Lampa y Providencia). Al crear uno, lo hacen todos los barberos de ese local; en "Equipo y horarios" eliges quién hace qué.
+            La categoría agrupa las tarjetas en la agenda (ej: "Promociones" aparece primero). Los inactivos no aparecen en la agenda pública, pero se conservan en reservas antiguas.</p>
         </div>
       </div>
 
@@ -499,6 +513,15 @@
     let entroConCodigo = false;
     let bloqueosTodos = [], serviciosActivos = [], notificaciones = [], ultimoNoLeidas = -1;
     let trabajadores = [], horarios = [], servicios = [], reservasTodas = [];
+    let locales = [], asignados = {};        // asignados[tid] = [ids de servicios que hace]
+    let LOCAL_PANEL = 0;                     // 0 = todos los locales (solo admin)
+    try { LOCAL_PANEL = Number(localStorage.getItem('clipperlab-local-panel')) || 0; } catch(e) {}
+    const trabDe   = tid => trabajadores.find(t => t.id === tid);
+    const localDe  = tid => trabDe(tid)?.local_id ?? null;
+    const nombreLocal = id => locales.find(l => l.id === id)?.nombre || '';
+    const enFiltro = tid => yo?.rol !== 'admin' || !LOCAL_PANEL || localDe(tid) === LOCAL_PANEL;          // ¿este profesional está en el local elegido?
+    const trabsFiltro = () => trabajadores.filter(t => enFiltro(t.id));
+    const servDelLocal = tid => serviciosActivos.filter(s => s.local_id === localDe(tid));
     let diaVista = hoyTxt(), filtro = 'proximas', modoRecuperacion = false;
 
     // Hora de inicio/fin de una reserva en minutos (reservas antiguas sin "inicio" duraban 60 min)
@@ -593,17 +616,33 @@
 
     // Trabajadores, horarios y reservas (RLS decide qué ve cada uno)
     async function cargarBase(){
-      const [t, h, r, b, c] = await Promise.all([
+      const [t, h, r, b, c, loc] = await Promise.all([
         db.from('trabajadores').select('*').order('orden').order('id'),
         db.from('horarios').select('*'),
         yo.rol === 'admin' ? db.from('reservas').select('*').order('fecha').order('hora') : db.rpc('mis_citas', {}),
         db.from('bloqueos').select('*').order('inicio'),
         db.rpc('agenda_config'),
+        db.from('locales').select('*').order('orden').order('id'),
       ]);
       trabajadores = t.data || []; horarios = h.data || []; reservasTodas = r.data || [];
       bloqueosTodos = b.data || []; serviciosActivos = (c.data && c.data.servicios) || [];
+      asignados = Object.fromEntries(((c.data && c.data.trabajadores) || []).map(x => [x.id, x.servicios || []]));
+      locales = (loc.data && loc.data.length ? loc.data : (c.data && c.data.locales)) || [];
+      if (LOCAL_PANEL && !locales.some(x => x.id === LOCAL_PANEL)) LOCAL_PANEL = 0;
+      const fl = $('filtroLocal');
+      fl.innerHTML = locales.length > 1 ? '<option value="0">📍 Todos los locales</option>' + locales.map(x => `<option value="${x.id}" ${x.id === LOCAL_PANEL ? 'selected' : ''}>📍 ${esc(x.nombre)}</option>`).join('') : '';
+      fl.classList.toggle('oculto', yo.rol !== 'admin' || locales.length < 2);
       const f = $('filtroTrab'), actual = f.value;
-      f.innerHTML = '<option value="">Todo el equipo</option>' + trabajadores.map(x => `<option value="${x.id}" ${String(x.id)===actual?'selected':''}>${esc(x.nombre)}</option>`).join('');
+      f.innerHTML = '<option value="">Todo el equipo</option>' + trabsFiltro().map(x => `<option value="${x.id}" ${String(x.id)===actual?'selected':''}>${esc(x.nombre)}</option>`).join('');
+    }
+    // El admin elige un local: agenda, semana, historial, caja, equipo y servicios muestran solo ese local
+    function cambiarLocalPanel(v){
+      LOCAL_PANEL = Number(v) || 0;
+      try { localStorage.setItem('clipperlab-local-panel', String(LOCAL_PANEL)); } catch(e) {}
+      $('semanaTrab').innerHTML = ''; $('cajaTrab').innerHTML = '';
+      const f = $('filtroTrab'); f.innerHTML = '<option value="">Todo el equipo</option>' + trabsFiltro().map(x => `<option value="${x.id}">${esc(x.nombre)}</option>`).join('');
+      const t = document.querySelector('.tab.sel')?.dataset.tab;
+      if (t === 'equipo') cargarEquipo(); else if (t === 'servicios') cargarServicios(); else refrescarVista();
     }
 
     function verTab(t){
@@ -698,19 +737,19 @@
       const f = deTexto(diaVista), dow = f.getDay();
       $('diaTxt').textContent = (diaVista === hoyTxt() ? 'Hoy · ' : '') + f.toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long' });
       $('diaInput').value = diaVista;
-      const delDia = reservasTodas.filter(r => r.fecha === diaVista);
+      const delDia = reservasTodas.filter(r => r.fecha === diaVista && enFiltro(r.trabajador_id));
       const vivas = delDia.filter(activa);
       $('kpis').innerHTML =
         `<div class="kpi"><b>${vivas.length}</b><span>reservas</span></div>` +
         `<div class="kpi"><b>${clp(sumaTotal(delDia))}</b><span>total del día</span></div>` +
         `<div class="kpi"><b>${delDia.filter(r => r.estado === 'completada').length}</b><span>completadas</span></div>`;
-      const cols = trabajadores.filter(t => t.activo || delDia.some(r => r.trabajador_id === t.id));
+      const cols = trabsFiltro().filter(t => t.activo || delDia.some(r => r.trabajador_id === t.id));
       if (!cols.length){ $('agendaDia').innerHTML = '<p class="vacio">No hay profesionales.</p>'; return; }
       grillaAgenda($('agendaDia'), cols.map(t => {
         const h = horarios.find(x => x.trabajador_id === t.id && x.dia === dow);
         const res = delDia.filter(r => r.trabajador_id === t.id);
         const n = res.filter(activa).length;
-        return { titulo: t.nombre, avatar: t.nombre[0], horario: h, reservas: res, esHoy: diaVista === hoyTxt(),
+        return { titulo: t.nombre + (!LOCAL_PANEL && locales.length > 1 ? ' · ' + nombreLocal(t.local_id) : ''), avatar: t.nombre[0], horario: h, reservas: res, esHoy: diaVista === hoyTxt(),
                  tid: t.id, fecha: diaVista, bloqueos: bloqueosDe(t.id, diaVista),
                  sub: h ? `${h.inicio.slice(0,5)}–${h.fin.slice(0,5)} · ${n} reserva${n===1?'':'s'}` : 'No trabaja' };
       }));
@@ -724,7 +763,7 @@
     function dibujarSemana(){
       const sel = $('semanaTrab');
       if (yo.rol === 'admin' && !sel.options.length)
-        sel.innerHTML = trabajadores.filter(t => t.activo).map(t => `<option value="${t.id}">${esc(t.nombre)}</option>`).join('');
+        sel.innerHTML = trabsFiltro().filter(t => t.activo).map(t => `<option value="${t.id}">${esc(t.nombre)}${!LOCAL_PANEL && locales.length > 1 ? ' · ' + esc(nombreLocal(t.local_id)) : ''}</option>`).join('');
       const tid = yo.rol === 'admin' ? Number(sel.value) : yo.trabajador_id;
       const dias = [...Array(7)].map((_, i) => { const d = new Date(semanaInicio); d.setDate(d.getDate() + i); return d; });
       const txt = dias.map(fechaTexto), fin = dias[6];
@@ -846,7 +885,7 @@
     function elegirProfesionalLlegada(){
       $('ventanaDetalle').innerHTML = `<h3 style="font-size:18px;">⚡ Orden de llegada</h3>
         <p class="nota" style="margin-bottom:10px;">¿Quién atiende? Queda en atención desde ahora.</p>
-        <div class="pros-llegada">${trabajadores.filter(t => t.activo).map(t => `<button class="boton-linea" onclick="cerrarDetalle(); ordenLlegada(${t.id})"><span class="avatar mini">${esc(t.nombre[0])}</span> ${esc(t.nombre)}</button>`).join('')}</div>
+        <div class="pros-llegada">${trabsFiltro().filter(t => t.activo).map(t => `<button class="boton-linea" onclick="cerrarDetalle(); ordenLlegada(${t.id})"><span class="avatar mini">${esc(t.nombre[0])}</span> ${esc(t.nombre)}</button>`).join('')}</div>
         <div class="det-acciones"><button class="boton-linea" style="margin-left:auto;" onclick="cerrarDetalle()">Cerrar</button></div>`;
       $('fondoDetalle').classList.remove('oculto');
     }
@@ -856,13 +895,12 @@
     function abrirTerminar(id){
       const r = reservasTodas.find(x => x.id === id); if (!r) return;
       pagoElegido = r.metodo_pago || null;
-      const nombres = (r.servicios || '').split(' + ');
-      const marcados = serviciosActivos.filter(s => nombres.includes(s.nombre)).map(s => s.id);
+      const marcados = marcadosPorNombre(r.servicios, r.trabajador_id);
       $('ventanaDetalle').innerHTML = `<h3 style="font-size:18px;">✓ Terminar atención</h3>
         <div class="det-fila"><span>Cliente</span><span>${esc(r.nombre)}</span></div>
         <div class="det-fila"><span>Inicio</span><span>${aHora(rangoDe(r)[0])}${r.origen === 'llegada' ? ' · orden de llegada' : ''}</span></div>
         ${r.origen === 'llegada' ? `<label for="fNombreLlegada">Nombre del cliente (opcional)</label><input id="fNombreLlegada" placeholder="Ej: Pedro">` : ''}
-        <label>Servicios realizados</label><div class="serv-checks">${checksServicios(marcados)}</div>
+        <label>Servicios realizados</label><div class="serv-checks">${checksServicios(marcados, r.trabajador_id)}</div>
         <label for="fPropina">Propina (opcional, es 100% tuya)</label>
         <div class="propinas">
           ${[0, 1000, 2000, 3000, 5000].map(v => `<button class="chip ${v === (r.propina || 0) ? 'sel' : ''}" onclick="elegirPropina(${v}, this)">${v ? clp(v) : 'Sin propina'}</button>`).join('')}
@@ -875,7 +913,6 @@
         <div class="det-acciones"><button class="boton" onclick="confirmarTermino(${r.id})">Confirmar pago y terminar</button>
           <button class="boton-linea" style="margin-left:auto;" onclick="cerrarDetalle()">Cerrar</button></div>
         <p class="estado" id="estadoAccion"></p>`;
-      document.querySelectorAll('.f-serv').forEach(c => c.addEventListener('change', totalACobrar));
       totalACobrar();
       $('fondoDetalle').classList.remove('oculto');
     }
@@ -906,7 +943,7 @@
     function filtrar(f){ filtro = f; document.querySelectorAll('.chip').forEach(c => c.classList.toggle('sel', c.dataset.f === f)); dibujarLista(); }
     function dibujarLista(){
       const hoy = hoyTxt(), trab = $('filtroTrab').value, q = $('buscar').value.trim().toLowerCase();
-      let lista = reservasTodas.filter(r => !trab || String(r.trabajador_id) === trab);
+      let lista = reservasTodas.filter(r => (!trab || String(r.trabajador_id) === trab) && enFiltro(r.trabajador_id));
       if (q) lista = lista.filter(r => (r.nombre||'').toLowerCase().includes(q) || (r.telefono||'').replace(/\D/g,'').includes(q.replace(/\D/g,'') || '§'));
       if (filtro === 'hoy')      lista = lista.filter(r => r.fecha === hoy);
       if (filtro === 'proximas') lista = lista.filter(r => r.fecha >= hoy);
@@ -947,14 +984,16 @@
         <h3 style="font-size:18px;">${esc(r.nombre)}</h3>
         <div class="det-fila"><span>Fecha</span><span>${esc(r.fecha)} · ${aHora(ri)}–${aHora(rf)}</span></div>
         <div class="det-fila"><span>Profesional</span><span>${esc(r.trabajador)}</span></div>
+        ${locales.length > 1 ? `<div class="det-fila"><span>Local</span><span>📍 ${esc(nombreLocal(r.local_id ?? localDe(r.trabajador_id)))}</span></div>` : ''}
         ${r.creado_por ? `<div class="det-fila"><span>Agendada por</span><span>${esc(r.creado_por)}${r.origen === 'panel' ? ' (panel)' : ''}</span></div>` : ''}
         <div class="det-fila"><span>Servicios</span><span>${esc(r.servicios || '—')}</span></div>
         <div class="det-fila"><span>${admin ? 'Total' : 'Valor del servicio'}</span><span>${r.total ? clp(r.total) : '—'}</span></div>
         ${est === 'completada' && r.propina ? `<div class="det-fila"><span>Propina</span><span>${clp(r.propina)}</span></div>` : ''}
         ${!admin && est === 'completada' ? `<div class="det-fila"><span>Tu parte</span><span><b>${clp(r.ganancia || 0)}</b></span></div>` : ''}
-        ${admin ? `<div class="det-fila"><span>WhatsApp</span><span>${esc(r.telefono || '—')}</span></div>
+        ${admin ? `<div class="det-fila"><span>WhatsApp</span><span>${esc(r.telefono || '—')}${r.whatsapp ? ' · <span class="ok">acepta avisos ✓</span>' : ''}</span></div>
         <div class="det-fila"><span>Correo</span><span>${esc(r.correo || '—')}</span></div>` : ''}
-        ${r.descripcion ? `<div class="det-fila"><span>Mensaje</span><span style="text-align:right;">${esc(r.descripcion)}</span></div>` : ''}
+        ${r.descripcion ? `<div class="det-fila"><span>Observaciones</span><span style="text-align:right;">${esc(r.descripcion)}</span></div>` : ''}
+        <div id="fotoRef"></div>
         ${admin && grupo.length ? `<div class="det-fila"><span>Viene con</span><span>${grupo.map(x => esc(x.nombre) + ' (' + esc(x.trabajador) + ')').join(', ')}</span></div>` : ''}
         <div class="det-fila"><span>Pago</span><span>${r.metodo_pago ? PAGOS[r.metodo_pago] : (est === 'completada' ? 'Sin registrar' : '—')}</span></div>
         ${est === 'completada' ? `<div class="pagos"><span class="nota">Método de pago:</span>
@@ -974,6 +1013,14 @@
         </div>
         <p class="estado" id="estadoDetalle"></p>`;
       $('fondoDetalle').classList.remove('oculto');
+      if (r.origen === 'web') cargarFotoRef(r.id);
+    }
+    // Foto de referencia que subió el cliente (se pide aparte para que la agenda cargue rápido)
+    async function cargarFotoRef(id){
+      const { data } = await db.rpc('foto_cita', { p_id: id });
+      const c = $('fotoRef'); if (!c || !data) return;
+      c.innerHTML = `<div class="det-fila"><span>📷 Foto del corte</span><span><a href="#" class="link" onclick="event.preventDefault(); $('imgRef').classList.toggle('oculto')">Ver / ocultar</a></span></div>
+        <img id="imgRef" class="foto-mini" src="${data}" alt="Foto de referencia del cliente">`;
     }
     function cerrarDetalle(){ $('fondoDetalle').classList.add('oculto'); }
     function refrescarVista(){
@@ -1015,16 +1062,34 @@
     // ================= AGENDAR / BLOQUEAR DESDE EL PANEL =================
     let accion = {};
     const MOTIVOS = ['Colación extra', 'Trámite', 'Médico', 'Día libre', 'Vacaciones', 'Capacitación'];
-    function opcionesProfesionales(sel){
-      const lista = yo.rol === 'admin' ? trabajadores.filter(t => t.activo) : trabajadores.filter(t => t.id === yo.trabajador_id);
-      return lista.map(t => `<option value="${t.id}" ${t.id === sel ? 'selected' : ''}>${esc(t.nombre)}</option>`).join('');
+    function opcionesProfesionales(sel, incluirInactivos){
+      const base = yo.rol === 'admin' ? trabsFiltro().filter(t => t.activo || incluirInactivos || t.id === sel) : trabajadores.filter(t => t.id === yo.trabajador_id);
+      if (sel && !base.some(t => t.id === sel) && trabDe(sel)) base.push(trabDe(sel));
+      const op = t => `<option value="${t.id}" ${t.id === sel ? 'selected' : ''}>${esc(t.nombre)}${t.activo ? '' : ' (inactivo)'}</option>`;
+      if (yo.rol !== 'admin' || locales.length < 2) return base.map(op).join('');
+      // Agrupados por local, para no mezclar sucursales
+      return locales.map(l => { const g = base.filter(t => t.local_id === l.id); return g.length ? `<optgroup label="📍 ${esc(l.nombre)}">${g.map(op).join('')}</optgroup>` : ''; }).join('');
     }
-    function checksServicios(marcados){
-      return serviciosActivos.map(s => `<label><input type="checkbox" class="f-serv" value="${s.id}" ${marcados.includes(s.id) ? 'checked' : ''} onchange="resumenForm()"> ${esc(s.nombre)} <span>${s.duracion} min · ${clp(s.precio)}</span></label>`).join('');
+    // Solo los servicios del local del profesional (con su precio de ese local). Los que no tiene asignados van al final.
+    function checksServicios(marcados, tid){
+      const lista = servDelLocal(tid), mios = asignados[tid] || [];
+      const orden = [...lista.filter(s => mios.includes(s.id)), ...lista.filter(s => !mios.includes(s.id))];
+      if (!orden.length) return '<p class="nota">Este local no tiene servicios activos.</p>';
+      return orden.map(s => `<label><input type="checkbox" class="f-serv" value="${s.id}" ${marcados.includes(s.id) ? 'checked' : ''} onchange="resumenForm(); if ($('totalCobrar')) totalACobrar()"> ${esc(s.nombre)}${mios.includes(s.id) ? '' : ' <small class="nota">(no asignado)</small>'} <span>${s.duracion} min · ${clp(s.precio)}</span></label>`).join('');
+    }
+    // Servicios que ya estaban marcados (por nombre) dentro del local de ese profesional
+    const marcadosPorNombre = (texto, tid) => { const n = (texto || '').split(' + '); return servDelLocal(tid).filter(s => n.includes(s.nombre)).map(s => s.id); };
+    // Al cambiar de profesional en el formulario, los servicios cambian a los de su local
+    function cambiarProfForm(){
+      const tid = Number($('fTid').value), c = $('servChecks'); if (!c) return;
+      const antes = serviciosActivos.filter(s => servSeleccionados().includes(s.id)).map(s => s.nombre).join(' + ');
+      c.innerHTML = checksServicios(marcadosPorNombre(antes, tid), tid);
+      if (accion) accion.tid = tid;
+      resumenForm();
     }
     // o = { modo:'agendar'|'bloquear', tid, fecha, t (minutos) }
     function abrirAccion(o){
-      const tid = o.tid || (yo.rol === 'admin' ? (trabajadores.find(t => t.activo) || {}).id : yo.trabajador_id);
+      const tid = o.tid || (yo.rol === 'admin' ? (trabsFiltro().find(t => t.activo) || {}).id : yo.trabajador_id);
       let t = o.t;
       if (t == null){ const a = new Date(); t = o.fecha === hoyTxt() ? Math.min(Math.ceil((a.getHours()*60 + a.getMinutes()) / 15) * 15, 23*60) : 10*60; }
       accion = { modo: o.modo || 'agendar', tid, fecha: o.fecha || hoyTxt(), t, motivo: '' };
@@ -1038,7 +1103,7 @@
         <button class="${a.modo === 'agendar' ? 'sel' : ''}" onclick="leerComunes(); accion.modo='agendar'; dibujarAccion()">+ Agendar cliente</button>
         <button class="${a.modo === 'bloquear' ? 'sel' : ''}" onclick="leerComunes(); accion.modo='bloquear'; dibujarAccion()">🔒 Bloquear</button></div>`;
       const comunes = `<div class="form-grid">
-          <div class="full"><label>Profesional</label><select id="fTid" ${yo.rol !== 'admin' ? 'disabled' : ''}>${opcionesProfesionales(a.tid)}</select></div>
+          <div class="full"><label>Profesional</label><select id="fTid" ${yo.rol !== 'admin' ? 'disabled' : ''} onchange="cambiarProfForm()">${opcionesProfesionales(a.tid)}</select></div>
           <div><label>Fecha</label><input type="date" id="fFecha" value="${a.fecha}"></div>
           <div><label>${a.modo === 'agendar' ? 'Hora' : 'Desde'}</label><input type="time" id="fHora" step="300" value="${aHora(a.t)}" oninput="resumenForm()"></div>`;
       let cuerpo;
@@ -1054,7 +1119,7 @@
           <button class="boton-linea" style="margin-left:auto;" onclick="cerrarDetalle()">Cerrar</button></div>`;
       } else if (a.modo === 'agendar'){
         cuerpo = comunes + `
-          <div class="full"><label>Servicios</label><div class="serv-checks">${checksServicios([])}</div></div>
+          <div class="full"><label>Servicios</label><div class="serv-checks" id="servChecks">${checksServicios([], a.tid)}</div></div>
           <div class="full"><label>Nombre del cliente *</label><input id="fNombre" placeholder="Ej: Pedro Soto"></div>
           <div><label>WhatsApp</label><input id="fTel" type="tel" placeholder="+56 9 …"></div>
           <div><label>Correo</label><input id="fCorreo" type="email" placeholder="opcional"></div>
@@ -1155,14 +1220,13 @@
     // ================= EDITAR RESERVA (admin) =================
     function abrirEditar(id){
       const r = reservasTodas.find(x => x.id === id); if (!r) return;
-      const [ri] = rangoDe(r), nombres = (r.servicios || '').split(' + ');
-      const marcados = serviciosActivos.filter(s => nombres.includes(s.nombre)).map(s => s.id);
+      const [ri] = rangoDe(r), marcados = marcadosPorNombre(r.servicios, r.trabajador_id);
       $('ventanaDetalle').innerHTML = `<h3 style="font-size:18px;">Editar reserva</h3>
         <div class="form-grid">
-          <div class="full"><label>Profesional</label><select id="fTid">${trabajadores.map(t => `<option value="${t.id}" ${t.id === r.trabajador_id ? 'selected' : ''}>${esc(t.nombre)}${t.activo ? '' : ' (inactivo)'}</option>`).join('')}</select></div>
+          <div class="full"><label>Profesional</label><select id="fTid" onchange="cambiarProfForm()">${opcionesProfesionales(r.trabajador_id, true)}</select></div>
           <div><label>Fecha</label><input type="date" id="fFecha" value="${r.fecha}"></div>
           <div><label>Hora</label><input type="time" id="fHora" step="300" value="${aHora(ri)}" oninput="resumenForm()"></div>
-          <div class="full"><label>Servicios</label><div class="serv-checks">${checksServicios(marcados)}</div>
+          <div class="full"><label>Servicios</label><div class="serv-checks" id="servChecks">${checksServicios(marcados, r.trabajador_id)}</div>
             ${r.servicios && !marcados.length ? `<p class="nota" style="margin-top:6px;">Servicio original: ${esc(r.servicios)}. Si no marcas ninguno, se mantiene.</p>` : ''}</div>
           <div class="full"><label>Cliente</label><input id="fNombre" value="${esc(r.nombre)}"></div>
           <div><label>WhatsApp</label><input id="fTel" value="${esc(r.telefono || '')}"></div>
@@ -1223,10 +1287,10 @@
     function dibujarCaja(){
       const admin = yo.rol === 'admin', sel = $('cajaTrab');
       if (admin && !sel.options.length)
-        sel.innerHTML = '<option value="">Todo el equipo</option>' + trabajadores.map(t => `<option value="${t.id}">${esc(t.nombre)}</option>`).join('');
-      const [desde, hasta, txt] = rangoCaja(); $('cajaTxt').textContent = txt;
+        sel.innerHTML = `<option value="">${LOCAL_PANEL ? 'Todo ' + esc(nombreLocal(LOCAL_PANEL)) : 'Todo el equipo'}</option>` + trabsFiltro().map(t => `<option value="${t.id}">${esc(t.nombre)}</option>`).join('');
+      const [desde, hasta, txt] = rangoCaja(); $('cajaTxt').textContent = txt + (admin && LOCAL_PANEL ? ' · ' + nombreLocal(LOCAL_PANEL) : '');
       const tid = admin ? (Number(sel.value) || null) : yo.trabajador_id;
-      const lista = reservasTodas.filter(r => r.fecha >= desde && r.fecha <= hasta && (!tid || r.trabajador_id === tid));
+      const lista = reservasTodas.filter(r => r.fecha >= desde && r.fecha <= hasta && (!tid || r.trabajador_id === tid) && (!admin || enFiltro(r.trabajador_id)));
       const hechas = lista.filter(r => r.estado === 'completada').sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
       const llegadas = lista.filter(r => r.origen === 'llegada' && r.estado !== 'cancelada').length;
       // Parte del profesional: el admin la calcula con la comisión; el profesional la recibe ya calculada
@@ -1284,8 +1348,11 @@
         return `<tr class="${total ? 'total' : ''}"><td>${nombre}</td><td class="num">${x.n}</td><td class="num">${clp(x.efectivo)}</td><td class="num">${clp(x.debito)}</td><td class="num">${clp(x.transferencia)}</td><td class="num">${clp(x.total)}</td><td class="num">${clp(x.propinas)}</td><td class="num">${clp(p)}</td><td class="num">${clp(x.total + x.propinas - p)}</td></tr>`; };
       let cuerpo;
       if (!tid){
-        $('cajaTituloDetalle').textContent = 'Por profesional';
-        cuerpo = trabajadores.map(t => fila(`${esc(t.nombre)} <span class="nota">${t.comision ?? 50}%</span>`, lista.filter(r => r.trabajador_id === t.id))).join('') + fila('Total', lista, true);
+        $('cajaTituloDetalle').textContent = !LOCAL_PANEL && locales.length > 1 ? 'Por local y profesional' : 'Por profesional';
+        // Con "todos los locales": subtotal por local y luego por profesional
+        const porLocal = !LOCAL_PANEL && locales.length > 1;
+        cuerpo = (porLocal ? locales.map(l => fila(`📍 <b>${esc(l.nombre)}</b>`, lista.filter(r => localDe(r.trabajador_id) === l.id))).join('') : '') +
+                 trabsFiltro().map(t => fila(`${esc(t.nombre)} <span class="nota">${t.comision ?? 50}%${porLocal ? ' · ' + esc(nombreLocal(t.local_id)) : ''}</span>`, lista.filter(r => r.trabajador_id === t.id))).join('') + fila('Total', lista, true);
       } else if (cajaPeriodo !== 'dia'){
         $('cajaTituloDetalle').textContent = 'Por día';
         cuerpo = [...new Set(lista.map(r => r.fecha))].sort().map(d => fila(deTexto(d).toLocaleDateString('es-CL', { weekday:'short', day:'numeric', month:'short' }), lista.filter(r => r.fecha === d))).join('') + fila('Total', lista, true);
@@ -1435,10 +1502,17 @@
     // ================= EQUIPO Y HORARIOS (admin) =================
     async function cargarEquipo(){
       await cargarBase();
+      const sv = await db.from('servicios').select('*').order('orden').order('id');
+      servicios = sv.data || [];
       const { data: accesos } = await db.rpc('estado_accesos');
       const acc = Object.fromEntries((accesos || []).map(a => [a.trabajador_id, a]));
-      $('listaTrab').innerHTML = trabajadores.map(t => {
+      $('nuevoLocal').innerHTML = locales.map(l => `<option value="${l.id}" ${l.id === (LOCAL_PANEL || locales[0]?.id) ? 'selected' : ''}>${esc(l.nombre)}</option>`).join('');
+      // El admin primero; después el resto (del local elegido arriba, si hay filtro)
+      const lista = trabsFiltro().sort((x, y) => (acc[y.id]?.es_admin ? 1 : 0) - (acc[x.id]?.es_admin ? 1 : 0));
+      $('listaTrab').innerHTML = lista.map(t => {
         const a = acc[t.id] || {};
+        const servLocal = servicios.length ? servicios.filter(s => s.local_id === t.local_id) : serviciosActivos.filter(s => s.local_id === t.local_id);
+        const mios = asignados[t.id] || [];
         let accesoHtml;
         if (!t.correo) accesoHtml = `<span class="nota">Sin correo: agrégalo y guarda para crearle una cuenta.</span>`;
         else if (a.tiene_cuenta) accesoHtml = `<span class="ok">✓ Entra con ${esc(t.correo)}</span>
@@ -1447,16 +1521,34 @@
         else accesoHtml = `<span class="nota">Sin cuenta.</span>
             <input type="text" id="clave-${t.id}" placeholder="Contraseña inicial (mín. 6)">
             <button class="boton-linea" onclick="crearAcceso(${t.id})">Crear acceso</button>`;
-        return `<div class="trab" id="trab-${t.id}">
+        return `<div class="trab ${a.es_admin ? 'es-admin' : ''}" id="trab-${t.id}">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+            ${a.es_admin ? '<span class="badge-admin" title="Esta cuenta administra todo el sistema">★ ADMIN</span>' : ''}
+            ${locales.length > 1 ? `<span class="badge-local">📍 ${esc(nombreLocal(t.local_id) || 'Sin local')}</span>` : ''}
+            ${t.activo ? '' : '<span class="badge cancelada">Inactivo</span>'}
+          </div>
           <div class="trab-cab">
-            <div class="avatar">${esc(t.nombre[0] || '?')}</div>
+            <div class="avatar" ${t.foto_url ? `style="background:url('${esc(t.foto_url)}') center/cover;color:transparent;"` : ''}>${esc(t.nombre[0] || '?')}</div>
             <input value="${esc(t.nombre)}" data-campo="nombre" aria-label="Nombre">
             <input value="${esc(t.correo || '')}" data-campo="correo" type="email" placeholder="correo@gmail.com" aria-label="Correo">
             <label style="margin:0;display:flex;gap:6px;align-items:center;white-space:nowrap;" title="% de lo cobrado que le corresponde">Comisión <input type="number" min="0" max="100" data-campo="comision" value="${t.comision ?? 50}" style="width:70px;padding:7px 8px;"> %</label>
             <label style="margin:0;display:flex;gap:6px;align-items:center;white-space:nowrap;"><input type="checkbox" data-campo="activo" ${t.activo?'checked':''}> Activo</label>
             <button class="boton-linea ancho-full" onclick="guardarTrabajador(${t.id})">Guardar</button>
           </div>
-          <div class="acceso">${accesoHtml}</div>
+          <div class="trab-extra">
+            <div><label>Local donde atiende</label><select data-campo="local_id">${locales.map(l => `<option value="${l.id}" ${l.id === t.local_id ? 'selected' : ''}>${esc(l.nombre)}</option>`).join('')}</select></div>
+            <div><label>Foto (link de una imagen, opcional — se ve en la agenda pública)</label><input data-campo="foto_url" value="${esc(t.foto_url || '')}" placeholder="https://…/foto.jpg"></div>
+          </div>
+          <div class="acceso">${a.es_admin ? '<span class="nota">Cuenta de administrador · </span>' : ''}${accesoHtml}</div>
+          <details class="detalle-horario" ${mios.length ? '' : 'open'}>
+            <summary>Servicios que realiza (${mios.filter(id => servLocal.some(s => s.id === id)).length} de ${servLocal.length})</summary>
+            <p class="nota" style="margin:6px 0 4px;">En la agenda pública solo aparece para los servicios marcados. Solo se muestran los de su local.</p>
+            <div class="asig">${servLocal.map(s => `<label><input type="checkbox" class="f-asig" value="${s.id}" ${mios.includes(s.id) ? 'checked' : ''}> ${esc(s.nombre)} <span class="nota">${clp(s.precio)}${s.activo === false ? ' · inactivo' : ''}</span></label>`).join('') || '<span class="nota">Este local aún no tiene servicios.</span>'}</div>
+            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+              <button class="boton" onclick="guardarAsignacion(${t.id})">Guardar servicios</button>
+              <button class="boton-linea" onclick="document.querySelectorAll('#trab-${t.id} .f-asig').forEach(c => c.checked = true)">Marcar todos</button>
+            </div>
+          </details>
           <details class="detalle-horario">
             <summary>Horario y colación</summary>
             ${tablaHorario(t.id)}
@@ -1527,19 +1619,34 @@
       const correo = c.querySelector('[data-campo=correo]').value.trim().toLowerCase() || null;
       const activo = c.querySelector('[data-campo=activo]').checked;
       const comision = parseInt(c.querySelector('[data-campo=comision]').value);
+      const caja = $('trab-' + tid), local_id = Number(caja.querySelector('[data-campo=local_id]')?.value) || null;
+      const foto_url = (caja.querySelector('[data-campo=foto_url]')?.value || '').trim() || null;
       if (!nombre) return estado(id, 'El nombre no puede quedar vacío.', 'error');
       if (isNaN(comision) || comision < 0 || comision > 100) return estado(id, 'La comisión debe estar entre 0 y 100 %.', 'error');
-      const { error } = await db.from('trabajadores').update({ nombre, correo, activo, comision }).eq('id', tid);
+      if (foto_url && !/^https:\/\//.test(foto_url)) return estado(id, 'La foto debe ser un link que empiece con https://', 'error');
+      const antes = trabDe(tid);
+      if (antes && local_id && antes.local_id !== local_id &&
+          !confirm(`¿Mover a ${nombre} a ${nombreLocal(local_id)}? Sus servicios pasan a ser los de ese local (todos marcados; luego ajustas).`)) return;
+      const { error } = await db.from('trabajadores').update({ nombre, correo, activo, comision, local_id, foto_url }).eq('id', tid);
       if (error) return estado(id, error.code === '23505' ? 'Ese correo ya lo usa otro trabajador.' : 'Error: ' + error.message, 'error');
       await cargarEquipo();
       estado('estado-trab-' + tid, '✓ Guardado', 'ok');
+    }
+    async function guardarAsignacion(tid){
+      const ids = [...document.querySelectorAll(`#trab-${tid} .f-asig:checked`)].map(x => Number(x.value)), id = 'estado-trab-' + tid;
+      if (!ids.length && !confirm('No marcaste ningún servicio: no aparecerá en la agenda pública. ¿Guardar igual?')) return;
+      const { data, error } = await db.rpc('asignar_servicios', { p_tid: tid, p_ids: ids });
+      if (error) return estado(id, 'Error: ' + error.message, 'error');
+      await cargarEquipo();
+      estado(id, `✓ Guardado: realiza ${data} servicio${data === 1 ? '' : 's'}. La agenda pública ya lo muestra así.`, 'ok');
     }
     async function agregarTrabajador(){
       const nombre = $('nuevoNombre').value.trim(), correo = $('nuevoCorreo').value.trim().toLowerCase() || null;
       if (!nombre) return estado('estadoNuevo', 'Escribe el nombre.', 'error');
       const orden = Math.max(0, ...trabajadores.map(t => t.orden || 0)) + 1;
       const comision = Math.min(100, Math.max(0, parseInt($('nuevaComision').value) || 50));
-      const { data, error } = await db.from('trabajadores').insert({ nombre, correo, orden, comision }).select().single();
+      const local_id = Number($('nuevoLocal').value) || null;
+      const { data, error } = await db.from('trabajadores').insert({ nombre, correo, orden, comision, local_id }).select().single();
       if (error) return estado('estadoNuevo', error.code === '23505' ? 'Ese correo ya lo usa otro trabajador.' : 'Error: ' + error.message, 'error');
       const base = [1,2,3,4,5,6].map(d => ({ trabajador_id: data.id, dia: d, inicio: '09:00', fin: '18:00', almuerzo_inicio: '13:00', almuerzo_fin: '14:00' }));
       const { error: e2 } = await db.from('horarios').insert(base);
@@ -1569,20 +1676,44 @@
       const { data, error } = await db.from('servicios').select('*').order('orden').order('id');
       if (error) return estado('estadoServ', 'Error: ' + error.message, 'error');
       servicios = data;
-      $('listaServ').innerHTML = servicios.map(s => filaServicio(s)).join('');
+      if (!locales.length) await cargarBase();
+      const ver = LOCAL_PANEL ? locales.filter(l => l.id === LOCAL_PANEL) : locales;
+      const sinLocal = servicios.filter(s => !locales.some(l => l.id === s.local_id));
+      $('listaServ').innerHTML = (ver.length ? ver : [{ id: null, nombre: '' }]).map(l => {
+        const del = servicios.filter(s => s.local_id === l.id);
+        return (locales.length > 1 ? `<div class="dia-titulo" style="margin-top:14px;">📍 ${esc(l.nombre)} · ${del.length} servicio${del.length === 1 ? '' : 's'}</div>` : '') + del.map(filaServicio).join('');
+      }).join('') + sinLocal.map(filaServicio).join('');
+      $('datalistCat')?.remove();
+      document.body.insertAdjacentHTML('beforeend', `<datalist id="datalistCat">${[...new Set(['Promociones', 'Servicios', ...servicios.map(s => s.categoria || 'Servicios')])].map(c => `<option value="${esc(c)}">`).join('')}</datalist>`);
     }
     function filaServicio(s){
+      const otros = locales.filter(l => l.id !== s.local_id && !servicios.some(x => x.local_id === l.id && x.nombre.trim().toLowerCase() === (s.nombre || '').trim().toLowerCase()));
       return `<div class="serv-fila" data-id="${s.id ?? ''}">
         <input data-c="nombre" value="${esc(s.nombre)}" placeholder="Nombre">
         <input data-c="descripcion" class="desc" value="${esc(s.descripcion || '')}" placeholder="Descripción corta">
+        <input data-c="categoria" list="datalistCat" value="${esc(s.categoria || 'Servicios')}" placeholder="Categoría">
+        <select data-c="local_id">${locales.map(l => `<option value="${l.id}" ${l.id === s.local_id ? 'selected' : ''}>${esc(l.nombre)}</option>`).join('')}</select>
         <input data-c="precio" type="number" min="0" step="500" value="${s.precio ?? ''}" placeholder="Precio">
         <input data-c="duracion" type="number" min="5" step="5" value="${s.duracion ?? ''}" placeholder="Min">
         <input data-c="activo" type="checkbox" ${s.activo !== false ? 'checked' : ''} aria-label="Activo">
         <div style="display:flex;gap:6px;">
           <button class="boton-linea" onclick="guardarServicio(this)">Guardar</button>
+          ${s.id && otros.length ? `<button class="boton-linea" onclick="duplicarServicio(${s.id})" title="Crear el mismo servicio en ${esc(otros.map(o => o.nombre).join(', '))}">⧉</button>` : ''}
           <button class="boton-linea rojo" onclick="eliminarServicio(this)" title="Eliminar">✕</button>
         </div>
       </div>`;
+    }
+    // Copia un servicio al otro local (mismo nombre y duración; después ajustas el precio de ese local)
+    async function duplicarServicio(id){
+      const s = servicios.find(x => x.id === id); if (!s) return;
+      const destinos = locales.filter(l => l.id !== s.local_id && !servicios.some(x => x.local_id === l.id && x.nombre.trim().toLowerCase() === s.nombre.trim().toLowerCase()));
+      if (!destinos.length) return estado('estadoServ', `"${s.nombre}" ya existe en los otros locales.`, 'error');
+      if (!confirm(`¿Crear "${s.nombre}" también en ${destinos.map(d => d.nombre).join(' y ')}? Queda con el mismo precio (${clp(s.precio)}): cámbialo si ahí cuesta distinto.`)) return;
+      const { error } = await db.from('servicios').insert(destinos.map(d => ({ nombre: s.nombre, descripcion: s.descripcion, precio: s.precio, duracion: s.duracion,
+        activo: s.activo, categoria: s.categoria || 'Servicios', local_id: d.id, orden: servicios.length + 1 })));
+      if (error) return estado('estadoServ', 'Error: ' + error.message, 'error');
+      estado('estadoServ', `✓ "${s.nombre}" creado en ${destinos.map(d => d.nombre).join(' y ')}. Revisa su precio.`, 'ok');
+      await cargarServicios(); await cargarBase();
     }
     async function eliminarServicio(btn){
       const f = btn.closest('.serv-fila'), id = f.dataset.id, nombre = f.querySelector('[data-c=nombre]').value || 'este servicio';
@@ -1593,19 +1724,20 @@
       estado('estadoServ', `✓ "${nombre}" eliminado.`, 'ok');
       cargarServicios();
     }
-    function nuevoServicio(){ $('listaServ').insertAdjacentHTML('beforeend', filaServicio({ nombre:'', activo:true })); }
+    function nuevoServicio(){ $('listaServ').insertAdjacentHTML('beforeend', filaServicio({ nombre:'', activo:true, categoria:'Servicios', local_id: LOCAL_PANEL || locales[0]?.id })); }
     async function guardarServicio(btn){
       const f = btn.closest('.serv-fila'), v = c => f.querySelector(`[data-c=${c}]`);
       const fila = { nombre: v('nombre').value.trim(), descripcion: v('descripcion').value.trim(),
-                     precio: parseInt(v('precio').value), duracion: parseInt(v('duracion').value), activo: v('activo').checked };
+                     precio: parseInt(v('precio').value), duracion: parseInt(v('duracion').value), activo: v('activo').checked,
+                     categoria: v('categoria').value.trim() || 'Servicios', local_id: Number(v('local_id').value) || null };
       if (!fila.nombre || isNaN(fila.precio) || isNaN(fila.duracion)) return estado('estadoServ', 'Completa nombre, precio y minutos.', 'error');
       if (fila.duracion < 5 || fila.duracion > 480) return estado('estadoServ', 'La duración debe estar entre 5 y 480 minutos.', 'error');
       const id = f.dataset.id;
       const { error } = id ? await db.from('servicios').update(fila).eq('id', id)
                            : await db.from('servicios').insert({ ...fila, orden: servicios.length + 1 });
       if (error) return estado('estadoServ', 'Error: ' + error.message, 'error');
-      estado('estadoServ', `✓ "${fila.nombre}" guardado. La agenda pública ya muestra el cambio.`, 'ok');
-      cargarServicios();
+      estado('estadoServ', `✓ "${fila.nombre}" guardado${locales.length > 1 ? ' en ' + nombreLocal(fila.local_id) : ''}. La agenda pública ya muestra el cambio.`, 'ok');
+      await cargarServicios(); await cargarBase();
     }
 
     // ================= MI HORARIO (trabajador) =================
